@@ -1,0 +1,15 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+langchain==0.1.0
+langchain-openai==0.0.2
+langchain-anthropic==0.1.1
+langchain-community==0.0.10
+openai==1.6.1
+anthropic==0.8.1
+httpx==0.25.2
+python-multipart==0.0.6
+sse-starlette==1.8.2
+typing-extensions==4.8.0 
