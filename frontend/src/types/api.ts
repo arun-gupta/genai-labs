@@ -44,12 +44,34 @@ export interface GenerateRequest {
 }
 
 export interface SummarizeRequest {
-  text: string;
+  text?: string;
+  url?: string;
+  file_content?: string;
+  file_type?: string;
   model_provider: 'openai' | 'anthropic' | 'ollama';
   model_name?: string;
   max_length: number;
   temperature: number;
   stream: boolean;
+  summary_type: 'general' | 'bullet_points' | 'key_points' | 'extractive';
+}
+
+export interface SummaryType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface SupportedFileType {
+  extension: string;
+  name: string;
+  description: string;
+}
+
+export interface AvailableModels {
+  providers: ModelProvider[];
+  summary_types: SummaryType[];
+  supported_file_types: SupportedFileType[];
 }
 
 export interface ModelProvider {

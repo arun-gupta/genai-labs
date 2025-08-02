@@ -39,13 +39,16 @@ class ModelFactory:
             raise ValueError("OpenAI API key not configured")
         
         model = model_name or settings.openai_model
+        # Remove temperature and streaming from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        
         return ChatOpenAI(
             model=model,
             openai_api_key=settings.openai_api_key,
             temperature=kwargs.get('temperature', 0.7),
             max_tokens=kwargs.get('max_tokens'),
             streaming=kwargs.get('streaming', True),
-            **kwargs
+            **model_kwargs
         )
     
     def _create_anthropic_model(self, model_name: Optional[str] = None, **kwargs) -> ChatAnthropic:
@@ -54,23 +57,29 @@ class ModelFactory:
             raise ValueError("Anthropic API key not configured")
         
         model = model_name or settings.anthropic_model
+        # Remove temperature and streaming from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        
         return ChatAnthropic(
             model=model,
             anthropic_api_key=settings.anthropic_api_key,
             temperature=kwargs.get('temperature', 0.7),
             max_tokens=kwargs.get('max_tokens'),
             streaming=kwargs.get('streaming', True),
-            **kwargs
+            **model_kwargs
         )
     
     def _create_ollama_model(self, model_name: Optional[str] = None, **kwargs) -> Ollama:
         """Create Ollama model instance."""
         model = model_name or settings.ollama_model
+        # Remove temperature and streaming from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        
         return Ollama(
             model=model,
             base_url=settings.ollama_base_url,
             temperature=kwargs.get('temperature', 0.7),
-            **kwargs
+            **model_kwargs
         )
 
 

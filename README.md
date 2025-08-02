@@ -99,6 +99,28 @@ npm install
 npm run dev
 ```
 
+## ⚠️ Rate Limiting and API Quotas
+
+### OpenAI Rate Limits
+- **TPM (Tokens Per Minute)**: Default limit is 10,000 tokens per minute
+- **RPM (Requests Per Minute)**: Varies by model and account tier
+- **Context Length**: GPT-4 has a 8,192 token context limit
+
+### Handling Rate Limits
+The application includes built-in handling for rate limits:
+
+1. **Automatic Text Truncation**: Long texts are automatically truncated to stay within limits
+2. **User-Friendly Error Messages**: Clear explanations when limits are hit
+3. **Helpful Tips**: Suggestions for avoiding rate limits
+4. **Alternative Models**: Switch to Ollama for local processing without limits
+
+### Tips to Avoid Rate Limits
+- Use shorter texts for summarization
+- Wait a few minutes between requests
+- Consider using Ollama (local) for large documents
+- Check your OpenAI account limits and upgrade if needed
+- Use the "extractive" summary type for very long documents
+
 ### 4. Docker Setup (Optional)
 
 ```bash

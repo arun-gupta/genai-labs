@@ -13,7 +13,7 @@ export const HomePage: React.FC = () => {
     },
     {
       title: 'Text Summarization',
-      description: 'Summarize long texts efficiently while maintaining key information and context.',
+      description: 'Summarize text, URLs, and documents with multiple input methods and summary styles.',
       icon: FileText,
       path: '/summarize',
       color: 'bg-green-500',

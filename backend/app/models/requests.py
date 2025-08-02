@@ -20,9 +20,13 @@ class GenerateRequest(BaseModel):
 
 
 class SummarizeRequest(BaseModel):
-    text: str = Field(..., description="Text to summarize")
+    text: Optional[str] = Field(None, description="Text to summarize")
+    url: Optional[str] = Field(None, description="URL to scrape and summarize")
+    file_content: Optional[bytes] = Field(None, description="File content to summarize")
+    file_type: Optional[str] = Field(None, description="Type of file (txt, pdf, docx, etc.)")
     model_provider: ModelProvider = Field(..., description="Model provider to use")
     model_name: Optional[str] = Field(None, description="Specific model name (optional)")
     max_length: int = Field(150, ge=50, le=500, description="Maximum length of summary")
     temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
-    stream: bool = Field(True, description="Whether to stream the response") 
+    stream: bool = Field(True, description="Whether to stream the response")
+    summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive") 
