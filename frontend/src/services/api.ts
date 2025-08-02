@@ -50,6 +50,34 @@ class ApiService {
     });
   }
 
+  async summarizeFile(
+    file: File,
+    modelProvider: string,
+    modelName: string = '',
+    maxLength: number = 150,
+    temperature: number = 0.3,
+    summaryType: string = 'general'
+  ): Promise<SummarizeResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('model_provider', modelProvider);
+    formData.append('model_name', modelName);
+    formData.append('max_length', maxLength.toString());
+    formData.append('temperature', temperature.toString());
+    formData.append('summary_type', summaryType);
+
+    const response = await fetch(`${this.baseUrl}/summarize/file`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`File upload failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
   async getAvailableModels(): Promise<AvailableModels> {
     return this.request<AvailableModels>('/models');
   }
@@ -81,22 +109,37 @@ class ApiService {
         throw new Error('No response body reader available');
       }
 
+      let buffer = '';
+
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
         for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            const eventType = line.slice(7).trim();
+            if (eventType === 'error') {
+              // Handle error event
+              continue;
+            }
+          }
+          
           if (line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') {
+                return;
+              }
               const streamChunk: StreamChunk = JSON.parse(data);
               onChunk(streamChunk);
             } catch (e) {
               // Skip invalid JSON lines
+              console.warn('Failed to parse SSE data:', data, e);
             }
           }
         }
@@ -133,22 +176,37 @@ class ApiService {
         throw new Error('No response body reader available');
       }
 
+      let buffer = '';
+
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
         for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            const eventType = line.slice(7).trim();
+            if (eventType === 'error') {
+              // Handle error event
+              continue;
+            }
+          }
+          
           if (line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') {
+                return;
+              }
               const streamChunk: StreamChunk = JSON.parse(data);
               onChunk(streamChunk);
             } catch (e) {
               // Skip invalid JSON lines
+              console.warn('Failed to parse SSE data:', data, e);
             }
           }
         }
