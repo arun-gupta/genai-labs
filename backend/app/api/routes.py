@@ -14,7 +14,7 @@ from app.services.prompt_template_service import prompt_template_service
 from app.services.export_service import export_service
 from app.services.rag_service import rag_service
 from app.services.model_comparison_service import model_comparison_service
-from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse
+from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse, GenerationComparisonRequest
 import json
 import time
 import datetime
@@ -708,6 +708,47 @@ async def compare_summarization_models(
             max_length=max_length,
             temperature=temperature,
             summary_type=summary_type
+        )
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate/compare", response_model=ModelComparisonResponse)
+async def compare_generation_models(
+    system_prompt: str = Form(""),
+    user_prompt: str = Form(...),
+    models: str = Form(...),
+    temperature: float = Form(0.7),
+    max_tokens: Optional[int] = Form(None),
+    target_language: Optional[str] = Form("en"),
+    translate_response: bool = Form(False),
+    output_format: str = Form("text")
+):
+    """Compare multiple models for text generation."""
+    try:
+        # Parse models JSON string
+        try:
+            models_list = json.loads(models)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid models format")
+        
+        # Validate models
+        if not models_list or len(models_list) < 2:
+            raise HTTPException(status_code=400, detail="At least 2 models must be specified for comparison")
+        
+        # Compare models for generation
+        result = await model_comparison_service.compare_generation_models(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            models=models_list,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            target_language=target_language,
+            translate_response=translate_response,
+            output_format=output_format
         )
         
         return result

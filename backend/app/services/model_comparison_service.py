@@ -243,6 +243,70 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error in model comparison: {str(e)}")
             raise Exception(f"Model comparison failed: {str(e)}")
+
+    async def compare_generation_models(self, system_prompt: str, user_prompt: str, models: List[dict], 
+                                      temperature: float = 0.7, max_tokens: Optional[int] = None,
+                                      target_language: str = "en", translate_response: bool = False,
+                                      output_format: str = "text") -> ModelComparisonResponse:
+        """Compare multiple models for text generation."""
+        start_time = time.time()
+        comparison_id = str(uuid.uuid4())
+        
+        try:
+            # Generate text with all models concurrently
+            tasks = []
+            for model_config in models:
+                task = self._generate_text_with_model(
+                    system_prompt, user_prompt, model_config, temperature, max_tokens,
+                    target_language, translate_response, output_format
+                )
+                tasks.append(task)
+            
+            # Wait for all generations to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process results and calculate metrics
+            comparison_results = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Error with model {models[i]}: {str(result)}")
+                    # Create error result
+                    comparison_results.append(ModelComparisonResult(
+                        model_provider=models[i].get("provider", "unknown"),
+                        model_name=models[i].get("model", "unknown"),
+                        generated_text=f"Error: {str(result)}",
+                        original_length=len(user_prompt.split()),
+                        generated_length=0,
+                        token_usage=None,
+                        latency_ms=None,
+                        quality_score=0.0,
+                        coherence_score=0.0,
+                        relevance_score=0.0,
+                        timestamp=datetime.datetime.utcnow().isoformat()
+                    ))
+                else:
+                    comparison_results.append(result)
+            
+            # Calculate comparison metrics
+            comparison_metrics = self._calculate_generation_comparison_metrics(comparison_results)
+            
+            # Generate recommendations
+            recommendations = self._generate_generation_recommendations(comparison_results, comparison_metrics)
+            
+            total_time = (time.time() - start_time) * 1000
+            
+            return ModelComparisonResponse(
+                comparison_id=comparison_id,
+                original_text=user_prompt,
+                results=comparison_results,
+                comparison_metrics=comparison_metrics,
+                recommendations=recommendations,
+                timestamp=datetime.datetime.utcnow().isoformat()
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in generation model comparison: {str(e)}")
+            raise Exception(f"Generation model comparison failed: {str(e)}")
     
     async def _generate_summary_with_model(self, text: str, model_config: dict, 
                                          max_length: int, temperature: float, 
@@ -299,6 +363,61 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error generating summary with model {model_config}: {str(e)}")
             raise e
+
+    async def _generate_text_with_model(self, system_prompt: str, user_prompt: str, model_config: dict,
+                                      temperature: float, max_tokens: Optional[int],
+                                      target_language: str, translate_response: bool,
+                                      output_format: str) -> ModelComparisonResult:
+        """Generate text with a specific model and calculate metrics."""
+        start_time = time.time()
+        
+        try:
+            # Generate text
+            full_content = ""
+            token_usage = None
+            latency_ms = 0
+            
+            async for chunk in self.generation_service.generate_text_stream(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model_provider=model_config["provider"],
+                model_name=model_config["model"],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                target_language=target_language,
+                translate_response=translate_response,
+                output_format=output_format
+            ):
+                full_content += chunk.content
+                if chunk.token_usage:
+                    token_usage = chunk.token_usage
+                if chunk.latency_ms:
+                    latency_ms = chunk.latency_ms
+            
+            # Calculate quality metrics (using user prompt as reference)
+            quality_metrics = self._calculate_quality_metrics(user_prompt, full_content)
+            
+            # Calculate generation length
+            generated_length = len(full_content.split())
+            original_length = len(user_prompt.split())
+            
+            return ModelComparisonResult(
+                model_provider=model_config["provider"],
+                model_name=model_config["model"],
+                generated_text=full_content,
+                original_length=original_length,
+                generated_length=generated_length,
+                token_usage=token_usage,
+                latency_ms=latency_ms,
+                quality_score=quality_metrics["quality_score"],
+                coherence_score=quality_metrics["coherence_score"],
+                relevance_score=quality_metrics["relevance_score"],
+                timestamp=datetime.datetime.utcnow().isoformat()
+            )
+            
+        except Exception as e:
+            logger.error(f"Error generating text with model {model_config}: {str(e)}")
+            raise e
     
     def _create_summary_prompt(self, summary_type: str, max_length: int) -> str:
         """Create appropriate system prompt based on summary type."""
@@ -314,49 +433,62 @@ class ModelComparisonService:
             return base_prompt + " Provide a comprehensive yet concise summary that captures the main ideas."
     
     def _calculate_comparison_metrics(self, results: List[ModelComparisonResult]) -> Dict:
-        """Calculate comparison metrics across all models."""
-        try:
-            if not results:
-                return {}
-            
-            # Performance metrics
-            latencies = [r.latency_ms for r in results if r.latency_ms]
-            avg_latency = sum(latencies) / len(latencies) if latencies else 0
-            
-            # Quality metrics
-            quality_scores = [r.quality_score for r in results if r.quality_score is not None]
-            avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0
-            
-            coherence_scores = [r.coherence_score for r in results if r.coherence_score is not None]
-            avg_coherence = sum(coherence_scores) / len(coherence_scores) if coherence_scores else 0
-            
-            relevance_scores = [r.relevance_score for r in results if r.relevance_score is not None]
-            avg_relevance = sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0
-            
-            # Compression metrics
-            compression_ratios = [r.compression_ratio for r in results]
-            avg_compression = sum(compression_ratios) / len(compression_ratios)
-            
-            # Find best performers
-            best_quality = max(results, key=lambda x: x.quality_score or 0) if results else None
-            fastest = min(results, key=lambda x: x.latency_ms or float('inf')) if results else None
-            most_compressed = min(results, key=lambda x: x.compression_ratio) if results else None
-            
-            return {
-                "average_latency_ms": avg_latency,
-                "average_quality_score": avg_quality,
-                "average_coherence_score": avg_coherence,
-                "average_relevance_score": avg_relevance,
-                "average_compression_ratio": avg_compression,
-                "best_quality_model": f"{best_quality.model_provider}/{best_quality.model_name}" if best_quality else None,
-                "fastest_model": f"{fastest.model_provider}/{fastest.model_name}" if fastest else None,
-                "most_compressed_model": f"{most_compressed.model_provider}/{most_compressed.model_name}" if most_compressed else None,
-                "total_models": len(results)
-            }
-            
-        except Exception as e:
-            logger.error(f"Error calculating comparison metrics: {str(e)}")
+        """Calculate overall comparison metrics."""
+        if not results:
             return {}
+        
+        # Calculate averages
+        avg_latency = sum(r.latency_ms or 0 for r in results) / len(results)
+        avg_quality = sum(r.quality_score or 0 for r in results) / len(results)
+        avg_coherence = sum(r.coherence_score or 0 for r in results) / len(results)
+        avg_relevance = sum(r.relevance_score or 0 for r in results) / len(results)
+        avg_compression = sum(r.compression_ratio or 0 for r in results) / len(results)
+        
+        # Find best performers
+        best_quality = max(results, key=lambda x: x.quality_score or 0)
+        fastest = min(results, key=lambda x: x.latency_ms or float('inf'))
+        most_compressed = min(results, key=lambda x: x.compression_ratio or float('inf'))
+        
+        return {
+            "average_latency_ms": avg_latency,
+            "average_quality_score": avg_quality,
+            "average_coherence_score": avg_coherence,
+            "average_relevance_score": avg_relevance,
+            "average_compression_ratio": avg_compression,
+            "best_quality_model": f"{best_quality.model_provider}/{best_quality.model_name}",
+            "fastest_model": f"{fastest.model_provider}/{fastest.model_name}",
+            "most_compressed_model": f"{most_compressed.model_provider}/{most_compressed.model_name}",
+            "total_models": len(results)
+        }
+
+    def _calculate_generation_comparison_metrics(self, results: List[ModelComparisonResult]) -> Dict:
+        """Calculate overall comparison metrics for generation."""
+        if not results:
+            return {}
+        
+        # Calculate averages
+        avg_latency = sum(r.latency_ms or 0 for r in results) / len(results)
+        avg_quality = sum(r.quality_score or 0 for r in results) / len(results)
+        avg_coherence = sum(r.coherence_score or 0 for r in results) / len(results)
+        avg_relevance = sum(r.relevance_score or 0 for r in results) / len(results)
+        avg_length = sum(r.generated_length or 0 for r in results) / len(results)
+        
+        # Find best performers
+        best_quality = max(results, key=lambda x: x.quality_score or 0)
+        fastest = min(results, key=lambda x: x.latency_ms or float('inf'))
+        longest = max(results, key=lambda x: x.generated_length or 0)
+        
+        return {
+            "average_latency_ms": avg_latency,
+            "average_quality_score": avg_quality,
+            "average_coherence_score": avg_coherence,
+            "average_relevance_score": avg_relevance,
+            "average_generated_length": avg_length,
+            "best_quality_model": f"{best_quality.model_provider}/{best_quality.model_name}",
+            "fastest_model": f"{fastest.model_provider}/{fastest.model_name}",
+            "longest_output_model": f"{longest.model_provider}/{longest.model_name}",
+            "total_models": len(results)
+        }
     
     def _generate_recommendations(self, results: List[ModelComparisonResult], 
                                 metrics: Dict) -> List[str]:
@@ -407,6 +539,56 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error generating recommendations: {str(e)}")
             return ["Unable to generate recommendations due to an error."]
+
+    def _generate_generation_recommendations(self, results: List[ModelComparisonResult], 
+                                metrics: Dict) -> List[str]:
+        """Generate recommendations based on generation comparison results."""
+        recommendations = []
+        
+        try:
+            if not results:
+                return ["No models were successfully compared."]
+            
+            # Quality recommendations
+            best_quality = max(results, key=lambda x: x.quality_score or 0)
+            if best_quality.quality_score and best_quality.quality_score > 0.8:
+                recommendations.append(f"🎯 **{best_quality.model_provider}/{best_quality.model_name}** provides the highest quality generation.")
+            
+            # Speed recommendations
+            fastest = min(results, key=lambda x: x.latency_ms or float('inf'))
+            if fastest.latency_ms and fastest.latency_ms < 2000:  # Less than 2 seconds
+                recommendations.append(f"⚡ **{fastest.model_provider}/{fastest.model_name}** is the fastest option.")
+            
+            # Length recommendations
+            longest = max(results, key=lambda x: x.generated_length or 0)
+            if longest.generated_length and longest.generated_length > 100: # More than 100 words
+                recommendations.append(f"📝 **{longest.model_provider}/{longest.model_name}** provides the longest output.")
+            
+            # Balanced recommendations
+            balanced_models = [r for r in results if r.quality_score and r.quality_score > 0.7 and 
+                             r.latency_ms and r.latency_ms < 5000]
+            if balanced_models:
+                best_balanced = max(balanced_models, key=lambda x: x.quality_score)
+                recommendations.append(f"⚖️ **{best_balanced.model_provider}/{best_balanced.model_name}** offers the best balance of quality and speed.")
+            
+            # Cost considerations (if token usage is available)
+            cost_efficient = None
+            for result in results:
+                if result.token_usage and result.quality_score and result.quality_score > 0.7:
+                    if not cost_efficient or result.token_usage.get('total_tokens', 0) < cost_efficient.token_usage.get('total_tokens', 0):
+                        cost_efficient = result
+            
+            if cost_efficient:
+                recommendations.append(f"💰 **{cost_efficient.model_provider}/{cost_efficient.model_name}** is the most cost-efficient option for good quality.")
+            
+            if not recommendations:
+                recommendations.append("All models performed similarly. Choose based on your specific requirements.")
+            
+            return recommendations
+            
+        except Exception as e:
+            logger.error(f"Error generating generation recommendations: {str(e)}")
+            return ["Unable to generate generation recommendations due to an error."]
 
 
 # Global model comparison service instance
