@@ -160,10 +160,26 @@ start_backend() {
     if [ ! -d "venv" ]; then
         echo -e "${YELLOW}📦 Creating Python virtual environment...${NC}"
         python3 -m venv venv
+        echo -e "${GREEN}✅ Virtual environment created${NC}"
+    fi
+    
+    # Verify virtual environment is properly set up
+    if [ ! -f "venv/bin/activate" ]; then
+        echo -e "${RED}❌ Virtual environment is corrupted. Please run ./setup.sh to recreate it.${NC}"
+        exit 1
     fi
     
     # Activate virtual environment and install dependencies
+    echo -e "${YELLOW}🔄 Activating virtual environment...${NC}"
     source venv/bin/activate
+    
+    # Verify we're in the virtual environment
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo -e "${RED}❌ Failed to activate virtual environment${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Virtual environment activated: $VIRTUAL_ENV${NC}"
     
     # Check if requirements are installed
     if ! python -c "import fastapi" 2>/dev/null; then

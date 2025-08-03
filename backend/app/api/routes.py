@@ -6,6 +6,7 @@ from app.models.responses import GenerationResponse, SummarizeResponse, StreamCh
 from app.services.generation_service import GenerationService
 from app.services.input_processor import input_processor
 from app.services.analytics_service import analytics_service
+from app.services.language_service import language_service
 from app.models.requests import ModelProvider
 import json
 import time
@@ -174,7 +175,9 @@ async def summarize_text_stream(request: SummarizeRequest):
                 model_name=request.model_name,
                 max_length=request.max_length,
                 temperature=request.temperature,
-                summary_type=request.summary_type
+                summary_type=request.summary_type,
+                target_language=request.target_language,
+                translate_summary=request.translate_summary
             ):
                 yield {
                     "event": "chunk",
@@ -298,6 +301,80 @@ async def analyze_summary(request: dict):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+
+@router.post("/detect-language")
+async def detect_language(request: dict):
+    """Detect the language of the input text."""
+    try:
+        text = request.get("text", "")
+        
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+        
+        detection = language_service.detect_language(text)
+        
+        return {
+            "detection": detection,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Language detection failed: {str(e)}")
+
+
+@router.post("/translate")
+async def translate_text(request: dict):
+    """Translate text to the target language."""
+    try:
+        text = request.get("text", "")
+        target_language = request.get("target_language", "en")
+        source_language = request.get("source_language", "auto")
+        
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+        
+        if not target_language:
+            raise HTTPException(status_code=400, detail="Target language is required")
+        
+        translation = language_service.translate_text(text, target_language, source_language)
+        
+        return {
+            "translation": translation,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
+
+@router.get("/languages")
+async def get_supported_languages():
+    """Get list of supported languages."""
+    try:
+        languages = language_service.get_supported_languages()
+        
+        # Group languages by family for better organization
+        language_families = {}
+        for code, info in languages.items():
+            family = language_service.get_language_family(code)
+            if family not in language_families:
+                language_families[family] = []
+            
+            language_families[family].append({
+                "code": code,
+                "name": info["name"],
+                "native": info["native"]
+            })
+        
+        return {
+            "languages": languages,
+            "families": language_families,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get languages: {str(e)}")
 
 
 @router.get("/models")

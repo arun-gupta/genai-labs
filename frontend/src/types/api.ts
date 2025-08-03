@@ -54,6 +54,8 @@ export interface SummarizeRequest {
   temperature: number;
   stream: boolean;
   summary_type: 'general' | 'bullet_points' | 'key_points' | 'extractive';
+  target_language?: string;
+  translate_summary?: boolean;
 }
 
 export interface SummaryType {
@@ -190,4 +192,43 @@ export interface ModelProvider {
 
 export interface AvailableModels {
   providers: ModelProvider[];
+}
+
+export interface LanguageDetection {
+  detected_language: string;
+  confidence: number;
+  method: string;
+  alternatives: Array<{
+    method: string;
+    language: string;
+    confidence: number;
+  }>;
+  all_results: Record<string, any>;
+}
+
+export interface Translation {
+  translated_text: string;
+  source_language: string;
+  target_language: string;
+  confidence: number;
+  pronunciation?: string;
+  original_text?: string;
+  error?: string;
+  no_translation_needed?: boolean;
+}
+
+export interface Language {
+  code: string;
+  name: string;
+  native: string;
+}
+
+export interface LanguageFamily {
+  family: string;
+  languages: Language[];
+}
+
+export interface SupportedLanguages {
+  languages: Record<string, { name: string; native: string }>;
+  families: Record<string, Language[]>;
 } 

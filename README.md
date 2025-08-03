@@ -53,7 +53,23 @@ genai-lab/
 - Python 3.9+
 - Docker (optional, for containerized deployment)
 
-### 1. Clone and Setup
+### 🚀 Quick Start (Recommended)
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd genai-lab
+
+# Run the automated setup script
+./setup.sh
+
+# Start the application
+./quickstart.sh
+```
+
+### 🔧 Manual Setup
+
+#### 1. Clone and Setup
 
 ```bash
 # Clone the repository
@@ -65,7 +81,7 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### 2. Backend Setup
+#### 2. Backend Setup (with Virtual Environment)
 
 ```bash
 cd backend
@@ -84,7 +100,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 3. Frontend Setup
+#### 3. Frontend Setup
 
 ```bash
 cd frontend
@@ -97,6 +113,162 @@ npm install
 
 # Run the frontend
 npm run dev
+```
+
+## 🐍 Virtual Environment Management
+
+### Why Virtual Environments?
+
+This project **strictly requires** Python virtual environments to ensure:
+- **Dependency Isolation**: Prevents conflicts between project dependencies
+- **Reproducible Builds**: Ensures consistent environments across different machines
+- **Clean Development**: Keeps system Python clean and project-specific
+- **Easy Cleanup**: Simple to remove and recreate if needed
+
+### Virtual Environment Structure
+
+```
+genai-lab/
+├── backend/
+│   ├── venv/              # Python virtual environment (gitignored)
+│   │   ├── bin/           # Virtual environment binaries
+│   │   ├── lib/           # Installed packages
+│   │   └── pyvenv.cfg     # Virtual environment config
+│   ├── requirements.txt   # Python dependencies
+│   └── main.py           # FastAPI application
+└── frontend/
+    ├── node_modules/      # Node.js dependencies (gitignored)
+    └── package.json       # Node.js dependencies
+```
+
+### Virtual Environment Commands
+
+```bash
+# Create virtual environment
+python -m venv backend/venv
+
+# Activate virtual environment
+source backend/venv/bin/activate  # Linux/macOS
+# or
+backend\venv\Scripts\activate     # Windows
+
+# Deactivate virtual environment
+deactivate
+
+# Install dependencies in virtual environment
+pip install -r backend/requirements.txt
+
+# Check if virtual environment is active
+echo $VIRTUAL_ENV  # Should show path to venv
+
+# List installed packages
+pip list
+
+# Remove virtual environment (if needed)
+rm -rf backend/venv
+```
+
+### .gitignore Configuration
+
+The project includes comprehensive `.gitignore` rules to ensure virtual environments are never committed:
+
+```gitignore
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+```
+
+### Troubleshooting Virtual Environments
+
+#### Issue: "No module named 'fastapi'"
+```bash
+# Solution: Ensure virtual environment is activated
+source backend/venv/bin/activate
+pip install -r backend/requirements.txt
+```
+
+#### Issue: "Virtual environment is corrupted"
+```bash
+# Solution: Recreate virtual environment
+rm -rf backend/venv
+python -m venv backend/venv
+source backend/venv/bin/activate
+pip install -r backend/requirements.txt
+```
+
+#### Issue: "Permission denied" on virtual environment
+```bash
+# Solution: Fix permissions
+chmod +x backend/venv/bin/activate
+chmod +x backend/venv/bin/python
+```
+
+#### Issue: "Python not found"
+```bash
+# Solution: Install Python 3.9+ and ensure it's in PATH
+python3 --version
+# or
+python --version
+```
+
+## 🔍 Environment Verification
+
+### Automated Verification
+
+Use the verification script to check if your environment is properly configured:
+
+```bash
+# Verify environment setup
+./verify_env.sh
+```
+
+This script checks:
+- ✅ Virtual environment status
+- ✅ Backend virtual environment structure
+- ✅ Frontend dependencies
+- ✅ Environment files
+- ✅ .gitignore configuration
+- ✅ Key Python dependencies
+- ✅ Key Node.js dependencies
+
+### Manual Verification
+
+You can also verify manually:
+
+```bash
+# Check if virtual environment is active
+echo $VIRTUAL_ENV
+
+# Check if backend virtual environment exists
+ls -la backend/venv/
+
+# Check if frontend dependencies exist
+ls -la frontend/node_modules/
+
+# Check if environment files exist
+ls -la backend/.env frontend/.env
+
+# Check .gitignore configuration
+grep -E "(venv/|node_modules/|__pycache__/)" .gitignore
 ```
 
 ## ⚠️ Rate Limiting and API Quotas

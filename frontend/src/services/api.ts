@@ -4,7 +4,10 @@ import {
   GenerationResponse, 
   SummarizeResponse, 
   AvailableModels,
-  StreamChunk 
+  StreamChunk,
+  LanguageDetection,
+  Translation,
+  SupportedLanguages
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -87,6 +90,32 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  }
+
+  async detectLanguage(text: string): Promise<{ detection: LanguageDetection }> {
+    return this.request<{ detection: LanguageDetection }>('/detect-language', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    });
+  }
+
+  async translateText(
+    text: string, 
+    targetLanguage: string, 
+    sourceLanguage: string = 'auto'
+  ): Promise<{ translation: Translation }> {
+    return this.request<{ translation: Translation }>('/translate', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        text, 
+        target_language: targetLanguage, 
+        source_language: sourceLanguage 
+      }),
+    });
+  }
+
+  async getSupportedLanguages(): Promise<SupportedLanguages> {
+    return this.request<SupportedLanguages>('/languages');
   }
 
   async generateTextStream(
