@@ -25,7 +25,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
 }) => {
   const [exporting, setExporting] = useState<string | null>(null);
 
-  const handleExport = async (format: 'pdf' | 'word' | 'markdown') => {
+  const handleExport = async (format: 'pdf' | 'word' | 'markdown' | 'html') => {
     if (!content.generated_content) {
       alert('No content to export');
       return;
@@ -39,7 +39,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `generated_content.${format === 'word' ? 'docx' : format}`;
+      link.download = `generated_content.${format === 'word' ? 'docx' : format === 'html' ? 'html' : format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -57,6 +57,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
       case 'pdf': return FileText;
       case 'word': return FileSpreadsheet;
       case 'markdown': return FileCode;
+      case 'html': return FileCode;
       default: return Download;
     }
   };
@@ -66,6 +67,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
       case 'pdf': return 'PDF Document';
       case 'word': return 'Word Document';
       case 'markdown': return 'Markdown File';
+      case 'html': return 'HTML File';
       default: return format.toUpperCase();
     }
   };
@@ -75,11 +77,12 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
       case 'pdf': return 'Professional document with formatting';
       case 'word': return 'Editable document for Microsoft Word';
       case 'markdown': return 'Plain text with markdown formatting';
+      case 'html': return 'Web page format for browsers';
       default: return '';
     }
   };
 
-  const formats: Array<'pdf' | 'word' | 'markdown'> = ['pdf', 'word', 'markdown'];
+  const formats: Array<'pdf' | 'word' | 'markdown' | 'html'> = ['pdf', 'word', 'markdown', 'html'];
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -88,7 +91,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
         <h3 className="text-lg font-medium text-gray-900">Export Options</h3>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {formats.map((format) => {
           const Icon = getFormatIcon(format);
           const isExporting = exporting === format;

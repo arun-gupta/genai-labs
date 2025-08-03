@@ -8,6 +8,7 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { PromptHistoryComponent } from '../components/PromptHistory';
+import { ExportOptions } from '../components/ExportOptions';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
@@ -242,6 +243,22 @@ export const SummarizePage: React.FC = () => {
 
   const handleVoiceInput = (transcript: string) => {
     setText(prev => prev + (prev ? ' ' : '') + transcript);
+  };
+
+  const getExportContent = () => {
+    return {
+      system_prompt: `Summarize the following text as a ${summaryType} summary with maximum ${maxLength} words.`,
+      user_prompt: inputType === 'text' ? text : inputType === 'url' ? url : selectedFile?.name || '',
+      generated_content: summary,
+      metadata: {
+        model_provider: selectedProvider,
+        model_name: selectedModel,
+        timestamp: new Date().toISOString(),
+        token_usage: tokenUsage,
+        latency_ms: latencyMs,
+      },
+      analytics: analytics,
+    };
   };
 
   // Detect language when text changes
@@ -711,14 +728,23 @@ An Open Source AI is an AI system made available under terms and in a way that g
 
             {/* Tab Content */}
             {activeTab === 'summary' && (
-              <ResponseDisplay
-                content={summary}
-                isStreaming={isSummarizing}
-                tokenUsage={tokenUsage}
-                latencyMs={latencyMs}
-                modelName={selectedModel}
-                modelProvider={selectedProvider}
-              />
+              <div className="space-y-6">
+                <ResponseDisplay
+                  content={summary}
+                  isStreaming={isSummarizing}
+                  tokenUsage={tokenUsage}
+                  latencyMs={latencyMs}
+                  modelName={selectedModel}
+                  modelProvider={selectedProvider}
+                />
+                
+                {summary && (
+                  <ExportOptions
+                    content={getExportContent()}
+                    className="w-full"
+                  />
+                )}
+              </div>
             )}
 
             {activeTab === 'analytics' && (
