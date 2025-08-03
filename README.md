@@ -18,7 +18,7 @@ cd genai-labs
 - **Text Generation** - Advanced text creation with 12+ writing styles
 - **Text Summarization** - Multi-format summarization with analytics  
 - **Q&A over Documents** - RAG-powered document question answering
-- **Model Comparison** - Side-by-side model performance analysis
+- **Model Comparison** - Side-by-side model performance analysis for generation and summarization
 - **Models Explorer** - Browse and manage 12+ open-source LLM models
 - **Voice Features** - Speech-to-text and text-to-speech
 - **Real-time Streaming** - Live output with token usage tracking
@@ -89,8 +89,15 @@ VITE_API_BASE_URL=http://localhost:8000
 4. View source citations and export results
 
 ### Model Comparison
+**For Text Generation:**
+1. Navigate to `/generate`
+2. Select 2+ models in the Model Comparison section
+3. Enter your prompt
+4. Click "Compare Models" to see side-by-side analysis
+
+**For Text Summarization:**
 1. Navigate to `/summarize`
-2. Select 2+ models in the comparison section
+2. Select 2+ models in the Model Comparison section
 3. Enter text to summarize
 4. Click "Compare Models" to see side-by-side analysis
 
@@ -98,6 +105,9 @@ VITE_API_BASE_URL=http://localhost:8000
 
 - **Frontend**: React + TypeScript + Tailwind CSS + Vite
 - **Backend**: FastAPI (Python) + LangChain + Pydantic
+- **Vector Database**: ChromaDB for document embeddings and RAG
+- **Text Processing**: NLTK, TextStat for analysis and metrics
+- **Embeddings**: HuggingFace Sentence Transformers
 - **APIs**: Web Speech API, OpenAI API, Anthropic API, Ollama API
 
 ## 🔮 Roadmap
