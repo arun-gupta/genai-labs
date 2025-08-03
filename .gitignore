@@ -126,8 +126,7 @@ public
 tmp/
 temp/
 
-# Docker
-.dockerignore
+
 
 # Ollama models (if stored locally)
 ollama_models/ 
