@@ -369,7 +369,6 @@ export const SummarizePage: React.FC = () => {
 
               {/* Output Format */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
                 <OutputFormatSelector
                   selectedFormat={outputFormat}
                   onFormatChange={setOutputFormat}
