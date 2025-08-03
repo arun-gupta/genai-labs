@@ -102,7 +102,6 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 🔮 Roadmap
 
-### 🚀 High-Impact Features (Priority)
 - **🖼️ Image Generation & Analysis** - Create and analyze images with AI (DALL-E, Midjourney integration)
 - **🤖 Chatbot Builder** - Build custom chatbots with knowledge base training
 - **📊 Data Analysis & Visualization** - Natural language to SQL, chart generation, report automation
@@ -110,12 +109,10 @@ VITE_API_BASE_URL=http://localhost:8000
 - **🌐 Multi-language Content Hub** - Translation memory, cultural adaptation, multi-language generation
 - **🎯 Personalized Content Engine** - AI-powered content personalization with user profiling
 - **🔄 Workflow Automation & Templates** - Custom workflows, template library, batch processing
-
-### 🔧 Additional Features
-- **Code Generation** - Specialized coding features
-- **Translation Services** - Multi-language support
-- **Structured Data Extraction** - Data processing capabilities
-- **Advanced Analytics** - Enhanced performance metrics and insights
+- **💻 Code Generation** - Specialized coding features and code analysis
+- **🌍 Translation Services** - Multi-language support and localization
+- **📋 Structured Data Extraction** - Data processing and form extraction capabilities
+- **📈 Advanced Analytics** - Enhanced performance metrics and business intelligence
 
 ## 🤝 Contributing
 
