@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap } from 'lucide-react';
+import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
@@ -237,6 +238,10 @@ export const SummarizePage: React.FC = () => {
       setInputType('text');
     }
     setShowHistory(false);
+  };
+
+  const handleVoiceInput = (transcript: string) => {
+    setText(prev => prev + (prev ? ' ' : '') + transcript);
   };
 
   // Detect language when text changes
@@ -482,15 +487,22 @@ export const SummarizePage: React.FC = () => {
             {/* Text Input */}
             {inputType === 'text' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Text to Summarize
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Text to Summarize
+                  </label>
+                  <VoiceInput
+                    onTranscript={handleVoiceInput}
+                    disabled={isSummarizing}
+                    className="text-xs"
+                  />
+                </div>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   disabled={isSummarizing}
                   className="input-field h-80 resize-none"
-                  placeholder="Paste or type the text you want to summarize here..."
+                  placeholder="Paste or type the text you want to summarize here, or use voice input..."
                   onKeyDown={handleKeyPress}
                 />
                 <div className="flex justify-between items-center mt-2">
