@@ -387,15 +387,8 @@ export const GeneratePage: React.FC = () => {
         <div className="xl:col-span-2 space-y-6">
           {/* Prompts */}
           <div className="card">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Prompts</h2>
-              <div className="flex items-center space-x-2">
-                <VoiceInput
-                  onTranscript={handleVoiceInput}
-                  disabled={isGenerating}
-                  className="text-xs"
-                />
-              </div>
             </div>
             
             <div className="space-y-4">
