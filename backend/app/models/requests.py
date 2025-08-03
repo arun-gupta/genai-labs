@@ -3,6 +3,19 @@ from typing import Optional, Literal
 from enum import Enum
 
 
+class OutputFormat(str, Enum):
+    TEXT = "text"
+    JSON = "json"
+    XML = "xml"
+    MARKDOWN = "markdown"
+    CSV = "csv"
+    YAML = "yaml"
+    HTML = "html"
+    BULLET_POINTS = "bullet_points"
+    NUMBERED_LIST = "numbered_list"
+    TABLE = "table"
+
+
 class ModelProvider(str, Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -19,6 +32,7 @@ class GenerateRequest(BaseModel):
     stream: bool = Field(True, description="Whether to stream the response")
     target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
     translate_response: bool = Field(False, description="Whether to translate the response")
+    output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format for the response")
 
 
 class SummarizeRequest(BaseModel):
@@ -33,4 +47,5 @@ class SummarizeRequest(BaseModel):
     stream: bool = Field(True, description="Whether to stream the response")
     summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive")
     target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
-    translate_summary: bool = Field(False, description="Whether to translate the summary") 
+    translate_summary: bool = Field(False, description="Whether to translate the summary")
+    output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format for the summary") 

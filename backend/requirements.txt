@@ -24,4 +24,5 @@ nltk>=3.8.1
 langdetect>=1.0.9
 deep-translator>=1.11.4
 pycld2>=0.41
-aiohttp>=3.9.1 
+aiohttp>=3.9.1
+PyYAML>=6.0 

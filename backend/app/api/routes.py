@@ -68,7 +68,8 @@ async def generate_text_stream(request: GenerateRequest):
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
                 target_language=request.target_language or "en",
-                translate_response=request.translate_response or False
+                translate_response=request.translate_response or False,
+                output_format=request.output_format.value
             ):
                 yield {
                     "event": "chunk",

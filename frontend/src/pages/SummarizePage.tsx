@@ -5,6 +5,7 @@ import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
+import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
@@ -31,6 +32,7 @@ export const SummarizePage: React.FC = () => {
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateSummary, setTranslateSummary] = useState(false);
+  const [outputFormat, setOutputFormat] = useState('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +141,7 @@ export const SummarizePage: React.FC = () => {
           stream: true,
           target_language: targetLanguage,
           translate_summary: translateSummary,
+          output_format: outputFormat as any,
         };
 
         await apiService.summarizeTextStream(
@@ -327,6 +330,20 @@ export const SummarizePage: React.FC = () => {
                   </>
                 )}
               </select>
+            </div>
+
+            {/* Output Format Settings */}
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <h3 className="text-sm font-medium text-gray-700">Output Format</h3>
+              </div>
+              
+              <OutputFormatSelector
+                selectedFormat={outputFormat}
+                onFormatChange={setOutputFormat}
+                className="w-full"
+              />
             </div>
 
             {/* Language Settings */}
