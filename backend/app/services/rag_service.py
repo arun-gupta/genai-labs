@@ -93,7 +93,7 @@ class RAGService:
             logger.error(f"Error loading document {file_path}: {str(e)}")
             raise Exception(f"Failed to load document: {str(e)}")
     
-    def _create_documents_with_metadata(self, text: str, file_name: str, document_id: str) -> List[Document]:
+    def _create_documents_with_metadata(self, text: str, file_name: str, document_id: str, tags: List[str] = None) -> List[Document]:
         """Split text into chunks and create documents with metadata."""
         chunks = self.text_splitter.split_text(text)
         
@@ -106,14 +106,15 @@ class RAGService:
                     "file_name": file_name,
                     "chunk_index": i,
                     "total_chunks": len(chunks),
-                    "source": file_name
+                    "source": file_name,
+                    "tags": tags or []
                 }
             )
             documents.append(doc)
         
         return documents
     
-    async def upload_document(self, file_content: bytes, file_name: str, collection_name: str = "default") -> Dict:
+    async def upload_document(self, file_content: bytes, file_name: str, collection_name: str = "default", tags: List[str] = None) -> Dict:
         """Upload and process a document for RAG."""
         start_time = time.time()
         
@@ -131,7 +132,7 @@ class RAGService:
             text_content = self._load_document(temp_file_path, file_type)
             
             # Split into chunks
-            documents = self._create_documents_with_metadata(text_content, file_name, document_id)
+            documents = self._create_documents_with_metadata(text_content, file_name, document_id, tags or [])
             
             # Create or get collection
             collection = self.chroma_client.get_or_create_collection(
@@ -160,6 +161,7 @@ class RAGService:
                 "file_name": file_name,
                 "chunks_processed": len(documents),
                 "collection_name": collection_name,
+                "tags": tags or [],
                 "message": f"Successfully processed {len(documents)} chunks from {file_name}",
                 "latency_ms": latency_ms,
                 "timestamp": datetime.datetime.utcnow().isoformat()
@@ -172,7 +174,7 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = 0.7) -> Dict:
+                          top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
         
@@ -180,10 +182,16 @@ class RAGService:
             # Get collection
             collection = self.chroma_client.get_collection(name=collection_name)
             
+            # Build where clause for tag filtering
+            where_clause = None
+            if filter_tags:
+                where_clause = {"tags": {"$in": filter_tags}}
+            
             # Query for relevant documents
             results = collection.query(
                 query_texts=[question],
                 n_results=top_k,
+                where=where_clause,
                 include=["documents", "metadatas", "distances"]
             )
             
@@ -205,7 +213,8 @@ class RAGService:
                         "file_name": metadata.get("file_name", ""),
                         "chunk_text": doc,
                         "similarity_score": similarity_score,
-                        "chunk_index": metadata.get("chunk_index", i)
+                        "chunk_index": metadata.get("chunk_index", i),
+                        "tags": metadata.get("tags", [])
                     })
             
             if not relevant_chunks:
@@ -268,7 +277,7 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = 0.7) -> AsyncGenerator[Dict, None]:
+                                 top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
         
@@ -276,10 +285,16 @@ Question: {question}"""
             # Get collection
             collection = self.chroma_client.get_collection(name=collection_name)
             
+            # Build where clause for tag filtering
+            where_clause = None
+            if filter_tags:
+                where_clause = {"tags": {"$in": filter_tags}}
+            
             # Query for relevant documents
             results = collection.query(
                 query_texts=[question],
                 n_results=top_k,
+                where=where_clause,
                 include=["documents", "metadatas", "distances"]
             )
             
@@ -301,7 +316,8 @@ Question: {question}"""
                         "file_name": metadata.get("file_name", ""),
                         "chunk_text": doc,
                         "similarity_score": similarity_score,
-                        "chunk_index": metadata.get("chunk_index", i)
+                        "chunk_index": metadata.get("chunk_index", i),
+                        "tags": metadata.get("tags", [])
                     })
             
             if not relevant_chunks:
@@ -364,17 +380,24 @@ Question: {question}"""
             collection_info = self.chroma_client.get_collection(collection.name)
             count = collection_info.count()
             
-            # Get unique documents in collection
+            # Get unique documents in collection and collect tags
             documents = {}
+            available_tags = set()
             if count > 0:
                 results = collection_info.get(limit=count)
                 for metadata in results['metadatas']:
                     doc_id = metadata.get('document_id', '')
+                    tags = metadata.get('tags', [])
+                    
+                    # Add tags to available tags set
+                    available_tags.update(tags)
+                    
                     if doc_id not in documents:
                         documents[doc_id] = {
                             "document_id": doc_id,
                             "file_name": metadata.get('file_name', ''),
-                            "chunks": 0
+                            "chunks": 0,
+                            "tags": tags
                         }
                     documents[doc_id]["chunks"] += 1
             
@@ -384,7 +407,8 @@ Question: {question}"""
                 total_chunks=count,
                 documents=list(documents.values()),
                 created_at=collection.metadata.get("created_at", ""),
-                last_updated=datetime.datetime.utcnow().isoformat()
+                last_updated=datetime.datetime.utcnow().isoformat(),
+                available_tags=list(available_tags)
             ))
         
         return collections

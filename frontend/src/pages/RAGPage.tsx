@@ -29,6 +29,7 @@ interface Source {
   chunk_text: string;
   similarity_score: number;
   chunk_index: number;
+  tags: string[];
 }
 
 export const RAGPage: React.FC = () => {
@@ -49,6 +50,9 @@ export const RAGPage: React.FC = () => {
   const [similarityThreshold, setSimilarityThreshold] = useState(0.7);
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
+  const [documentTags, setDocumentTags] = useState<string[]>([]);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,6 +63,15 @@ export const RAGPage: React.FC = () => {
     try {
       const response = await apiService.getRAGCollections();
       setCollections(response);
+      
+      // Extract all available tags from collections
+      const allTags = new Set<string>();
+      response.forEach(collection => {
+        if (collection.available_tags) {
+          collection.available_tags.forEach(tag => allTags.add(tag));
+        }
+      });
+      setAvailableTags(Array.from(allTags));
     } catch (error) {
       console.error('Error loading collections:', error);
     }
@@ -76,7 +89,7 @@ export const RAGPage: React.FC = () => {
         formData.append('file', file);
         formData.append('collection_name', selectedCollection);
 
-        const response = await apiService.uploadRAGDocument(formData);
+        const response = await apiService.uploadRAGDocument(formData, documentTags);
         
         setUploadedFiles(prev => [...prev, file]);
         await loadCollections(); // Refresh collections
@@ -123,7 +136,11 @@ export const RAGPage: React.FC = () => {
             finalSources = chunk.sources;
             setSources(finalSources);
           }
-        }
+        },
+        (error: string) => {
+          setError(error);
+        },
+        filterTags
       );
     } catch (error) {
       setError(`Failed to get answer: ${error}`);
@@ -309,6 +326,23 @@ export const RAGPage: React.FC = () => {
               </select>
             </div>
 
+            {/* Document Tags */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Document Tags (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={documentTags.join(', ')}
+                onChange={(e) => setDocumentTags(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag))}
+                placeholder="e.g., research, technical, manual"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Tags will be applied to uploaded documents for better organization
+              </p>
+            </div>
+
             {/* File Upload */}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
@@ -416,6 +450,41 @@ export const RAGPage: React.FC = () => {
               className="w-full h-32 p-3 border border-gray-300 rounded-md resize-none"
             />
             
+            {/* Tag Filtering */}
+            {availableTags.length > 0 && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filter by Tags (optional)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        if (filterTags.includes(tag)) {
+                          setFilterTags(filterTags.filter(t => t !== tag));
+                        } else {
+                          setFilterTags([...filterTags, tag]);
+                        }
+                      }}
+                      className={`px-3 py-1 text-xs rounded-full border ${
+                        filterTags.includes(tag)
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                {filterTags.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Filtering by: {filterTags.join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <div className="mt-4 flex items-center space-x-2">
               <button
                 onClick={handleAskQuestion}
@@ -462,6 +531,15 @@ export const RAGPage: React.FC = () => {
                         )}
                       </button>
                     </div>
+                    {source.tags && source.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {source.tags.map(tag => (
+                          <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
                       {source.chunk_text}
                     </p>

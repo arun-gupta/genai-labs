@@ -96,6 +96,7 @@ class DocumentUploadRequest(BaseModel):
     file_name: str = Field(..., description="Name of the uploaded file")
     file_type: str = Field(..., description="Type of the uploaded file")
     collection_name: Optional[str] = Field("default", description="Vector collection name")
+    tags: Optional[List[str]] = Field([], description="Tags for categorizing the document")
 
 
 class DocumentUploadResponse(BaseModel):
@@ -103,6 +104,7 @@ class DocumentUploadResponse(BaseModel):
     file_name: str
     chunks_processed: int
     collection_name: str
+    tags: List[str]
     message: str
     timestamp: str
 
@@ -117,6 +119,7 @@ class RAGQuestionRequest(BaseModel):
     stream: bool = Field(True, description="Whether to stream the response")
     top_k: int = Field(5, ge=1, le=20, description="Number of relevant chunks to retrieve")
     similarity_threshold: float = Field(0.7, ge=0.0, le=1.0, description="Minimum similarity threshold")
+    filter_tags: Optional[List[str]] = Field(None, description="Filter documents by specific tags")
 
 
 class RAGQuestionResponse(BaseModel):
@@ -137,6 +140,7 @@ class DocumentSource(BaseModel):
     similarity_score: float
     page_number: Optional[int] = None
     chunk_index: int
+    tags: List[str] = []
 
 
 class CollectionInfo(BaseModel):
@@ -146,6 +150,7 @@ class CollectionInfo(BaseModel):
     documents: List[dict]
     created_at: str
     last_updated: str
+    available_tags: List[str] = []
 
 
 class DeleteDocumentRequest(BaseModel):
