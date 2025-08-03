@@ -4,21 +4,40 @@ A full-stack web application for experimenting with different GenAI use cases us
 
 ## 🚀 Features
 
-### MVP (Phase 1)
-- **Prompt Editor**: System and user prompt inputs with real-time editing
-- **Model Selection**: Dropdown to choose between OpenAI, Anthropic, and Ollama models
-- **Use Cases**: 
-  - Text generation (`/generate`)
-  - Text summarization (`/summarize`)
-- **Models Explorer**: Comprehensive view of open-source models with availability status (`/models`)
+### Core Features
+- **Text Generation** (`/generate`): Advanced text generation with multiple writing styles
+- **Text Summarization** (`/summarize`): Multi-format summarization with analytics
+- **Models Explorer** (`/models`): Comprehensive view of open-source models with availability status
 - **Real-time Streaming**: Live output with token usage and latency tracking
 - **Prompt History**: Local storage for session-based prompt history
 - **Modular Architecture**: LangChain-based model abstractions
 
+### Advanced Text Generation Features
+- **Writing Style Selector**: 12 different writing styles (Creative, Poetic, Business, Academic, Technical, Conversational, Journalistic, Storytelling, Persuasive, Minimalist, Formal, Humorous)
+- **Voice Input**: Speech-to-text for prompts using Web Speech API
+- **Voice Output**: Text-to-speech for responses with voice selection
+- **Multiple Candidates**: Generate multiple response variations (1-5 candidates)
+- **Output Format Selection**: Choose from 10+ output formats (Text, JSON, XML, Markdown, CSV, YAML, HTML, Bullet Points, Numbered Lists, Tables)
+- **Language Translation**: Built-in translation support for responses
+- **Language Detection**: Automatic language detection for input text
+- **Prompt Templates**: Pre-built templates with variable substitution
+- **Generation Analytics**: Comprehensive analysis of generated content
+
+### Text Summarization Features
+- **Multiple Input Methods**: Text, URL, and file upload support
+- **Summary Types**: General, bullet points, key points, and extractive summaries
+- **Analytics Dashboard**: Detailed metrics and quality analysis
+- **Compression Ratios**: Track information retention and compression
+- **Readability Scores**: Multiple readability metrics (Flesch, Gunning Fog, SMOG, etc.)
+- **Sentiment Analysis**: Sentiment tracking and preservation analysis
+- **Keyword Analysis**: Keyword extraction and overlap tracking
+
 ### Tech Stack
-- **Frontend**: React + TypeScript + Tailwind CSS
-- **Backend**: FastAPI (Python) + LangChain
+- **Frontend**: React + TypeScript + Tailwind CSS + Vite
+- **Backend**: FastAPI (Python) + LangChain + Pydantic
+- **APIs**: Web Speech API (voice features), OpenAI API, Anthropic API, Ollama API
 - **Deployment**: Docker-ready with modular architecture
+- **Development**: Hot reload, TypeScript compilation, ESLint
 
 ## 🤖 Supported Models
 
@@ -49,13 +68,21 @@ The application includes a comprehensive **Models Explorer** page that showcases
 ## 📁 Project Structure
 
 ```
-genai-lab/
+genai-labs/
 ├── frontend/                 # React TypeScript application
 │   ├── src/
 │   │   ├── components/      # Reusable UI components
+│   │   │   ├── VoiceInput.tsx      # Speech-to-text component
+│   │   │   ├── VoiceOutput.tsx     # Text-to-speech component
+│   │   │   ├── WritingStyleSelector.tsx # Writing style dropdown
+│   │   │   └── ...                 # Other components
 │   │   ├── pages/          # Route components
+│   │   │   ├── GeneratePage.tsx    # Text generation with voice features
+│   │   │   ├── SummarizePage.tsx   # Text summarization
+│   │   │   └── ModelsPage.tsx      # Models explorer
 │   │   ├── services/       # API client services
 │   │   ├── types/          # TypeScript type definitions
+│   │   │   └── speech.d.ts # Web Speech API declarations
 │   │   └── utils/          # Utility functions
 │   ├── public/             # Static assets
 │   └── package.json        # Frontend dependencies
@@ -65,10 +92,12 @@ genai-lab/
 │   │   ├── core/           # Configuration and core utilities
 │   │   ├── models/         # Pydantic models
 │   │   ├── services/       # LangChain and model services
+│   │   │   ├── generation_service.py      # Text generation
+│   │   │   ├── generation_analytics_service.py # Content analysis
+│   │   │   └── ...                        # Other services
 │   │   └── utils/          # Utility functions
 │   ├── requirements.txt    # Python dependencies
 │   └── main.py            # FastAPI application entry point
-├── shared/                 # Shared types and constants
 ├── docker-compose.yml      # Local development setup
 └── README.md              # This file
 ```
@@ -298,6 +327,28 @@ ls -la backend/.env frontend/.env
 grep -E "(venv/|node_modules/|__pycache__/)" .gitignore
 ```
 
+## 🎤 Voice Features
+
+### Voice Input (Speech-to-Text)
+- **Real-time Transcription**: Convert speech to text in real-time
+- **Continuous Recognition**: Supports ongoing speech input
+- **Language Support**: Defaults to English (en-US)
+- **Visual Feedback**: Animated microphone with audio level indicators
+- **Error Handling**: Graceful fallback for unsupported browsers
+
+### Voice Output (Text-to-Speech)
+- **Multiple Voices**: Choose from available system voices
+- **Playback Controls**: Play, pause, resume, and stop functionality
+- **Voice Selection**: Dropdown to select preferred voice
+- **Visual Status**: Clear playing/paused status indicators
+- **Smart Voice Detection**: Automatically selects English voices
+
+### Browser Compatibility
+- **Chrome/Edge**: Full support for both voice input and output
+- **Firefox**: Full support for text-to-speech, limited speech recognition
+- **Safari**: Full support for text-to-speech, limited speech recognition
+- **Mobile Browsers**: Limited support, varies by platform
+
 ## ⚠️ Rate Limiting and API Quotas
 
 ### OpenAI Rate Limits
@@ -352,32 +403,48 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 🎯 Usage
 
-1. **Text Generation** (`/generate`):
-   - Enter system and user prompts
-   - Select your preferred model
-   - Generate text with real-time streaming
+### Text Generation (`/generate`)
+1. **Select Writing Style**: Choose from 12 different writing styles (Creative, Business, Academic, etc.)
+2. **Voice Input**: Use microphone to dictate your prompts
+3. **Configure Settings**: Set temperature, max tokens, output format, and number of candidates
+4. **Generate**: Create text with real-time streaming and analytics
+5. **Voice Output**: Listen to generated responses with text-to-speech
+6. **Export**: Copy, download, or share your generated content
 
-2. **Text Summarization** (`/summarize`):
-   - Paste text to summarize
-   - Choose model and parameters
-   - Get instant summaries
+### Text Summarization (`/summarize`)
+1. **Input Content**: Paste text, provide URL, or upload files
+2. **Choose Summary Type**: General, bullet points, key points, or extractive
+3. **Configure Parameters**: Set length, temperature, and output format
+4. **Generate Summary**: Get instant summaries with detailed analytics
+5. **Analyze Results**: View compression ratios, readability scores, and sentiment analysis
+
+### Models Explorer (`/models`)
+1. **Browse Models**: View 12+ open-source models with detailed information
+2. **Check Availability**: See which models are installed vs. need downloading
+3. **Copy Commands**: One-click copy of Ollama download commands
+4. **Filter & Search**: Find models by category, organization, or availability
 
 ## 🔮 Roadmap
 
-### Phase 2: Advanced Features
-- Q&A over documents (RAG)
-- Code generation and explanation
-- Translation services
-- Sentiment analysis
-- Structured data extraction
-- Persona simulation
+### Phase 2: Advanced Features (In Progress)
+- **✅ Writing Style Selection**: 12 different writing styles implemented
+- **✅ Voice Input/Output**: Speech-to-text and text-to-speech features
+- **✅ Multiple Candidates**: Generate multiple response variations
+- **✅ Advanced Analytics**: Comprehensive content analysis
+- **🔄 Q&A over Documents**: RAG implementation for document queries
+- **🔄 Code Generation**: Specialized code generation and explanation
+- **🔄 Translation Services**: Multi-language translation capabilities
+- **🔄 Structured Data Extraction**: Extract structured data from text
 
 ### Phase 3: Collaboration & Analytics
-- User authentication
-- Prompt template library
-- Team collaboration
-- Performance analytics
-- Model comparison tools
+- **🔄 User Authentication**: User accounts and session management
+- **🔄 Prompt Template Library**: Community-shared prompt templates
+- **🔄 Team Collaboration**: Multi-user collaboration features
+- **🔄 Performance Analytics**: Advanced usage and performance tracking
+- **🔄 Model Comparison Tools**: Side-by-side model performance comparison
+- **🔄 Advanced Sampling**: Top-p, top-k, frequency penalty controls
+- **🔄 Conversation History**: Multi-turn conversation management
+- **🔄 Content Filtering**: Safety and bias detection features
 
 ## 🤝 Contributing
 
