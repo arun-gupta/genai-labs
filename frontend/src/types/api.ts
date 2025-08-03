@@ -74,6 +74,25 @@ export interface SupportedFileType {
 
 export interface AvailableModels {
   providers: ModelProvider[];
+  ollama_models?: {
+    models: Array<{
+      name: string;
+      display_name: string;
+      description: string;
+      parameters: string;
+      organization: string;
+      license: string;
+      download_command: string;
+      category: string;
+      tags: string[];
+      is_available: boolean;
+      status: string;
+    }>;
+    available_count: number;
+    total_count: number;
+    categories: string[];
+    organizations: string[];
+  };
   summary_types: SummaryType[];
   supported_file_types: SupportedFileType[];
 }
