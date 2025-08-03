@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
+from typing import Optional
 from app.models.requests import GenerateRequest, SummarizeRequest
 from app.models.responses import GenerationResponse, SummarizeResponse, StreamChunk, ErrorResponse
 from app.services.generation_service import GenerationService
@@ -656,33 +657,51 @@ async def delete_rag_collection(collection_name: str):
 
 # Model Comparison Endpoints
 @router.post("/summarize/compare", response_model=ModelComparisonResponse)
-async def compare_summarization_models(request: ModelComparisonRequest):
+async def compare_summarization_models(
+    text: Optional[str] = Form(None),
+    url: Optional[str] = Form(None),
+    file_content: Optional[UploadFile] = File(None),
+    models: str = Form(...),
+    max_length: int = Form(150),
+    temperature: float = Form(0.3),
+    summary_type: str = Form("general"),
+    target_language: Optional[str] = Form("en"),
+    translate_summary: bool = Form(False)
+):
     """Compare multiple models for text summarization."""
     try:
+        # Parse models JSON string
+        try:
+            models_list = json.loads(models)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid models format")
+        
         # Extract text from request
-        text = None
-        if request.text:
-            text = request.text
-        elif request.url:
+        text_content = None
+        if text:
+            text_content = text
+        elif url:
             # Process URL to extract text
-            text = await input_processor.process_url(request.url)
-        elif request.file_content:
+            text_content = await input_processor.process_url(url)
+        elif file_content:
             # Process file content
-            text = await input_processor.process_file_content(request.file_content, request.file_type)
+            file_bytes = await file_content.read()
+            file_type = file_content.filename.split('.')[-1].lower() if '.' in file_content.filename else 'txt'
+            text_content = await input_processor.process_file_content(file_bytes, file_type)
         else:
             raise HTTPException(status_code=400, detail="No text, URL, or file content provided")
         
         # Validate models
-        if not request.models or len(request.models) < 2:
+        if not models_list or len(models_list) < 2:
             raise HTTPException(status_code=400, detail="At least 2 models must be specified for comparison")
         
         # Compare models
         result = await model_comparison_service.compare_models(
-            text=text,
-            models=request.models,
-            max_length=request.max_length,
-            temperature=request.temperature,
-            summary_type=request.summary_type
+            text=text_content,
+            models=models_list,
+            max_length=max_length,
+            temperature=temperature,
+            summary_type=summary_type
         )
         
         return result
