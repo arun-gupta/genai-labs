@@ -1,4 +1,4 @@
-# GenAI Lab 🧪
+# GenAI Lab 🧠
 
 A full-stack web application for experimenting with different GenAI use cases using large language models (LLMs). Supports both local models (via Ollama) and cloud-hosted models (OpenAI, Anthropic, etc.).
 
