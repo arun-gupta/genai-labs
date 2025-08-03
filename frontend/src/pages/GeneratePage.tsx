@@ -455,17 +455,6 @@ export const GeneratePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Prompt Templates */}
-          <div className="card">
-            <PromptTemplateSelector
-              onTemplateSelect={handleTemplateSelect}
-              onClearTemplate={handleClearTemplate}
-              currentSystemPrompt={systemPrompt}
-              currentUserPrompt={userPrompt}
-              className="w-full"
-            />
-          </div>
-
           {/* Model Comparison Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
@@ -512,6 +501,17 @@ export const GeneratePage: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Prompt Templates */}
+          <div className="card">
+            <PromptTemplateSelector
+              onTemplateSelect={handleTemplateSelect}
+              onClearTemplate={handleClearTemplate}
+              currentSystemPrompt={systemPrompt}
+              currentUserPrompt={userPrompt}
+              className="w-full"
+            />
           </div>
 
           {/* History */}
