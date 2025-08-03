@@ -102,7 +102,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
               }
             }}
             disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:cursor-not-allowed appearance-none"
           >
             {availableModels?.providers.map((provider) => {
               const Icon = providerIcons[provider.id as keyof typeof providerIcons] || Server;
@@ -135,7 +135,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             value={selectedModel}
             onChange={(e) => onModelChange(e.target.value)}
             disabled={disabled || !availableModelsForProvider.length}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:cursor-not-allowed appearance-none"
           >
             {availableModelsForProvider.map((model) => (
               <option key={model} value={model}>
