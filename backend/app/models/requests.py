@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from enum import Enum
 
 
@@ -87,4 +87,67 @@ class AnalyticsRequest(BaseModel):
 
 class AnalyticsResponse(BaseModel):
     analytics: dict
-    timestamp: str 
+    timestamp: str
+
+
+# RAG Models
+class DocumentUploadRequest(BaseModel):
+    file_content: bytes = Field(..., description="Document file content")
+    file_name: str = Field(..., description="Name of the uploaded file")
+    file_type: str = Field(..., description="Type of the uploaded file")
+    collection_name: Optional[str] = Field("default", description="Vector collection name")
+
+
+class DocumentUploadResponse(BaseModel):
+    document_id: str
+    file_name: str
+    chunks_processed: int
+    collection_name: str
+    message: str
+    timestamp: str
+
+
+class RAGQuestionRequest(BaseModel):
+    question: str = Field(..., description="Question to ask about the documents")
+    collection_name: Optional[str] = Field("default", description="Vector collection to search")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
+    max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
+    stream: bool = Field(True, description="Whether to stream the response")
+    top_k: int = Field(5, ge=1, le=20, description="Number of relevant chunks to retrieve")
+    similarity_threshold: float = Field(0.7, ge=0.0, le=1.0, description="Minimum similarity threshold")
+
+
+class RAGQuestionResponse(BaseModel):
+    answer: str
+    question: str
+    sources: List[dict]
+    model_provider: str
+    model_name: str
+    token_usage: Optional[dict] = None
+    latency_ms: Optional[float] = None
+    timestamp: str
+
+
+class DocumentSource(BaseModel):
+    document_id: str
+    file_name: str
+    chunk_text: str
+    similarity_score: float
+    page_number: Optional[int] = None
+    chunk_index: int
+
+
+class CollectionInfo(BaseModel):
+    collection_name: str
+    document_count: int
+    total_chunks: int
+    documents: List[dict]
+    created_at: str
+    last_updated: str
+
+
+class DeleteDocumentRequest(BaseModel):
+    document_id: str = Field(..., description="ID of the document to delete")
+    collection_name: Optional[str] = Field("default", description="Vector collection name") 

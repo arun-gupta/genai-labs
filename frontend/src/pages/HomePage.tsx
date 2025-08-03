@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -17,6 +17,13 @@ export const HomePage: React.FC = () => {
       icon: FileText,
       path: '/summarize',
       color: 'bg-green-500',
+    },
+    {
+      title: 'Q&A over Documents',
+      description: 'Upload documents and ask questions to get AI-powered answers based on your content.',
+      icon: Search,
+      path: '/rag',
+      color: 'bg-purple-500',
     },
   ];
 
@@ -83,7 +90,7 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (

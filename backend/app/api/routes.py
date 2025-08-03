@@ -11,7 +11,8 @@ from app.services.language_service import language_service
 from app.services.model_availability_service import model_availability_service
 from app.services.prompt_template_service import prompt_template_service
 from app.services.export_service import export_service
-from app.models.requests import ModelProvider
+from app.services.rag_service import rag_service
+from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest
 import json
 import time
 import datetime
@@ -536,4 +537,117 @@ async def get_available_models():
             {"extension": "xlsx", "name": "Excel Spreadsheet", "description": "Microsoft Excel files"},
             {"extension": "md", "name": "Markdown", "description": "Markdown files"}
         ]
-    } 
+    }
+
+
+# RAG Endpoints
+@router.post("/rag/upload", response_model=DocumentUploadResponse)
+async def upload_document_for_rag(
+    file: UploadFile = File(...),
+    collection_name: str = Form("default")
+):
+    """Upload a document for RAG processing."""
+    try:
+        file_content = await file.read()
+        
+        result = await rag_service.upload_document(
+            file_content=file_content,
+            file_name=file.filename,
+            collection_name=collection_name
+        )
+        
+        return DocumentUploadResponse(**result)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/rag/question", response_model=RAGQuestionResponse)
+async def ask_rag_question(request: RAGQuestionRequest):
+    """Ask a question about uploaded documents."""
+    try:
+        result = await rag_service.ask_question(
+            question=request.question,
+            collection_name=request.collection_name,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+            top_k=request.top_k,
+            similarity_threshold=request.similarity_threshold
+        )
+        
+        return RAGQuestionResponse(**result)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/rag/question/stream")
+async def ask_rag_question_stream(request: RAGQuestionRequest):
+    """Ask a question about uploaded documents with streaming response."""
+    async def generate():
+        try:
+            async for chunk in rag_service.ask_question_stream(
+                question=request.question,
+                collection_name=request.collection_name,
+                model_provider=request.model_provider.value,
+                model_name=request.model_name,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                top_k=request.top_k,
+                similarity_threshold=request.similarity_threshold
+            ):
+                yield {
+                    "event": "chunk",
+                    "data": json.dumps(chunk)
+                }
+                
+                if chunk.get("is_complete", False):
+                    break
+                    
+        except Exception as e:
+            error_chunk = {
+                "content": f"Error: {str(e)}",
+                "is_complete": True,
+                "sources": []
+            }
+            yield {
+                "event": "error",
+                "data": json.dumps(error_chunk)
+            }
+    
+    return EventSourceResponse(generate())
+
+
+@router.get("/rag/collections")
+async def get_rag_collections():
+    """Get information about all RAG collections."""
+    try:
+        collections = rag_service.get_collections()
+        return collections
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/rag/document")
+async def delete_rag_document(request: DeleteDocumentRequest):
+    """Delete a document from RAG collection."""
+    try:
+        result = rag_service.delete_document(
+            document_id=request.document_id,
+            collection_name=request.collection_name
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/rag/collection/{collection_name}")
+async def delete_rag_collection(collection_name: str):
+    """Delete an entire RAG collection."""
+    try:
+        result = rag_service.delete_collection(collection_name=collection_name)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
