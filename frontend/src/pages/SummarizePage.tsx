@@ -29,6 +29,7 @@ export const SummarizePage: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<any>(null);
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'analytics'>('summary');
 
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
@@ -668,38 +669,53 @@ An Open Source AI is an AI system made available under terms and in a way that g
               Press Cmd/Ctrl + Enter to summarize
             </div>
           </div>
-        </div>
 
-        {/* Right Panel - Response */}
-        <div className="xl:col-span-1 space-y-6">
-          {/* Summary Response */}
+          {/* Response Section with Tabs */}
           <div className="card">
-            <div className="flex items-center space-x-2 mb-4">
-              <FileText className="text-green-600" size={20} />
-              <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+            {/* Tab Navigation */}
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={() => setActiveTab('summary')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'summary'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <FileText size={16} />
+                <span>Summary</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <BarChart3 size={16} />
+                <span>Analytics</span>
+              </button>
             </div>
-            
-            <ResponseDisplay
-              content={summary}
-              isStreaming={isSummarizing}
-              tokenUsage={tokenUsage}
-              latencyMs={latencyMs}
-              modelName={selectedModel}
-              modelProvider={selectedProvider}
-            />
-          </div>
 
-          {/* Analytics */}
-          <div className="card">
-            <div className="flex items-center space-x-2 mb-4">
-              <BarChart3 className="text-purple-600" size={20} />
-              <h2 className="text-lg font-semibold text-gray-900">Analytics</h2>
-            </div>
-            
-            <AnalyticsDisplay
-              analytics={analytics}
-              isLoading={isAnalyzing}
-            />
+            {/* Tab Content */}
+            {activeTab === 'summary' && (
+              <ResponseDisplay
+                content={summary}
+                isStreaming={isSummarizing}
+                tokenUsage={tokenUsage}
+                latencyMs={latencyMs}
+                modelName={selectedModel}
+                modelProvider={selectedProvider}
+              />
+            )}
+
+            {activeTab === 'analytics' && (
+              <AnalyticsDisplay
+                analytics={analytics}
+                isLoading={isAnalyzing}
+              />
+            )}
           </div>
         </div>
       </div>
