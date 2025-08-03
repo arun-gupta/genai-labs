@@ -8,6 +8,7 @@ import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { GenerationAnalyticsDisplay } from '../components/GenerationAnalyticsDisplay';
 import { PromptTemplateSelector } from '../components/PromptTemplateSelector';
 import { MultipleCandidatesSelector } from '../components/MultipleCandidatesSelector';
+import { WritingStyleSelector } from '../components/WritingStyleSelector';
 import { ExportOptions } from '../components/ExportOptions';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
@@ -28,7 +29,8 @@ export const GeneratePage: React.FC = () => {
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateResponse, setTranslateResponse] = useState(false);
   const [outputFormat, setOutputFormat] = useState('text');
-  const [numCandidates, setNumCandidates] = useState(3);
+  const [numCandidates, setNumCandidates] = useState(1);
+  const [selectedWritingStyle, setSelectedWritingStyle] = useState('none');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [analytics, setAnalytics] = useState<any>(null);
@@ -180,6 +182,13 @@ export const GeneratePage: React.FC = () => {
     setUserPrompt(userPrompt);
   };
 
+  const handleWritingStyleChange = (style: string) => {
+    setSelectedWritingStyle(style);
+    if (style === 'none') {
+      setSystemPrompt('');
+    }
+  };
+
   const handleClearTemplate = () => {
     setSystemPrompt('');
     setUserPrompt('');
@@ -301,6 +310,16 @@ export const GeneratePage: React.FC = () => {
                   placeholder="1000"
                 />
               </div>
+            </div>
+
+            {/* Writing Style Settings */}
+            <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <WritingStyleSelector
+                selectedStyle={selectedWritingStyle}
+                onStyleChange={handleWritingStyleChange}
+                onSystemPromptChange={setSystemPrompt}
+                className="w-full"
+              />
             </div>
 
             {/* Multiple Candidates Settings */}
