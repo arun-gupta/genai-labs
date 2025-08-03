@@ -6,6 +6,7 @@ from app.models.responses import GenerationResponse, SummarizeResponse, StreamCh
 from app.services.generation_service import GenerationService
 from app.services.input_processor import input_processor
 from app.services.analytics_service import analytics_service
+from app.services.generation_analytics_service import generation_analytics_service
 from app.services.language_service import language_service
 from app.services.model_availability_service import model_availability_service
 from app.models.requests import ModelProvider
@@ -305,6 +306,31 @@ async def analyze_summary(request: dict):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+
+@router.post("/analytics/generation")
+async def analyze_generation(request: dict):
+    """Analyze generated text and provide comprehensive analytics."""
+    try:
+        system_prompt = request.get("system_prompt", "")
+        user_prompt = request.get("user_prompt", "")
+        generated_text = request.get("generated_text", "")
+        output_format = request.get("output_format", "text")
+        
+        if not generated_text:
+            raise HTTPException(status_code=400, detail="generated_text is required")
+        
+        analytics = generation_analytics_service.analyze_generation(
+            system_prompt, user_prompt, generated_text, output_format
+        )
+        
+        return {
+            "analytics": analytics,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation analytics failed: {str(e)}")
 
 
 @router.post("/detect-language")
