@@ -3,6 +3,7 @@ from langchain.schema import HumanMessage, SystemMessage
 from langchain.callbacks.base import BaseCallbackHandler
 from app.services.model_factory import model_factory
 from app.services.language_service import language_service
+from app.services.output_formatter_service import output_formatter_service
 from app.models.responses import TokenUsage, StreamChunk
 import time
 import json
@@ -66,7 +67,8 @@ class GenerationService:
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         target_language: str = "en",
-        translate_response: bool = False
+        translate_response: bool = False,
+        output_format: str = "text"
     ) -> AsyncGenerator[StreamChunk, None]:
         """Generate text with streaming response."""
         start_time = time.time()
@@ -84,11 +86,22 @@ class GenerationService:
             # Create callback handler for streaming
             callback_handler = StreamingCallbackHandler()
             
-            # Prepare messages
+            # Prepare messages with output format instructions
             messages = []
             if system_prompt.strip():
-                messages.append(SystemMessage(content=system_prompt))
-            messages.append(HumanMessage(content=user_prompt))
+                # Add output format instructions to system prompt
+                formatted_system_prompt = output_formatter_service.format_system_prompt(
+                    system_prompt, output_format
+                )
+                messages.append(SystemMessage(content=formatted_system_prompt))
+            else:
+                # If no system prompt, add format instructions to user prompt
+                format_instruction = output_formatter_service.get_format_instruction(output_format)
+                user_prompt_with_format = f"{user_prompt}\n\n{format_instruction}"
+                messages.append(HumanMessage(content=user_prompt_with_format))
+            
+            if system_prompt.strip():
+                messages.append(HumanMessage(content=user_prompt))
             
             # Generate response - handle Ollama models differently
             if model_provider == "ollama":

@@ -43,6 +43,7 @@ export interface GenerateRequest {
   stream: boolean;
   target_language?: string;
   translate_response?: boolean;
+  output_format?: 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table';
 }
 
 export interface SummarizeRequest {
@@ -58,6 +59,7 @@ export interface SummarizeRequest {
   summary_type: 'general' | 'bullet_points' | 'key_points' | 'extractive';
   target_language?: string;
   translate_summary?: boolean;
+  output_format?: 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table';
 }
 
 export interface SummaryType {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Settings, History, Languages } from 'lucide-react';
+import { Send, Settings, History, Languages, FileText } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
+import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, LanguageDetection } from '../types/api';
@@ -22,6 +23,7 @@ export const GeneratePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateResponse, setTranslateResponse] = useState(false);
+  const [outputFormat, setOutputFormat] = useState('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
 
@@ -74,6 +76,7 @@ export const GeneratePage: React.FC = () => {
           stream: true,
           target_language: targetLanguage,
           translate_response: translateResponse,
+          output_format: outputFormat,
         },
         (chunk: StreamChunk) => {
           setResponse(prev => prev + chunk.content);
@@ -142,6 +145,20 @@ export const GeneratePage: React.FC = () => {
               onModelChange={setSelectedModel}
               disabled={isGenerating}
             />
+
+            {/* Output Format Settings */}
+            <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <FileText className="text-purple-600" size={20} />
+                <h3 className="text-lg font-medium text-gray-900">Output Format</h3>
+              </div>
+              
+              <OutputFormatSelector
+                selectedFormat={outputFormat}
+                onFormatChange={setOutputFormat}
+                className="w-full"
+              />
+            </div>
 
             {/* Language Settings */}
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
