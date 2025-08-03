@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
@@ -29,7 +29,7 @@ export const SummarizePage: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<any>(null);
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'analytics'>('summary');
+
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateSummary, setTranslateSummary] = useState(false);
@@ -259,23 +259,24 @@ export const SummarizePage: React.FC = () => {
   const inputContent = getInputContent();
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Text Summarization</h1>
         <p className="text-gray-600">
-          Summarize text, URLs, or documents using different large language models
+          Create concise summaries from text, URLs, or documents
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Section */}
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Panel - Settings */}
+        <div className="xl:col-span-1 space-y-6">
+          {/* Model Selection */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
-              <Settings className="text-gray-500" size={20} />
-              <h2 className="text-xl font-semibold text-gray-900">Configuration</h2>
+              <Zap className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model</h2>
             </div>
-            
             <ModelSelector
               selectedProvider={selectedProvider}
               selectedModel={selectedModel}
@@ -283,27 +284,67 @@ export const SummarizePage: React.FC = () => {
               onModelChange={setSelectedModel}
               disabled={isSummarizing}
             />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+          {/* Summary Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Settings className="text-gray-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Summary Settings</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Summary Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Length (words)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Summary Type</label>
+                <select
+                  value={summaryType}
+                  onChange={(e) => setSummaryType(e.target.value)}
+                  disabled={isSummarizing}
+                  className="input-field"
+                >
+                  {availableModels?.summary_types?.map((type: SummaryType) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  )) || (
+                    <>
+                      <option value="general">General Summary</option>
+                      <option value="bullet_points">Bullet Points</option>
+                      <option value="key_points">Key Points</option>
+                      <option value="extractive">Extractive</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* Max Length */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700">Max Length</label>
+                  <span className="text-xs text-gray-500">{maxLength} words</span>
+                </div>
                 <input
-                  type="number"
+                  type="range"
                   min="50"
                   max="500"
                   value={maxLength}
                   onChange={(e) => setMaxLength(parseInt(e.target.value))}
                   disabled={isSummarizing}
-                  className="input-field"
+                  className="w-full"
                 />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Short</span>
+                  <span>Long</span>
+                </div>
               </div>
-              
+
+              {/* Temperature */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Temperature
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700">Creativity</label>
+                  <span className="text-xs text-gray-500">{temperature}</span>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -314,57 +355,32 @@ export const SummarizePage: React.FC = () => {
                   disabled={isSummarizing}
                   className="w-full"
                 />
-                <div className="text-xs text-gray-500 mt-1">{temperature}</div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Focused</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+
+              {/* Output Format */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+                <OutputFormatSelector
+                  selectedFormat={outputFormat}
+                  onFormatChange={setOutputFormat}
+                  className="w-full"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Summary Type Selector */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Summary Type
-              </label>
-              <select
-                value={summaryType}
-                onChange={(e) => setSummaryType(e.target.value)}
-                disabled={isSummarizing}
-                className="input-field"
-              >
-                {availableModels?.summary_types?.map((type: SummaryType) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                )) || (
-                  <>
-                    <option value="general">General Summary</option>
-                    <option value="bullet_points">Bullet Points</option>
-                    <option value="key_points">Key Points</option>
-                    <option value="extractive">Extractive</option>
-                  </>
-                )}
-              </select>
+          {/* Language Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Languages className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Language</h2>
             </div>
-
-            {/* Output Format Settings */}
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <h3 className="text-sm font-medium text-gray-700">Output Format</h3>
-              </div>
-              
-              <OutputFormatSelector
-                selectedFormat={outputFormat}
-                onFormatChange={setOutputFormat}
-                className="w-full"
-              />
-            </div>
-
-            {/* Language Settings */}
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center space-x-2">
-                <Languages className="w-4 h-4 text-gray-500" />
-                <h3 className="text-sm font-medium text-gray-700">Language Settings</h3>
-              </div>
-              
+            
+            <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -375,15 +391,13 @@ export const SummarizePage: React.FC = () => {
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="translate-summary" className="text-sm text-gray-700">
-                  Translate summary to different language
+                  Translate summary
                 </label>
               </div>
               
               {translateSummary && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Target Language
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Language</label>
                   <LanguageSelector
                     selectedLanguage={targetLanguage}
                     onLanguageChange={setTargetLanguage}
@@ -393,33 +407,39 @@ export const SummarizePage: React.FC = () => {
                 </div>
               )}
             </div>
-
-            {/* History */}
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <History className="w-4 h-4 text-gray-500" />
-                  <h3 className="text-sm font-medium text-gray-700">History</h3>
-                </div>
-                <button
-                  onClick={() => setShowHistory(!showHistory)}
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                >
-                  {showHistory ? 'Hide' : 'Show'} History
-                </button>
-              </div>
-              
-              {showHistory && (
-                <PromptHistoryComponent
-                  onLoadPrompt={handleLoadFromHistory}
-                  className="w-full"
-                />
-              )}
-            </div>
           </div>
 
+          {/* History */}
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Input Source</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <History className="text-blue-600" size={20} />
+                <h2 className="text-lg font-semibold text-gray-900">History</h2>
+              </div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              >
+                {showHistory ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            
+            {showHistory && (
+              <PromptHistoryComponent
+                onLoadPrompt={handleLoadFromHistory}
+                className="w-full"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Center Panel - Main Content */}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Input Source */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Input Source</h2>
+            </div>
             
             {/* Input Type Selector */}
             <div className="flex space-x-2 mb-4">
@@ -468,7 +488,7 @@ export const SummarizePage: React.FC = () => {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   disabled={isSummarizing}
-                  className="input-field h-64 resize-none"
+                  className="input-field h-80 resize-none"
                   placeholder="Paste or type the text you want to summarize here..."
                   onKeyDown={handleKeyPress}
                 />
@@ -629,7 +649,7 @@ An Open Source AI is an AI system made available under terms and in a way that g
             <button
               onClick={handleSummarize}
               disabled={isSummarizing || !inputContent}
-              className="mt-4 btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSummarizing ? (
                 <>
@@ -650,36 +670,15 @@ An Open Source AI is an AI system made available under terms and in a way that g
           </div>
         </div>
 
-        {/* Output Section */}
-        <div>
-          {/* Tab Navigation */}
-          <div className="flex space-x-2 mb-4">
-            <button
-              onClick={() => setActiveTab('summary')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'summary'
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <FileText size={16} />
-              <span>Summary</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'analytics'
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <BarChart3 size={16} />
-              <span>Analytics</span>
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === 'summary' && (
+        {/* Right Panel - Response */}
+        <div className="xl:col-span-1 space-y-6">
+          {/* Summary Response */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <FileText className="text-green-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+            </div>
+            
             <ResponseDisplay
               content={summary}
               isStreaming={isSummarizing}
@@ -688,14 +687,20 @@ An Open Source AI is an AI system made available under terms and in a way that g
               modelName={selectedModel}
               modelProvider={selectedProvider}
             />
-          )}
+          </div>
 
-          {activeTab === 'analytics' && (
+          {/* Analytics */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <BarChart3 className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Analytics</h2>
+            </div>
+            
             <AnalyticsDisplay
               analytics={analytics}
               isLoading={isAnalyzing}
             />
-          )}
+          </div>
         </div>
       </div>
     </div>
