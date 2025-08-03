@@ -1,0 +1,101 @@
+# Features Guide
+
+## 🚀 Core Features
+
+### Text Generation (`/generate`)
+Advanced text generation with multiple writing styles and real-time streaming.
+
+**Key Features:**
+- **Writing Style Selector**: 12 different writing styles (Creative, Poetic, Business, Academic, Technical, Conversational, Journalistic, Storytelling, Persuasive, Minimalist, Formal, Humorous)
+- **Voice Input**: Speech-to-text for prompts using Web Speech API
+- **Voice Output**: Text-to-speech for responses with voice selection
+- **Multiple Candidates**: Generate multiple response variations (1-5 candidates)
+- **Output Format Selection**: Choose from 10+ output formats (Text, JSON, XML, Markdown, CSV, YAML, HTML, Bullet Points, Numbered Lists, Tables)
+- **Language Translation**: Built-in translation support for responses
+- **Language Detection**: Automatic language detection for input text
+- **Prompt Templates**: Pre-built templates with variable substitution
+- **Generation Analytics**: Comprehensive analysis of generated content
+
+### Text Summarization (`/summarize`)
+Multi-format summarization with comprehensive analytics and multiple input methods.
+
+**Key Features:**
+- **Multiple Input Methods**: Text, URL, and file upload support
+- **Summary Types**: General, bullet points, key points, and extractive summaries
+- **Analytics Dashboard**: Detailed metrics and quality analysis
+- **Compression Ratios**: Track information retention and compression
+- **Readability Scores**: Multiple readability metrics (Flesch, Gunning Fog, SMOG, etc.)
+- **Sentiment Analysis**: Sentiment tracking and preservation analysis
+- **Keyword Analysis**: Keyword extraction and overlap tracking
+
+### Models Explorer (`/models`)
+Comprehensive view of open-source models with availability status and management tools.
+
+**Key Features:**
+- **Availability Status**: Shows which models are installed vs. need downloading
+- **One-Click Copy**: Copy download commands with a single click
+- **Advanced Filtering**: Filter by category, organization, and availability
+- **Search**: Search across model names, descriptions, and tags
+- **Visual Indicators**: Color-coded organization badges and status icons
+
+## 🎤 Voice Features
+
+### Voice Input (Speech-to-Text)
+- **Real-time Transcription**: Convert speech to text in real-time
+- **Continuous Recognition**: Supports ongoing speech input
+- **Language Support**: Defaults to English (en-US)
+- **Visual Feedback**: Animated microphone with audio level indicators
+- **Error Handling**: Graceful fallback for unsupported browsers
+
+### Voice Output (Text-to-Speech)
+- **Multiple Voices**: Choose from available system voices
+- **Playback Controls**: Play, pause, resume, and stop functionality
+- **Voice Selection**: Dropdown to select preferred voice
+- **Visual Status**: Clear playing/paused status indicators
+- **Smart Voice Detection**: Automatically selects English voices
+
+### Browser Compatibility
+- **Chrome/Edge**: Full support for both voice input and output
+- **Firefox**: Full support for text-to-speech, limited speech recognition
+- **Safari**: Full support for text-to-speech, limited speech recognition
+- **Mobile Browsers**: Limited support, varies by platform
+
+## 📊 Analytics & Export
+
+### Generation Analytics
+- **Token Usage**: Track tokens consumed per request
+- **Latency Metrics**: Response time analysis
+- **Content Analysis**: Readability, sentiment, and quality metrics
+- **Performance Tracking**: Historical performance data
+
+### Export Options
+- **Multiple Formats**: PDF, Word, Markdown, HTML export
+- **Structured Data**: JSON, XML, CSV, YAML output
+- **Formatted Lists**: Bullet points and numbered lists
+- **Tables**: Structured table format
+
+### Prompt History
+- **Local Storage**: Session-based prompt history
+- **Search & Filter**: Find previous prompts quickly
+- **Load & Reuse**: Easily reuse previous prompts
+- **Export History**: Save prompt history for backup
+
+## 🔧 Technical Features
+
+### Real-time Streaming
+- **Live Output**: See responses as they're generated
+- **Progress Indicators**: Visual feedback during generation
+- **Token Tracking**: Real-time token usage display
+- **Cancel Support**: Stop generation mid-process
+
+### Modular Architecture
+- **LangChain Integration**: Flexible model abstractions
+- **Service-based Design**: Clean separation of concerns
+- **API-first Approach**: RESTful API for all features
+- **Extensible Framework**: Easy to add new models and features
+
+### Performance Features
+- **Caching**: Intelligent response caching
+- **Rate Limiting**: Built-in API rate limit handling
+- **Error Recovery**: Graceful error handling and recovery
+- **Optimization**: Efficient resource usage 
