@@ -682,12 +682,18 @@ async def compare_summarization_models(
             text_content = text
         elif url:
             # Process URL to extract text
-            text_content = await input_processor.process_url(url)
+            try:
+                text_content, _ = input_processor.extract_text_from_url(url)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to process URL: {str(e)}")
         elif file_content:
             # Process file content
-            file_bytes = await file_content.read()
-            file_type = file_content.filename.split('.')[-1].lower() if '.' in file_content.filename else 'txt'
-            text_content = await input_processor.process_file_content(file_bytes, file_type)
+            try:
+                file_bytes = await file_content.read()
+                file_type = file_content.filename.split('.')[-1].lower() if '.' in file_content.filename else 'txt'
+                text_content = input_processor.extract_text_from_file(file_bytes, file_type)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to process file: {str(e)}")
         else:
             raise HTTPException(status_code=400, detail="No text, URL, or file content provided")
         

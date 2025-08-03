@@ -39,8 +39,8 @@ class ModelFactory:
             raise ValueError("OpenAI API key not configured")
         
         model = model_name or settings.openai_model
-        # Remove temperature and streaming from kwargs to avoid duplicates
-        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        # Remove temperature, streaming, and max_tokens from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
         
         return ChatOpenAI(
             model=model,
@@ -57,8 +57,8 @@ class ModelFactory:
             raise ValueError("Anthropic API key not configured")
         
         model = model_name or settings.anthropic_model
-        # Remove temperature and streaming from kwargs to avoid duplicates
-        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        # Remove temperature, streaming, and max_tokens from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
         
         return ChatAnthropic(
             model=model,
@@ -72,8 +72,8 @@ class ModelFactory:
     def _create_ollama_model(self, model_name: Optional[str] = None, **kwargs) -> OllamaLLM:
         """Create Ollama model instance."""
         model = model_name or settings.ollama_model
-        # Remove temperature and streaming from kwargs to avoid duplicates
-        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
+        # Remove temperature, streaming, and max_tokens from kwargs to avoid duplicates
+        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
         
         return OllamaLLM(
             model=model,

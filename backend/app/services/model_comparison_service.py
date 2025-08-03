@@ -186,8 +186,8 @@ class ModelComparisonService:
         comparison_id = str(uuid.uuid4())
         
         try:
-            # Process input text
-            processed_text = await input_processor.process_text(text)
+            # Process input text (no processing needed for plain text)
+            processed_text = text
             
             # Generate summaries with all models concurrently
             tasks = []
