@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Languages, Check } from 'lucide-react';
 import { SupportedLanguages } from '../types/api';
+import { apiService } from '../services/api';
 
 interface LanguageSelectorProps {
   selectedLanguage: string;
@@ -24,11 +25,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     const fetchLanguages = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/v1/languages');
-        if (response.ok) {
-          const data = await response.json();
-          setLanguages(data);
-        }
+        const data = await apiService.getSupportedLanguages();
+        setLanguages(data);
       } catch (error) {
         console.error('Failed to fetch languages:', error);
       } finally {

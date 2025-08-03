@@ -7,22 +7,40 @@ from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
 from collections import Counter
 import math
+import ssl
 
-# Download required NLTK data
+# Fix SSL certificate issues for NLTK downloads
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+# Download required NLTK data (with SSL error handling)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt')
+    try:
+        nltk.download('punkt', quiet=True)
+    except Exception:
+        pass
 
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('stopwords')
+    try:
+        nltk.download('stopwords', quiet=True)
+    except Exception:
+        pass
 
 try:
     nltk.data.find('vader_lexicon')
 except LookupError:
-    nltk.download('vader_lexicon')
+    try:
+        nltk.download('vader_lexicon', quiet=True)
+    except Exception:
+        pass
 
 
 class AnalyticsService:
