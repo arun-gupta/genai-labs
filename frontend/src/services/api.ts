@@ -122,7 +122,7 @@ class ApiService {
     });
   }
 
-  async exportContent(format: 'pdf' | 'word' | 'markdown', content: any): Promise<Blob> {
+  async exportContent(format: 'pdf' | 'word' | 'markdown' | 'html', content: any): Promise<Blob> {
     const response = await fetch(`${this.baseUrl}/export/${format}`, {
       method: 'POST',
       headers: {
