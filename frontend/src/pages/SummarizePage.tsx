@@ -15,7 +15,7 @@ export const SummarizePage: React.FC = () => {
   const [url, setUrl] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedProvider, setSelectedProvider] = useState('ollama');
-  const [selectedModel, setSelectedModel] = useState('llama2');
+  const [selectedModel, setSelectedModel] = useState('mistral:7b');
   const [maxLength, setMaxLength] = useState(150);
   const [temperature, setTemperature] = useState(0.3);
   const [summaryType, setSummaryType] = useState('general');
