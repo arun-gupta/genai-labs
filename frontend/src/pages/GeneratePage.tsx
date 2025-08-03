@@ -5,6 +5,7 @@ import { ResponseDisplay } from '../components/ResponseDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
+import { GenerationAnalyticsDisplay } from '../components/GenerationAnalyticsDisplay';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, LanguageDetection } from '../types/api';
@@ -26,6 +27,9 @@ export const GeneratePage: React.FC = () => {
   const [outputFormat, setOutputFormat] = useState('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'response' | 'analytics'>('response');
 
   // Language detection effect
   useEffect(() => {
@@ -92,6 +96,9 @@ export const GeneratePage: React.FC = () => {
         }
       );
 
+      // Generate analytics
+      await generateAnalytics();
+
       // Save to history
       const historyItem: PromptHistory = {
         id: Date.now().toString(),
@@ -111,6 +118,26 @@ export const GeneratePage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const generateAnalytics = async () => {
+    if (!response) return;
+    
+    setIsAnalyzing(true);
+    try {
+      const analyticsResponse = await apiService.analyzeGeneration({
+        system_prompt: systemPrompt,
+        user_prompt: userPrompt,
+        generated_text: response,
+        output_format: outputFormat
+      });
+      setAnalytics(analyticsResponse.analytics);
+    } catch (err) {
+      console.error('Error generating analytics:', err);
+      // Don't show error to user as analytics is not critical
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -309,14 +336,48 @@ export const GeneratePage: React.FC = () => {
 
         {/* Output Section */}
         <div>
-          <ResponseDisplay
-            content={response}
-            isStreaming={isGenerating}
-            tokenUsage={tokenUsage}
-            latencyMs={latencyMs}
-            modelName={selectedModel}
-            modelProvider={selectedProvider}
-          />
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+            <button
+              onClick={() => setActiveTab('response')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'response'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Response
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'analytics'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Analytics
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'response' && (
+            <ResponseDisplay
+              content={response}
+              isStreaming={isGenerating}
+              tokenUsage={tokenUsage}
+              latencyMs={latencyMs}
+              modelName={selectedModel}
+              modelProvider={selectedProvider}
+            />
+          )}
+
+          {activeTab === 'analytics' && (
+            <GenerationAnalyticsDisplay
+              analytics={analytics}
+              isLoading={isAnalyzing}
+            />
+          )}
         </div>
       </div>
     </div>

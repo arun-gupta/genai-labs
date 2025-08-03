@@ -92,6 +92,18 @@ class ApiService {
     });
   }
 
+  async analyzeGeneration(request: { 
+    system_prompt: string; 
+    user_prompt: string; 
+    generated_text: string; 
+    output_format?: string 
+  }): Promise<{ analytics: any }> {
+    return this.request<{ analytics: any }>('/analytics/generation', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   async detectLanguage(text: string): Promise<{ detection: LanguageDetection }> {
     return this.request<{ detection: LanguageDetection }>('/detect-language', {
       method: 'POST',
