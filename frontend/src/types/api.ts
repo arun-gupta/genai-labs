@@ -281,4 +281,13 @@ export interface TemplateFillResponse {
   system_prompt: string;
   user_prompt: string;
   template_info: PromptTemplate;
+}
+
+export interface WritingStyle {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  systemPrompt: string;
+  category: string;
 } 

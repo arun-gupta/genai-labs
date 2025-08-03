@@ -33,7 +33,7 @@ class GenerateRequest(BaseModel):
     output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format for the response")
     target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
     translate_response: bool = Field(False, description="Whether to translate the response")
-    num_candidates: int = Field(3, ge=1, le=5, description="Number of candidate responses to generate")
+    num_candidates: int = Field(1, ge=1, le=5, description="Number of candidate responses to generate")
 
 
 class GenerationResponse(BaseModel):
