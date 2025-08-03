@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, BarChart3 as CompareIcon } from 'lucide-react';
 import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
@@ -9,6 +9,7 @@ import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { PromptHistoryComponent } from '../components/PromptHistory';
 import { ExportOptions } from '../components/ExportOptions';
+import { ModelComparison } from '../components/ModelComparison';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
@@ -40,6 +41,10 @@ export const SummarizePage: React.FC = () => {
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<any>(null);
+  const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
+  const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -249,6 +254,39 @@ export const SummarizePage: React.FC = () => {
     setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
   };
 
+  const handleModelComparison = async () => {
+    if (!validateInput()) return;
+    
+    setIsComparing(true);
+    setError(null);
+    setComparisonResults(null);
+    
+    try {
+      const request: any = {
+        models: selectedModels,
+        max_length: maxLength,
+        temperature: temperature,
+        summary_type: summaryType
+      };
+      
+      if (inputType === 'text') {
+        request.text = text;
+      } else if (inputType === 'url') {
+        request.url = url;
+      } else if (inputType === 'file' && selectedFile) {
+        request.file_content = selectedFile;
+      }
+      
+      const result = await apiService.compareSummarizationModels(request);
+      setComparisonResults(result);
+      setShowComparison(true);
+    } catch (err) {
+      setError(`Model comparison failed: ${err}`);
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
   const getExportContent = () => {
     return {
       system_prompt: `Summarize the following text as a ${summaryType} summary with maximum ${maxLength} words.`,
@@ -396,6 +434,54 @@ export const SummarizePage: React.FC = () => {
                   className="w-full"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Model Comparison Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <CompareIcon className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model Comparison</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">
+                Select models to compare for summarization performance
+              </p>
+              
+              {availableModels?.providers?.map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isComparing}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {selectedModels.length > 0 && (
+                <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+                  <p className="text-xs text-purple-700">
+                    Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -679,26 +765,46 @@ An Open Source AI is an AI system made available under terms and in a way that g
               </div>
             )}
 
-            <button
-              onClick={handleSummarize}
-              disabled={isSummarizing || !inputContent}
-              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSummarizing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Summarizing...</span>
-                </>
-              ) : (
-                <>
-                  <Send size={16} />
-                  <span>Summarize</span>
-                </>
-              )}
-            </button>
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={handleSummarize}
+                disabled={isSummarizing || !inputContent}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSummarizing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Summarizing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Summarize</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleModelComparison}
+                disabled={isComparing || !inputContent || selectedModels.length < 2}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isComparing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Comparing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CompareIcon size={16} />
+                    <span>Compare Models</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             <div className="mt-2 text-xs text-gray-500 text-center">
-              Press Cmd/Ctrl + Enter to summarize
+              Press Cmd/Ctrl + Enter to summarize • Select 2+ models to compare
             </div>
           </div>
 
@@ -760,6 +866,16 @@ An Open Source AI is an AI system made available under terms and in a way that g
           </div>
         </div>
       </div>
+
+      {/* Model Comparison Results */}
+      {showComparison && comparisonResults && (
+        <ModelComparison
+          results={comparisonResults.results}
+          metrics={comparisonResults.comparison_metrics}
+          recommendations={comparisonResults.recommendations}
+          isComparing={isComparing}
+        />
+      )}
     </div>
   );
 }; 
