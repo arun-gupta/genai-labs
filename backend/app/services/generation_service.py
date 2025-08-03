@@ -87,8 +87,24 @@ class GenerationService:
                 messages.append(SystemMessage(content=system_prompt))
             messages.append(HumanMessage(content=user_prompt))
             
-            # Generate response
-            response = await model.agenerate([messages], callbacks=[callback_handler])
+            # Generate response - handle Ollama models differently
+            if model_provider == "ollama":
+                # For Ollama, use a different approach
+                try:
+                    # Convert messages to simple text for Ollama
+                    prompt_text = ""
+                    for message in messages:
+                        if hasattr(message, 'content'):
+                            prompt_text += message.content + "\n"
+                    
+                    # Use the model's __call__ method for Ollama
+                    response = await model.ainvoke(prompt_text)
+                    callback_handler.content = response
+                except Exception as ollama_error:
+                    raise Exception(f"Ollama model error: {str(ollama_error)}")
+            else:
+                # For other models, use agenerate
+                await model.agenerate([messages], callbacks=[callback_handler])
             
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
@@ -143,8 +159,24 @@ class GenerationService:
                 HumanMessage(content=user_prompt)
             ]
             
-            # Generate response
-            response = await model.agenerate([messages], callbacks=[callback_handler])
+            # Generate response - handle Ollama models differently
+            if model_provider == "ollama":
+                # For Ollama, use a different approach
+                try:
+                    # Convert messages to simple text for Ollama
+                    prompt_text = ""
+                    for message in messages:
+                        if hasattr(message, 'content'):
+                            prompt_text += message.content + "\n"
+                    
+                    # Use the model's __call__ method for Ollama
+                    response = await model.ainvoke(prompt_text)
+                    callback_handler.content = response
+                except Exception as ollama_error:
+                    raise Exception(f"Ollama model error: {str(ollama_error)}")
+            else:
+                # For other models, use agenerate
+                await model.agenerate([messages], callbacks=[callback_handler])
             
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3 } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
+import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
-import { StreamChunk, SummaryType, SupportedFileType } from '../types/api';
+import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse } from '../types/api';
 
 export const SummarizePage: React.FC = () => {
   const [inputType, setInputType] = useState<'text' | 'url' | 'file'>('text');
@@ -22,6 +23,10 @@ export const SummarizePage: React.FC = () => {
   const [latencyMs, setLatencyMs] = useState<number | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'analytics'>('summary');
+  const [originalText, setOriginalText] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -75,6 +80,16 @@ export const SummarizePage: React.FC = () => {
     setError(null);
     setTokenUsage(null);
     setLatencyMs(undefined);
+    setAnalytics(null);
+    
+    // Store original text for analytics
+    if (inputType === 'text') {
+      setOriginalText(text);
+    } else if (inputType === 'url') {
+      setOriginalText(`URL: ${url}`);
+    } else if (inputType === 'file' && selectedFile) {
+      setOriginalText(`File: ${selectedFile.name}`);
+    }
 
     try {
       if (inputType === 'file' && selectedFile) {
@@ -121,6 +136,9 @@ export const SummarizePage: React.FC = () => {
         );
       }
 
+      // Generate analytics
+      await generateAnalytics();
+
       // Save to history
       const historyItem: PromptHistory = {
         id: Date.now().toString(),
@@ -139,6 +157,41 @@ export const SummarizePage: React.FC = () => {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsSummarizing(false);
+    }
+  };
+
+  const generateAnalytics = async () => {
+    if (!summary) return;
+    
+    setIsAnalyzing(true);
+    try {
+      // Get the actual original text for analytics
+      let originalTextForAnalytics = '';
+      if (inputType === 'text') {
+        originalTextForAnalytics = text;
+      } else if (inputType === 'url') {
+        // For URL, we'll use a placeholder since we don't have the scraped content
+        originalTextForAnalytics = `Content from URL: ${url}`;
+      } else if (inputType === 'file' && selectedFile) {
+        // For file, we'll use a placeholder since we don't have the extracted content
+        originalTextForAnalytics = `Content from file: ${selectedFile.name}`;
+      }
+      
+      if (originalTextForAnalytics && originalTextForAnalytics.length > 10) {
+        const analyticsResponse = await apiService.analyzeSummary({
+          original_text: originalTextForAnalytics,
+          summary_text: summary
+        });
+        setAnalytics(analyticsResponse.analytics);
+      } else {
+        // Show a message that analytics requires more content
+        console.log('Analytics requires more original content to be meaningful');
+      }
+    } catch (err) {
+      console.error('Error generating analytics:', err);
+      // Don't show error to user as analytics is not critical
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -468,14 +521,50 @@ An Open Source AI is an AI system made available under terms and in a way that g
 
         {/* Output Section */}
         <div>
-          <ResponseDisplay
-            content={summary}
-            isStreaming={isSummarizing}
-            tokenUsage={tokenUsage}
-            latencyMs={latencyMs}
-            modelName={selectedModel}
-            modelProvider={selectedProvider}
-          />
+          {/* Tab Navigation */}
+          <div className="flex space-x-2 mb-4">
+            <button
+              onClick={() => setActiveTab('summary')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'summary'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <FileText size={16} />
+              <span>Summary</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'analytics'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <BarChart3 size={16} />
+              <span>Analytics</span>
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'summary' && (
+            <ResponseDisplay
+              content={summary}
+              isStreaming={isSummarizing}
+              tokenUsage={tokenUsage}
+              latencyMs={latencyMs}
+              modelName={selectedModel}
+              modelProvider={selectedProvider}
+            />
+          )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsDisplay
+              analytics={analytics}
+              isLoading={isAnalyzing}
+            />
+          )}
         </div>
       </div>
     </div>

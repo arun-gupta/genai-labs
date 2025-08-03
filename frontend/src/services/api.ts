@@ -82,6 +82,13 @@ class ApiService {
     return this.request<AvailableModels>('/models');
   }
 
+  async analyzeSummary(request: AnalyticsRequest): Promise<AnalyticsResponse> {
+    return this.request<AnalyticsResponse>('/analytics', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
   async generateTextStream(
     request: GenerateRequest,
     onChunk: (chunk: StreamChunk) => void,
