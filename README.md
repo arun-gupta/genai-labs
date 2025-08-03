@@ -114,23 +114,40 @@ genai-labs/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd genai-lab
+cd genai-labs
 
-# Run the automated setup script
+# Start the application (includes setup if needed)
+./quickstart.sh
+```
+
+**Note:** The `quickstart.sh` script automatically handles setup if needed, including:
+- Creating Python virtual environment
+- Installing dependencies
+- Setting up environment files
+- Starting both backend and frontend servers
+
+### 🔧 Manual Setup (Alternative)
+
+If you prefer to run setup separately or need more control:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd genai-labs
+
+# Run setup only (optional)
 ./setup.sh
 
 # Start the application
 ./quickstart.sh
 ```
 
-### 🔧 Manual Setup
-
-#### 1. Clone and Setup
+#### 1. Clone and Manual Setup
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd genai-lab
+cd genai-labs
 
 # Create environment files
 cp backend/.env.example backend/.env
