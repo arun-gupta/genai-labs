@@ -182,7 +182,8 @@ async def summarize_text_stream(request: SummarizeRequest):
                 temperature=request.temperature,
                 summary_type=request.summary_type,
                 target_language=request.target_language,
-                translate_summary=request.translate_summary
+                translate_summary=request.translate_summary,
+                output_format=request.output_format.value
             ):
                 yield {
                     "event": "chunk",

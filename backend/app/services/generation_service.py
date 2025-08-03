@@ -164,7 +164,8 @@ class GenerationService:
         temperature: float = 0.3,
         summary_type: str = "general",
         target_language: str = "en",
-        translate_summary: bool = False
+        translate_summary: bool = False,
+        output_format: str = "text"
     ) -> AsyncGenerator[StreamChunk, None]:
         """Summarize text with streaming response."""
         start_time = time.time()
@@ -182,7 +183,10 @@ class GenerationService:
             callback_handler = StreamingCallbackHandler()
             
             # Create summarization prompt based on type
-            system_prompt = self._get_summary_system_prompt(summary_type, max_length)
+            base_system_prompt = self._get_summary_system_prompt(summary_type, max_length)
+            
+            # Add output format instructions to system prompt
+            system_prompt = output_formatter_service.format_system_prompt(base_system_prompt, output_format)
             user_prompt = f"Please summarize the following text:\n\n{text}"
             
             # Prepare messages
