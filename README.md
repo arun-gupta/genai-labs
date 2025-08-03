@@ -36,7 +36,6 @@ A full-stack web application for experimenting with different GenAI use cases us
 - **Frontend**: React + TypeScript + Tailwind CSS + Vite
 - **Backend**: FastAPI (Python) + LangChain + Pydantic
 - **APIs**: Web Speech API (voice features), OpenAI API, Anthropic API, Ollama API
-- **Deployment**: Docker-ready with modular architecture
 - **Development**: Hot reload, TypeScript compilation, ESLint
 
 ## 🤖 Supported Models
@@ -98,7 +97,10 @@ genai-labs/
 │   │   └── utils/          # Utility functions
 │   ├── requirements.txt    # Python dependencies
 │   └── main.py            # FastAPI application entry point
-├── docker-compose.yml      # Local development setup
+├── setup.sh                # Complete environment setup
+├── quickstart.sh           # Quick application startup
+├── dev-setup.sh            # Development environment setup
+├── verify_env.sh           # Environment verification
 └── README.md              # This file
 ```
 
@@ -107,7 +109,6 @@ genai-labs/
 ### Prerequisites
 - Node.js 18+ and npm
 - Python 3.9+
-- Docker (optional, for containerized deployment)
 
 ### 🚀 Quick Start (Recommended)
 
@@ -388,12 +389,7 @@ The application includes built-in handling for rate limits:
 - Check your OpenAI account limits and upgrade if needed
 - Use the "extractive" summary type for very long documents
 
-### 4. Docker Setup (Optional)
 
-```bash
-# Run both frontend and backend with Docker Compose
-docker-compose up --build
-```
 
 ## 🔧 Environment Variables
 
