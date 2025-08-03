@@ -41,6 +41,8 @@ export interface GenerateRequest {
   temperature: number;
   max_tokens?: number;
   stream: boolean;
+  target_language?: string;
+  translate_response?: boolean;
 }
 
 export interface SummarizeRequest {
