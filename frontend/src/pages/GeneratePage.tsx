@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Send, Settings, History } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Settings, History, Languages } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
+import { LanguageSelector } from '../components/LanguageSelector';
+import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
-import { StreamChunk } from '../types/api';
+import { StreamChunk, LanguageDetection } from '../types/api';
 
 export const GeneratePage: React.FC = () => {
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -18,6 +20,35 @@ export const GeneratePage: React.FC = () => {
   const [tokenUsage, setTokenUsage] = useState<any>(null);
   const [latencyMs, setLatencyMs] = useState<number | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  const [translateResponse, setTranslateResponse] = useState(false);
+  const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
+  const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
+
+  // Language detection effect
+  useEffect(() => {
+    const detectLanguage = async () => {
+      if (!userPrompt.trim()) {
+        setLanguageDetection(null);
+        return;
+      }
+
+      setIsDetectingLanguage(true);
+      try {
+        const result = await apiService.detectLanguage(userPrompt);
+        setLanguageDetection(result.detection);
+      } catch (error) {
+        console.error('Language detection failed:', error);
+        setLanguageDetection(null);
+      } finally {
+        setIsDetectingLanguage(false);
+      }
+    };
+
+    // Debounce language detection
+    const timeoutId = setTimeout(detectLanguage, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [userPrompt]);
 
   const handleGenerate = async () => {
     if (!userPrompt.trim()) {
@@ -41,6 +72,8 @@ export const GeneratePage: React.FC = () => {
           temperature,
           max_tokens: maxTokens,
           stream: true,
+          target_language: targetLanguage,
+          translate_response: translateResponse,
         },
         (chunk: StreamChunk) => {
           setResponse(prev => prev + chunk.content);
@@ -110,6 +143,44 @@ export const GeneratePage: React.FC = () => {
               disabled={isGenerating}
             />
 
+            {/* Language Settings */}
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-2 mb-3">
+                <Languages className="text-blue-600" size={20} />
+                <h3 className="text-lg font-medium text-gray-900">Language Settings</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="translate-response"
+                    checked={translateResponse}
+                    onChange={(e) => setTranslateResponse(e.target.checked)}
+                    disabled={isGenerating}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="translate-response" className="text-sm font-medium text-gray-700">
+                    Translate response to different language
+                  </label>
+                </div>
+                
+                {translateResponse && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Target Language
+                    </label>
+                    <LanguageSelector
+                      selectedLanguage={targetLanguage}
+                      onLanguageChange={setTargetLanguage}
+                      placeholder="Select target language..."
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -176,6 +247,16 @@ export const GeneratePage: React.FC = () => {
                   placeholder="Enter your prompt here..."
                   onKeyDown={handleKeyPress}
                 />
+                
+                {/* Language Detection Display */}
+                {userPrompt.trim() && (
+                  <div className="mt-3">
+                    <LanguageDetectionDisplay
+                      detection={languageDetection}
+                      isLoading={isDetectingLanguage}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

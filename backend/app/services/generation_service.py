@@ -64,7 +64,9 @@ class GenerationService:
         model_provider: str,
         model_name: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None
+        max_tokens: Optional[int] = None,
+        target_language: str = "en",
+        translate_response: bool = False
     ) -> AsyncGenerator[StreamChunk, None]:
         """Generate text with streaming response."""
         start_time = time.time()
@@ -110,9 +112,23 @@ class GenerationService:
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
             
+            # Handle translation if requested
+            final_content = callback_handler.content
+            if translate_response and target_language != "en":
+                try:
+                    translation_result = language_service.translate_text(
+                        final_content, 
+                        target_language, 
+                        "auto"
+                    )
+                    final_content = translation_result['translated_text']
+                except Exception as translation_error:
+                    # If translation fails, keep original content
+                    print(f"Translation failed: {translation_error}")
+            
             # Yield final chunk with complete information
             yield StreamChunk(
-                content=callback_handler.content,
+                content=final_content,
                 is_complete=True,
                 token_usage=callback_handler.token_usage,
                 latency_ms=latency_ms

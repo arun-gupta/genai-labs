@@ -17,6 +17,8 @@ class GenerateRequest(BaseModel):
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
     stream: bool = Field(True, description="Whether to stream the response")
+    target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
+    translate_response: bool = Field(False, description="Whether to translate the response")
 
 
 class SummarizeRequest(BaseModel):
