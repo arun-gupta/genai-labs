@@ -181,11 +181,9 @@ start_backend() {
     
     echo -e "${GREEN}✅ Virtual environment activated: $VIRTUAL_ENV${NC}"
     
-    # Check if requirements are installed
-    if ! python -c "import fastapi" 2>/dev/null; then
-        echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
-        pip install -r requirements.txt
-    fi
+    # Always install requirements for QuickStart
+    echo -e "${YELLOW}📦 Installing Python dependencies...${NC}"
+    pip install -r requirements.txt
     
     # Start the backend server
     echo -e "${GREEN}🚀 Starting backend server on http://localhost:8000${NC}"

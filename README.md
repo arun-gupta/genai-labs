@@ -8,7 +8,7 @@ A full-stack web application for experimenting with different GenAI use cases us
 # Clone and start the application
 git clone <repository-url>
 cd genai-labs
-./quickstart.sh
+./quickstart.sh  # Installs all dependencies and starts the app
 ```
 
 **That's it!** The app will be running at http://localhost:3000
@@ -17,6 +17,8 @@ cd genai-labs
 
 - **Text Generation** - Advanced text creation with 12+ writing styles
 - **Text Summarization** - Multi-format summarization with analytics  
+- **Q&A over Documents** - RAG-powered document question answering
+- **Model Comparison** - Side-by-side model performance analysis
 - **Models Explorer** - Browse and manage 12+ open-source LLM models
 - **Voice Features** - Speech-to-text and text-to-speech
 - **Real-time Streaming** - Live output with token usage tracking
@@ -27,13 +29,13 @@ cd genai-labs
 
 ### 🚀 Quick Start (Recommended)
 ```bash
-./quickstart.sh  # Everything in one command
+./quickstart.sh  # Everything in one command - installs dependencies and starts the app
 ```
 
 ### 🔧 Development Setup
 ```bash
-./dev-setup.sh   # Quick dev environment
-./quickstart.sh  # Start the app
+./dev-setup.sh   # Quick dev environment setup (creates venv, installs deps)
+./quickstart.sh  # Start the app (skips dependency installation)
 ```
 
 
@@ -85,6 +87,18 @@ VITE_API_BASE_URL=http://localhost:8000
 3. Check availability status
 4. Copy download commands for Ollama
 
+### Q&A over Documents
+1. Navigate to `/rag`
+2. Upload documents (PDF, DOCX, TXT, MD, CSV)
+3. Ask questions about your documents
+4. View source citations and export results
+
+### Model Comparison
+1. Navigate to `/summarize`
+2. Select 2+ models in the comparison section
+3. Enter text to summarize
+4. Click "Compare Models" to see side-by-side analysis
+
 ## 🏗️ Tech Stack
 
 - **Frontend**: React + TypeScript + Tailwind CSS + Vite
@@ -93,10 +107,10 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 🔮 Roadmap
 
-- **Q&A over Documents** - RAG implementation
 - **Code Generation** - Specialized coding features
 - **Translation Services** - Multi-language support
 - **Structured Data Extraction** - Data processing capabilities
+- **Advanced Analytics** - Enhanced performance metrics and insights
 
 ## 🤝 Contributing
 
