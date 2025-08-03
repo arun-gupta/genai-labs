@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3 } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
+import { LanguageSelector } from '../components/LanguageSelector';
+import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
-import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse } from '../types/api';
+import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
 
 export const SummarizePage: React.FC = () => {
   const [inputType, setInputType] = useState<'text' | 'url' | 'file'>('text');
@@ -27,6 +29,10 @@ export const SummarizePage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'analytics'>('summary');
   const [originalText, setOriginalText] = useState<string>('');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  const [translateSummary, setTranslateSummary] = useState(false);
+  const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
+  const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +45,20 @@ export const SummarizePage: React.FC = () => {
       setAvailableModels(models);
     } catch (err) {
       console.error('Error loading models:', err);
+    }
+  };
+
+  const detectLanguage = async (text: string) => {
+    if (!text.trim() || text.length < 10) return;
+    
+    setIsDetectingLanguage(true);
+    try {
+      const response = await apiService.detectLanguage(text);
+      setLanguageDetection(response.detection);
+    } catch (err) {
+      console.error('Error detecting language:', err);
+    } finally {
+      setIsDetectingLanguage(false);
     }
   };
 
@@ -117,6 +137,8 @@ export const SummarizePage: React.FC = () => {
           temperature: temperature,
           summary_type: summaryType as any,
           stream: true,
+          target_language: targetLanguage,
+          translate_summary: translateSummary,
         };
 
         await apiService.summarizeTextStream(
@@ -200,6 +222,17 @@ export const SummarizePage: React.FC = () => {
       handleSummarize();
     }
   };
+
+  // Detect language when text changes
+  useEffect(() => {
+    if (inputType === 'text' && text.length > 10) {
+      const timeoutId = setTimeout(() => {
+        detectLanguage(text);
+      }, 1000); // Debounce for 1 second
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [text, inputType]);
 
   const getInputContent = () => {
     if (inputType === 'text') return text;
@@ -295,6 +328,42 @@ export const SummarizePage: React.FC = () => {
                 )}
               </select>
             </div>
+
+            {/* Language Settings */}
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center space-x-2">
+                <Languages className="w-4 h-4 text-gray-500" />
+                <h3 className="text-sm font-medium text-gray-700">Language Settings</h3>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="translate-summary"
+                  checked={translateSummary}
+                  onChange={(e) => setTranslateSummary(e.target.checked)}
+                  disabled={isSummarizing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="translate-summary" className="text-sm text-gray-700">
+                  Translate summary to different language
+                </label>
+              </div>
+              
+              {translateSummary && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Language
+                  </label>
+                  <LanguageSelector
+                    selectedLanguage={targetLanguage}
+                    onLanguageChange={setTargetLanguage}
+                    placeholder="Select target language..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="card">
@@ -370,6 +439,16 @@ An Open Source AI is an AI system made available under terms and in a way that g
                     Try Sample
                   </button>
                 </div>
+                
+                {/* Language Detection Display */}
+                {(languageDetection || isDetectingLanguage) && (
+                  <div className="mt-3">
+                    <LanguageDetectionDisplay
+                      detection={languageDetection}
+                      isLoading={isDetectingLanguage}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

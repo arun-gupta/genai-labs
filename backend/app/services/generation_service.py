@@ -2,6 +2,7 @@ from typing import AsyncGenerator, Optional
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.callbacks.base import BaseCallbackHandler
 from app.services.model_factory import model_factory
+from app.services.language_service import language_service
 from app.models.responses import TokenUsage, StreamChunk
 import time
 import json
@@ -132,7 +133,9 @@ class GenerationService:
         model_name: Optional[str] = None,
         max_length: int = 150,
         temperature: float = 0.3,
-        summary_type: str = "general"
+        summary_type: str = "general",
+        target_language: str = "en",
+        translate_summary: bool = False
     ) -> AsyncGenerator[StreamChunk, None]:
         """Summarize text with streaming response."""
         start_time = time.time()
@@ -181,9 +184,29 @@ class GenerationService:
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
             
+            # Get the summary content
+            summary_content = callback_handler.content
+            
+            # Translate if requested
+            if translate_summary and target_language != "en":
+                try:
+                    translation_result = language_service.translate_text(
+                        summary_content, 
+                        target_language, 
+                        "en"
+                    )
+                    if translation_result.get('error'):
+                        # If translation fails, use original summary
+                        summary_content = f"{summary_content}\n\n[Translation failed: {translation_result['error']}]"
+                    else:
+                        summary_content = translation_result['translated_text']
+                except Exception as e:
+                    # If translation fails, use original summary
+                    summary_content = f"{summary_content}\n\n[Translation failed: {str(e)}]"
+            
             # Yield final chunk with complete information
             yield StreamChunk(
-                content=callback_handler.content,
+                content=summary_content,
                 is_complete=True,
                 token_usage=callback_handler.token_usage,
                 latency_ms=latency_ms
