@@ -36,11 +36,7 @@ cd genai-labs
 ./quickstart.sh  # Start the app
 ```
 
-### 📋 Complete Setup
-```bash
-./setup.sh       # Comprehensive setup
-./quickstart.sh  # Start the app
-```
+
 
 ## 🔧 Configuration
 
