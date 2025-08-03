@@ -182,20 +182,14 @@ class RAGService:
             # Get collection
             collection = self.chroma_client.get_collection(name=collection_name)
             
-            # Build where clause for tag filtering
-            where_clause = None
-            if filter_tags:
-                where_clause = {"tags": {"$in": filter_tags}}
-            
-            # Query for relevant documents
+            # Query for relevant documents (we'll filter by tags after query)
             results = collection.query(
                 query_texts=[question],
-                n_results=top_k,
-                where=where_clause,
+                n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
                 include=["documents", "metadatas", "distances"]
             )
             
-            # Filter by similarity threshold
+            # Filter by similarity threshold and tags
             relevant_chunks = []
             sources = []
             
@@ -206,7 +200,13 @@ class RAGService:
             )):
                 similarity_score = 1 - distance  # Convert distance to similarity
                 
-                if similarity_score >= similarity_threshold:
+                # Check if document has required tags
+                doc_tags = metadata.get("tags", [])
+                tag_match = True
+                if filter_tags:
+                    tag_match = any(tag in doc_tags for tag in filter_tags)
+                
+                if similarity_score >= similarity_threshold and tag_match:
                     relevant_chunks.append(doc)
                     sources.append({
                         "document_id": metadata.get("document_id", ""),
@@ -214,7 +214,7 @@ class RAGService:
                         "chunk_text": doc,
                         "similarity_score": similarity_score,
                         "chunk_index": metadata.get("chunk_index", i),
-                        "tags": metadata.get("tags", [])
+                        "tags": doc_tags
                     })
             
             if not relevant_chunks:
@@ -285,20 +285,14 @@ Question: {question}"""
             # Get collection
             collection = self.chroma_client.get_collection(name=collection_name)
             
-            # Build where clause for tag filtering
-            where_clause = None
-            if filter_tags:
-                where_clause = {"tags": {"$in": filter_tags}}
-            
-            # Query for relevant documents
+            # Query for relevant documents (we'll filter by tags after query)
             results = collection.query(
                 query_texts=[question],
-                n_results=top_k,
-                where=where_clause,
+                n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
                 include=["documents", "metadatas", "distances"]
             )
             
-            # Filter by similarity threshold
+            # Filter by similarity threshold and tags
             relevant_chunks = []
             sources = []
             
@@ -309,7 +303,13 @@ Question: {question}"""
             )):
                 similarity_score = 1 - distance
                 
-                if similarity_score >= similarity_threshold:
+                # Check if document has required tags
+                doc_tags = metadata.get("tags", [])
+                tag_match = True
+                if filter_tags:
+                    tag_match = any(tag in doc_tags for tag in filter_tags)
+                
+                if similarity_score >= similarity_threshold and tag_match:
                     relevant_chunks.append(doc)
                     sources.append({
                         "document_id": metadata.get("document_id", ""),
@@ -317,7 +317,7 @@ Question: {question}"""
                         "chunk_text": doc,
                         "similarity_score": similarity_score,
                         "chunk_index": metadata.get("chunk_index", i),
-                        "tags": metadata.get("tags", [])
+                        "tags": doc_tags
                     })
             
             if not relevant_chunks:
