@@ -10,6 +10,7 @@ import { PromptTemplateSelector } from '../components/PromptTemplateSelector';
 import { MultipleCandidatesSelector } from '../components/MultipleCandidatesSelector';
 import { VoiceInput } from '../components/VoiceInput';
 import { VoiceOutput } from '../components/VoiceOutput';
+import { PromptHistoryComponent } from '../components/PromptHistory';
 import { ExportOptions } from '../components/ExportOptions';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
@@ -40,6 +41,7 @@ export const GeneratePage: React.FC = () => {
   const [candidates, setCandidates] = useState<string[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<number>(0);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Language detection effect
   useEffect(() => {
@@ -209,6 +211,12 @@ export const GeneratePage: React.FC = () => {
     setResponse(candidates[index] || '');
   };
 
+  const handleLoadFromHistory = (systemPrompt: string, userPrompt: string) => {
+    setSystemPrompt(systemPrompt);
+    setUserPrompt(userPrompt);
+    setShowHistory(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -349,6 +357,29 @@ export const GeneratePage: React.FC = () => {
               currentUserPrompt={userPrompt}
               className="w-full"
             />
+          </div>
+
+          {/* History */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <History className="text-blue-600" size={20} />
+                <h3 className="text-lg font-semibold text-gray-900">History</h3>
+              </div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors"
+              >
+                {showHistory ? 'Hide' : 'Show'} History
+              </button>
+            </div>
+            
+            {showHistory && (
+              <PromptHistoryComponent
+                onLoadPrompt={handleLoadFromHistory}
+                className="w-full"
+              />
+            )}
           </div>
         </div>
 

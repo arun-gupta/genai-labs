@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
+import { PromptHistoryComponent } from '../components/PromptHistory';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
@@ -35,6 +36,7 @@ export const SummarizePage: React.FC = () => {
   const [outputFormat, setOutputFormat] = useState('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -226,6 +228,16 @@ export const SummarizePage: React.FC = () => {
     }
   };
 
+  const handleLoadFromHistory = (systemPrompt: string, userPrompt: string) => {
+    // For summarize page, we can load the text input from history
+    if (userPrompt.startsWith('Summarize: ')) {
+      const textToSummarize = userPrompt.replace('Summarize: ', '');
+      setText(textToSummarize);
+      setInputType('text');
+    }
+    setShowHistory(false);
+  };
+
   // Detect language when text changes
   useEffect(() => {
     if (inputType === 'text' && text.length > 10) {
@@ -379,6 +391,29 @@ export const SummarizePage: React.FC = () => {
                     className="w-full"
                   />
                 </div>
+              )}
+            </div>
+
+            {/* History */}
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <History className="w-4 h-4 text-gray-500" />
+                  <h3 className="text-sm font-medium text-gray-700">History</h3>
+                </div>
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                >
+                  {showHistory ? 'Hide' : 'Show'} History
+                </button>
+              </div>
+              
+              {showHistory && (
+                <PromptHistoryComponent
+                  onLoadPrompt={handleLoadFromHistory}
+                  className="w-full"
+                />
               )}
             </div>
           </div>
