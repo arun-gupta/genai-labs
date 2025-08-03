@@ -179,12 +179,15 @@ class ModelAvailabilityService:
             model["is_available"] = model["name"] in available_models
             model["status"] = "Available" if model["is_available"] else "Download Required"
         
+        # Sort models alphabetically by display_name
+        all_models.sort(key=lambda x: x["display_name"])
+        
         return {
             "models": all_models,
             "available_count": len(available_models),
             "total_count": len(all_models),
-            "categories": list(set(model["category"] for model in all_models)),
-            "organizations": list(set(model["organization"] for model in all_models))
+            "categories": sorted(list(set(model["category"] for model in all_models))),
+            "organizations": sorted(list(set(model["organization"] for model in all_models)))
         }
 
 # Global instance
