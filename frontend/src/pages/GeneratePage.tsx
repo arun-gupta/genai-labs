@@ -12,7 +12,7 @@ export const GeneratePage: React.FC = () => {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('ollama');
-  const [selectedModel, setSelectedModel] = useState('llama2');
+  const [selectedModel, setSelectedModel] = useState('mistral:7b');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState<number | undefined>(1000);
   const [isGenerating, setIsGenerating] = useState(false);
