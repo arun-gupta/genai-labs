@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -63,19 +63,52 @@ export const HomePage: React.FC = () => {
       description: 'GPT-4, GPT-3.5 Turbo, and more',
       icon: Brain,
       requiresKey: true,
+      models: ['gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo'],
+      features: ['Advanced reasoning', 'Code generation', 'Real-time streaming']
     },
     {
       name: 'Anthropic',
       description: 'Claude models for advanced reasoning',
       icon: Brain,
       requiresKey: true,
+      models: ['claude-3-sonnet', 'claude-3-haiku', 'claude-2.1'],
+      features: ['Constitutional AI', 'Safety-focused', 'Long context']
     },
     {
-      name: 'Ollama',
+      name: 'Ollama (Local)',
       description: 'Local models for privacy and speed',
       icon: Server,
       requiresKey: false,
+      models: ['Mistral 7B', 'Llama 2', 'Code Llama', 'Phi-2'],
+      features: ['Offline processing', 'Privacy-first', 'Custom models']
     },
+  ];
+
+  const modelCategories = [
+    {
+      title: 'General Purpose',
+      models: ['Mistral 7B', 'Llama 2', 'GPT-4', 'Claude-3'],
+      icon: Zap,
+      color: 'text-blue-600'
+    },
+    {
+      title: 'Coding & Development',
+      models: ['Code Llama', 'Phi-2', 'GPT-4', 'Claude-3'],
+      icon: Code,
+      color: 'text-green-600'
+    },
+    {
+      title: 'Reasoning & Analysis',
+      models: ['GPT-4', 'Claude-3', 'Llama 2', 'Mistral 7B'],
+      icon: Brain,
+      color: 'text-purple-600'
+    },
+    {
+      title: 'Multilingual',
+      models: ['Mistral 7B', 'Llama 2', 'GPT-4', 'Claude-3'],
+      icon: Globe,
+      color: 'text-orange-600'
+    }
   ];
 
   return (
@@ -196,26 +229,97 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Model Providers */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {models.map((model) => {
             const Icon = model.icon;
             return (
-              <div key={model.name} className="card text-center hover:shadow-md transition-shadow">
-                <div className="flex justify-center mb-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Icon className="text-gray-600" size={24} />
+              <div key={model.name} className="card hover:shadow-lg transition-all duration-200 border-2 border-transparent hover:border-primary-200">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Icon className="text-gray-600" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {model.name}
+                      </h3>
+                      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                        {model.requiresKey ? 'API Key Required' : 'Local Model'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {model.name}
-                </h3>
-                <p className="text-gray-600 text-sm mb-3">{model.description}</p>
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                  {model.requiresKey ? 'API Key Required' : 'Local Model'}
+                  
+                  <p className="text-gray-600 text-sm">{model.description}</p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Available Models:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {model.models.map((modelName, index) => (
+                          <span key={index} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md">
+                            {modelName}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Key Features:</h4>
+                      <div className="space-y-1">
+                        {model.features.map((feature, index) => (
+                          <div key={index} className="flex items-center text-xs text-gray-600">
+                            <div className="w-1 h-1 bg-primary-400 rounded-full mr-2"></div>
+                            {feature}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        {/* Model Categories */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Model Categories</h3>
+            <p className="text-gray-600 text-sm">
+              Models organized by their primary capabilities
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {modelCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <div key={category.title} className="card text-center hover:shadow-md transition-shadow">
+                  <div className="flex justify-center mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50">
+                      <Icon className={category.color} size={20} />
+                    </div>
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                    {category.title}
+                  </h4>
+                  <div className="space-y-1">
+                    {category.models.slice(0, 3).map((model, index) => (
+                      <div key={index} className="text-xs text-gray-600">
+                        {model}
+                      </div>
+                    ))}
+                    {category.models.length > 3 && (
+                      <div className="text-xs text-gray-500">
+                        +{category.models.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
