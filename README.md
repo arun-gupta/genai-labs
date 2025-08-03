@@ -25,12 +25,7 @@ cd genai-labs
 - **Export Options** - PDF, Word, Markdown, HTML export
 - **Prompt History** - Local storage for session management
 
-## 🛠️ Setup Options
-
-### 🚀 Quick Start (Recommended)
-```bash
-./quickstart.sh  # Everything in one command - installs dependencies and starts the app
-```
+## 🛠️ Alternative Setup Options
 
 ### 🔧 Development Setup
 ```bash
