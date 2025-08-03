@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -10,6 +10,7 @@ export const HomePage: React.FC = () => {
       icon: Zap,
       path: '/generate',
       color: 'bg-blue-500',
+      highlights: ['12+ Writing Styles', 'Real-time Streaming', 'Voice Input']
     },
     {
       title: 'Text Summarization',
@@ -17,6 +18,7 @@ export const HomePage: React.FC = () => {
       icon: FileText,
       path: '/summarize',
       color: 'bg-green-500',
+      highlights: ['Model Comparison', 'Analytics', 'Multi-format Export']
     },
     {
       title: 'Q&A over Documents',
@@ -24,7 +26,35 @@ export const HomePage: React.FC = () => {
       icon: Search,
       path: '/rag',
       color: 'bg-purple-500',
+      highlights: ['Document Upload', 'Source Citations', 'Collection Management']
     },
+  ];
+
+  const capabilities = [
+    {
+      title: 'Voice Features',
+      description: 'Speech-to-text and text-to-speech capabilities',
+      icon: Mic,
+      color: 'text-blue-600'
+    },
+    {
+      title: 'Model Explorer',
+      description: 'Browse and manage 12+ open-source LLM models',
+      icon: Brain,
+      color: 'text-green-600'
+    },
+    {
+      title: 'Export Options',
+      description: 'Export results in PDF, Word, Markdown, and HTML formats',
+      icon: Download,
+      color: 'text-purple-600'
+    },
+    {
+      title: 'Real-time Analytics',
+      description: 'Live token usage tracking and performance metrics',
+      icon: BarChart3,
+      color: 'text-orange-600'
+    }
   ];
 
   const models = [
@@ -68,50 +98,58 @@ export const HomePage: React.FC = () => {
             className="btn-primary flex items-center space-x-2"
           >
             <Zap size={16} />
-            <span>Start Generating</span>
+            <span>Get Started</span>
             <ArrowRight size={16} />
           </Link>
           <Link
-            to="/summarize"
+            to="/models"
             className="btn-secondary flex items-center space-x-2"
           >
-            <FileText size={16} />
-            <span>Try Summarization</span>
+            <Brain size={16} />
+            <span>Explore Models</span>
           </Link>
         </div>
       </div>
 
-      {/* Features Section */}
+      {/* Main Features Section */}
       <div className="space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Features</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Core Features</h2>
           <p className="text-gray-600">
-            Explore different AI capabilities with our intuitive interface
+            Three powerful AI capabilities to enhance your workflow
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
               <Link
                 key={feature.path}
                 to={feature.path}
-                className="card hover:shadow-md transition-shadow group"
+                className="card hover:shadow-lg transition-all duration-200 group border-2 border-transparent hover:border-primary-200"
               >
-                <div className="flex items-start space-x-4">
-                  <div className={`${feature.color} p-3 rounded-lg text-white`}>
-                    <Icon size={24} />
+                <div className="space-y-4">
+                  <div className={`${feature.color} p-4 rounded-lg text-white w-fit`}>
+                    <Icon size={28} />
                   </div>
-                  <div className="flex-1">
+                  <div>
                     <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 mt-2">{feature.description}</p>
-                    <div className="flex items-center text-primary-600 mt-4 group-hover:text-primary-700 transition-colors">
-                      <span className="text-sm font-medium">Try it now</span>
-                      <ArrowRight size={16} className="ml-1" />
+                    <p className="text-gray-600 mt-2 mb-4">{feature.description}</p>
+                    <div className="space-y-2">
+                      {feature.highlights.map((highlight, index) => (
+                        <div key={index} className="flex items-center text-sm text-gray-500">
+                          <div className="w-1.5 h-1.5 bg-primary-400 rounded-full mr-2"></div>
+                          {highlight}
+                        </div>
+                      ))}
                     </div>
+                  </div>
+                  <div className="flex items-center text-primary-600 group-hover:text-primary-700 transition-colors pt-2 border-t border-gray-100">
+                    <span className="text-sm font-medium">Try it now</span>
+                    <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </Link>
@@ -120,10 +158,39 @@ export const HomePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Additional Capabilities */}
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Additional Capabilities</h2>
+          <p className="text-gray-600">
+            Enhanced features available across all tools
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {capabilities.map((capability) => {
+            const Icon = capability.icon;
+            return (
+              <div key={capability.title} className="card text-center hover:shadow-md transition-shadow">
+                <div className="flex justify-center mb-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50`}>
+                    <Icon className={capability.color} size={20} />
+                  </div>
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  {capability.title}
+                </h3>
+                <p className="text-xs text-gray-600">{capability.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Models Section */}
       <div className="space-y-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Supported Models</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Supported Models</h2>
           <p className="text-gray-600">
             Choose from a variety of language models to suit your needs
           </p>
@@ -133,7 +200,7 @@ export const HomePage: React.FC = () => {
           {models.map((model) => {
             const Icon = model.icon;
             return (
-              <div key={model.name} className="card text-center">
+              <div key={model.name} className="card text-center hover:shadow-md transition-shadow">
                 <div className="flex justify-center mb-4">
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                     <Icon className="text-gray-600" size={24} />
@@ -152,21 +219,35 @@ export const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Getting Started */}
+      {/* Quick Actions */}
       <div className="card bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Getting Started</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Ready to Get Started?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Configure your API keys in the backend environment file to use cloud models, 
             or set up Ollama locally for private, offline AI processing.
           </p>
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex items-center justify-center space-x-4 flex-wrap">
             <Link
               to="/generate"
               className="btn-primary flex items-center space-x-2"
             >
               <Zap size={16} />
-              <span>Start Experimenting</span>
+              <span>Text Generation</span>
+            </Link>
+            <Link
+              to="/summarize"
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <FileText size={16} />
+              <span>Text Summarization</span>
+            </Link>
+            <Link
+              to="/rag"
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <Search size={16} />
+              <span>Q&A over Documents</span>
             </Link>
           </div>
         </div>
