@@ -4,6 +4,7 @@ import { Navigation } from './components/Navigation';
 import { HomePage } from './pages/HomePage';
 import { GeneratePage } from './pages/GeneratePage';
 import { SummarizePage } from './pages/SummarizePage';
+import { RAGPage } from './pages/RAGPage';
 import { ModelsPage } from './pages/ModelsPage';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/generate" element={<GeneratePage />} />
           <Route path="/summarize" element={<SummarizePage />} />
+          <Route path="/rag" element={<RAGPage />} />
           <Route path="/models" element={<ModelsPage />} />
         </Routes>
       </main>

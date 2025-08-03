@@ -297,6 +297,108 @@ class ApiService {
       onError(error instanceof Error ? error.message : 'Unknown error');
     }
   }
+
+  // RAG Methods
+  async uploadRAGDocument(formData: FormData): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/rag/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`RAG upload failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async askRAGQuestion(request: any): Promise<any> {
+    return this.request<any>('/rag/question', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async askRAGQuestionStream(
+    request: any,
+    onChunk: (chunk: StreamChunk) => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    const url = `${this.baseUrl}/rag/question/stream`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`RAG streaming request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body reader available');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            const eventType = line.slice(7).trim();
+            if (eventType === 'error') {
+              continue;
+            }
+          }
+          
+          if (line.startsWith('data: ')) {
+            try {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') {
+                return;
+              }
+              const chunk: StreamChunk = JSON.parse(data);
+              onChunk(chunk);
+            } catch (e) {
+              console.warn('Failed to parse RAG SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Unknown error occurred');
+    }
+  }
+
+  async getRAGCollections(): Promise<any[]> {
+    return this.request<any[]>('/rag/collections');
+  }
+
+  async deleteRAGDocument(request: { document_id: string; collection_name: string }): Promise<any> {
+    return this.request<any>('/rag/document', {
+      method: 'DELETE',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async deleteRAGCollection(collectionName: string): Promise<any> {
+    return this.request<any>(`/rag/collection/${collectionName}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiService = new ApiService(); 
