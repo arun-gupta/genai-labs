@@ -111,4 +111,4 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details. 
+Apache License 2.0 - see [LICENSE](LICENSE) for details. 
