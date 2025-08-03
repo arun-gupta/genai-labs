@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown, BarChart3 } from 'lucide-react';
+import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown, BarChart3, GitCompare } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -12,6 +12,7 @@ import { VoiceInput } from '../components/VoiceInput';
 import { VoiceOutput } from '../components/VoiceOutput';
 import { PromptHistoryComponent } from '../components/PromptHistory';
 import { ExportOptions } from '../components/ExportOptions';
+import { ModelComparison } from '../components/ModelComparison';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, LanguageDetection } from '../types/api';
@@ -37,11 +38,30 @@ export const GeneratePage: React.FC = () => {
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [analytics, setAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'response' | 'analytics'>('response');
+  const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
   const [candidates, setCandidates] = useState<string[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<number>(0);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<any>(null);
+  const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
+  const [showComparison, setShowComparison] = useState(false);
+  const [availableModels, setAvailableModels] = useState<any>(null);
+
+  // Load available models
+  useEffect(() => {
+    const loadAvailableModels = async () => {
+      try {
+        const models = await apiService.getAvailableModels();
+        setAvailableModels(models);
+      } catch (error) {
+        console.error('Failed to load available models:', error);
+      }
+    };
+    
+    loadAvailableModels();
+  }, []);
 
   // Language detection effect
   useEffect(() => {
@@ -215,6 +235,42 @@ export const GeneratePage: React.FC = () => {
     setSystemPrompt(systemPrompt);
     setUserPrompt(userPrompt);
     setShowHistory(false);
+  };
+
+  const handleModelComparison = async () => {
+    if (!userPrompt.trim()) {
+      setError('Please enter a user prompt');
+      return;
+    }
+    
+    if (selectedModels.length < 2) {
+      setError('Please select at least 2 models for comparison');
+      return;
+    }
+    
+    setIsComparing(true);
+    setError(null);
+    setComparisonResults(null);
+    
+    try {
+      const result = await apiService.compareGenerationModels({
+        system_prompt: systemPrompt,
+        user_prompt: userPrompt,
+        models: selectedModels,
+        temperature: temperature,
+        max_tokens: maxTokens,
+        target_language: targetLanguage,
+        translate_response: translateOutput,
+        output_format: outputFormat
+      });
+      
+      setComparisonResults(result);
+      setShowComparison(true);
+    } catch (err) {
+      setError(`Model comparison failed: ${err}`);
+    } finally {
+      setIsComparing(false);
+    }
   };
 
   const getExportContent = () => {
@@ -410,6 +466,54 @@ export const GeneratePage: React.FC = () => {
             />
           </div>
 
+          {/* Model Comparison Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <GitCompare className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model Comparison</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">
+                Select models to compare for text generation performance
+              </p>
+              
+              {availableModels?.providers?.map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isComparing}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {selectedModels.length > 0 && (
+                <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+                  <p className="text-xs text-purple-700">
+                    Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* History */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
@@ -501,27 +605,47 @@ export const GeneratePage: React.FC = () => {
               </div>
             )}
 
-            {/* Generate Button */}
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating || !userPrompt.trim()}
-              className="mt-4 w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Send size={16} />
-                  <span>Generate Text</span>
-                </>
-              )}
-            </button>
+            {/* Generate and Compare Buttons */}
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating || !userPrompt.trim()}
+                className="flex-1 btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Generate</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleModelComparison}
+                disabled={isComparing || !userPrompt.trim() || selectedModels.length < 2}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isComparing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Comparing...</span>
+                  </>
+                ) : (
+                  <>
+                    <GitCompare size={16} />
+                    <span>Compare Models</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             <div className="mt-2 text-xs text-gray-500 text-center">
-              Press Cmd/Ctrl + Enter to generate
+              Press Cmd/Ctrl + Enter to generate • Select 2+ models to compare
             </div>
           </div>
 
@@ -551,6 +675,19 @@ export const GeneratePage: React.FC = () => {
                 <BarChart3 size={16} />
                 <span>Analytics</span>
               </button>
+              {showComparison && (
+                <button
+                  onClick={() => setActiveTab('comparison')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'comparison'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <GitCompare size={16} />
+                  <span>Comparison</span>
+                </button>
+              )}
             </div>
 
             {/* Tab Content */}
@@ -578,6 +715,16 @@ export const GeneratePage: React.FC = () => {
               <GenerationAnalyticsDisplay
                 analytics={analytics}
                 isLoading={isAnalyzing}
+              />
+            )}
+
+            {activeTab === 'comparison' && comparisonResults && (
+              <ModelComparison
+                results={comparisonResults.results}
+                metrics={comparisonResults.comparison_metrics}
+                recommendations={comparisonResults.recommendations}
+                isComparing={isComparing}
+                comparisonType="generation"
               />
             )}
           </div>

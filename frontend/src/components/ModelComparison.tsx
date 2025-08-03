@@ -4,10 +4,12 @@ import { BarChart3, Clock, Target, TrendingUp, Award, Zap, FileText, CheckCircle
 interface ModelResult {
   model_provider: string;
   model_name: string;
-  summary: string;
+  summary?: string;
+  generated_text?: string;
   original_length: number;
-  summary_length: number;
-  compression_ratio: number;
+  summary_length?: number;
+  generated_length?: number;
+  compression_ratio?: number;
   token_usage?: {
     total_tokens: number;
     prompt_tokens: number;
@@ -25,7 +27,7 @@ interface ComparisonMetrics {
   average_quality_score: number;
   average_coherence_score: number;
   average_relevance_score: number;
-  average_compression_ratio: number;
+  average_compression_ratio?: number;
   best_quality_model?: string;
   fastest_model?: string;
   most_compressed_model?: string;
@@ -37,13 +39,15 @@ interface ModelComparisonProps {
   metrics: ComparisonMetrics;
   recommendations: string[];
   isComparing: boolean;
+  comparisonType: 'summarization' | 'generation';
 }
 
 export const ModelComparison: React.FC<ModelComparisonProps> = ({
   results,
   metrics,
   recommendations,
-  isComparing
+  isComparing,
+  comparisonType
 }) => {
   const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(false);
@@ -85,7 +89,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
       );
     }
     
-    if (metrics.most_compressed_model === `${result.model_provider}/${result.model_name}`) {
+    if (comparisonType === 'summarization' && metrics.most_compressed_model === `${result.model_provider}/${result.model_name}`) {
       badges.push(
         <span key="compression" className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
           <FileText className="mr-1" size={12} />
@@ -95,6 +99,46 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
     }
     
     return badges;
+  };
+
+  const getContent = (result: ModelResult) => {
+    return comparisonType === 'summarization' ? result.summary : result.generated_text;
+  };
+
+  const getContentLength = (result: ModelResult) => {
+    return comparisonType === 'summarization' ? result.summary_length : result.generated_length;
+  };
+
+  const getContentColumnHeader = () => {
+    return comparisonType === 'summarization' ? 'Summary' : 'Generated Text';
+  };
+
+  const getLengthColumnHeader = () => {
+    return comparisonType === 'summarization' ? 'Words' : 'Length';
+  };
+
+  const getCompressionColumn = () => {
+    if (comparisonType === 'summarization') {
+      return (
+        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+          Compression
+        </th>
+      );
+    }
+    return null;
+  };
+
+  const getCompressionCell = (result: ModelResult) => {
+    if (comparisonType === 'summarization' && result.compression_ratio !== undefined) {
+      return (
+        <td className="px-4 py-4 text-center">
+          <div className="text-sm font-medium text-gray-900">
+            {(result.compression_ratio * 100).toFixed(1)}%
+          </div>
+        </td>
+      );
+    }
+    return null;
   };
 
   if (isComparing) {
@@ -140,12 +184,14 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div className="text-sm text-gray-600">Avg Speed</div>
           </div>
           
-          <div className="text-center p-3 bg-purple-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">
-              {metrics.average_compression_ratio ? (metrics.average_compression_ratio * 100).toFixed(1) : 'N/A'}%
+          {comparisonType === 'summarization' && (
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {metrics.average_compression_ratio ? (metrics.average_compression_ratio * 100).toFixed(1) : 'N/A'}%
+              </div>
+              <div className="text-sm text-gray-600">Avg Compression</div>
             </div>
-            <div className="text-sm text-gray-600">Avg Compression</div>
-          </div>
+          )}
           
           <div className="text-center p-3 bg-orange-50 rounded-lg">
             <div className="text-2xl font-bold text-orange-600">
@@ -182,14 +228,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   Model
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b">
-                  Summary
+                  {getContentColumnHeader()}
                 </th>
                 <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
-                  Words
+                  {getLengthColumnHeader()}
                 </th>
-                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
-                  Compression
-                </th>
+                {getCompressionColumn()}
                 <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
                   Speed (s)
                 </th>
@@ -215,51 +259,57 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     </div>
                   </td>
                   
-                  {/* Summary */}
+                  {/* Content */}
                   <td className="px-4 py-4">
                     <div className="max-w-md">
                       <div className="text-sm text-gray-800">
-                        {expandedSummaries.has(index) 
-                          ? result.summary 
-                          : result.summary.length > 150 
-                            ? `${result.summary.substring(0, 150)}...` 
-                            : result.summary
-                        }
+                        {(() => {
+                          const content = getContent(result);
+                          if (!content) return 'No content';
+                          
+                          return expandedSummaries.has(index) 
+                            ? content 
+                            : content.length > 150 
+                              ? `${content.substring(0, 150)}...` 
+                              : content;
+                        })()}
                       </div>
-                      {result.summary.length > 150 && (
-                        <button
-                          onClick={() => toggleExpandedSummary(index)}
-                          className="text-blue-500 hover:text-blue-700 text-xs mt-1 flex items-center"
-                        >
-                          {expandedSummaries.has(index) ? (
-                            <>
-                              <ChevronUp size={12} className="mr-1" />
-                              Show Less
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown size={12} className="mr-1" />
-                              Show More
-                            </>
-                          )}
-                        </button>
-                      )}
+                      {(() => {
+                        const content = getContent(result);
+                        if (content && content.length > 150) {
+                          return (
+                            <button
+                              onClick={() => toggleExpandedSummary(index)}
+                              className="text-blue-500 hover:text-blue-700 text-xs mt-1 flex items-center"
+                            >
+                              {expandedSummaries.has(index) ? (
+                                <>
+                                  <ChevronUp size={12} className="mr-1" />
+                                  Show Less
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown size={12} className="mr-1" />
+                                  Show More
+                                </>
+                              )}
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </td>
                   
-                  {/* Words */}
+                  {/* Length */}
                   <td className="px-4 py-4 text-center">
                     <div className="text-sm font-medium text-gray-900">
-                      {result.summary_length}
+                      {getContentLength(result) || 0}
                     </div>
                   </td>
                   
-                  {/* Compression */}
-                  <td className="px-4 py-4 text-center">
-                    <div className="text-sm font-medium text-gray-900">
-                      {(result.compression_ratio * 100).toFixed(1)}%
-                    </div>
-                  </td>
+                  {/* Compression (only for summarization) */}
+                  {getCompressionCell(result)}
                   
                   {/* Speed */}
                   <td className="px-4 py-4 text-center">

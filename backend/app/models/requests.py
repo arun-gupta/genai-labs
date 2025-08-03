@@ -167,13 +167,26 @@ class ModelComparisonRequest(BaseModel):
     translate_summary: bool = Field(False, description="Whether to translate the summary")
 
 
+class GenerationComparisonRequest(BaseModel):
+    system_prompt: str = Field("", description="System prompt for the model")
+    user_prompt: str = Field(..., description="User prompt for text generation")
+    models: List[dict] = Field(..., description="List of models to compare")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
+    max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
+    target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
+    translate_response: bool = Field(False, description="Whether to translate the response")
+    output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format for the response")
+
+
 class ModelComparisonResult(BaseModel):
     model_provider: str
     model_name: str
-    summary: str
+    summary: Optional[str] = None
+    generated_text: Optional[str] = None
     original_length: int
-    summary_length: int
-    compression_ratio: float
+    summary_length: Optional[int] = None
+    generated_length: Optional[int] = None
+    compression_ratio: Optional[float] = None
     token_usage: Optional[dict] = None
     latency_ms: Optional[float] = None
     quality_score: Optional[float] = None

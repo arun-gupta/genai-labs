@@ -438,6 +438,48 @@ class ApiService {
 
     return response.json();
   }
+
+  async compareGenerationModels(request: {
+    system_prompt: string;
+    user_prompt: string;
+    models: Array<{ provider: string; model: string }>;
+    temperature: number;
+    max_tokens?: number;
+    target_language?: string;
+    translate_response?: boolean;
+    output_format?: string;
+  }): Promise<any> {
+    const formData = new FormData();
+    
+    formData.append('system_prompt', request.system_prompt);
+    formData.append('user_prompt', request.user_prompt);
+    formData.append('models', JSON.stringify(request.models));
+    formData.append('temperature', request.temperature.toString());
+    
+    if (request.max_tokens) {
+      formData.append('max_tokens', request.max_tokens.toString());
+    }
+    if (request.target_language) {
+      formData.append('target_language', request.target_language);
+    }
+    if (request.translate_response !== undefined) {
+      formData.append('translate_response', request.translate_response.toString());
+    }
+    if (request.output_format) {
+      formData.append('output_format', request.output_format);
+    }
+
+    const response = await fetch(`${this.baseUrl}/generate/compare`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Generation model comparison failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService(); 
