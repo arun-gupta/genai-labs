@@ -81,7 +81,7 @@ export const ModelsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const data = await apiService.getAvailableModels();
-      setModelsData(data.ollama_models);
+      setModelsData(data.ollama_models as ModelsData);
     } catch (err) {
       setError('Failed to load models');
       console.error('Error loading models:', err);
@@ -116,6 +116,9 @@ export const ModelsPage: React.FC = () => {
     return matchesSearch && matchesCategory && matchesOrganization && matchesAvailability;
   }) || [];
 
+  const availableModels = filteredModels.filter(m => m.is_available);
+  const downloadRequiredModels = filteredModels.filter(m => !m.is_available);
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -143,22 +146,120 @@ export const ModelsPage: React.FC = () => {
     );
   }
 
+  const renderModelCard = (model: Model, isAvailable: boolean) => {
+    const CategoryIcon = categoryIcons[model.category as keyof typeof categoryIcons] || Zap;
+    const orgColor = organizationColors[model.organization as keyof typeof organizationColors] || 'bg-gray-100 text-gray-800';
+    
+    return (
+      <div 
+        key={model.name}
+        className={`rounded-lg border-2 transition-all duration-200 hover:shadow-lg ${
+          isAvailable 
+            ? 'bg-gradient-to-br from-green-50 to-white border-green-300 hover:border-green-400 shadow-sm' 
+            : 'bg-white border-blue-200 hover:border-blue-300'
+        }`}
+      >
+        {/* Header */}
+        <div className={`p-4 border-b ${isAvailable ? 'border-green-100' : 'border-gray-100'}`}>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <CategoryIcon className={`w-5 h-5 ${isAvailable ? 'text-green-600' : 'text-blue-600'}`} />
+              <h3 className="font-semibold text-gray-900">{model.display_name}</h3>
+            </div>
+            {isAvailable ? (
+              <div className="flex items-center space-x-1 bg-green-100 px-2 py-1 rounded-full">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-xs font-medium text-green-700">Available</span>
+              </div>
+            ) : (
+              <Download className="w-5 h-5 text-blue-500" />
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2 mb-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${orgColor}`}>
+              {model.organization}
+            </span>
+            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+              {model.parameters}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-600 line-clamp-2">{model.description}</p>
+        </div>
+
+        {/* Tags */}
+        <div className={`px-4 py-2 border-b ${isAvailable ? 'border-green-100' : 'border-gray-100'}`}>
+          <div className="flex flex-wrap gap-1">
+            {model.tags.slice(0, 3).map((tag, index) => (
+              <span 
+                key={index}
+                className={`px-2 py-1 rounded-full text-xs ${
+                  isAvailable ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
+            {model.tags.length > 3 && (
+              <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-full text-xs">
+                +{model.tags.length - 3}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-gray-500">License: {model.license}</span>
+            <span className={`text-xs font-medium ${
+              isAvailable ? 'text-green-600' : 'text-blue-600'
+            }`}>
+              {isAvailable ? 'Ready to Use' : 'Download Required'}
+            </span>
+          </div>
+          
+          <button
+            onClick={() => copyToClipboard(model.download_command)}
+            className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              copiedCommand === model.download_command
+                ? 'bg-green-100 text-green-700'
+                : isAvailable 
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            <span className="font-mono text-xs">
+              {copiedCommand === model.download_command ? 'Copied!' : model.download_command}
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Open Source Models</h1>
         <p className="text-xl text-gray-600 mb-2">
-          Explore {modelsData?.total_count} open-source language models
+          Explore {modelsData?.total_count || 0} open-source language models
         </p>
-        <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
-          <div className="flex items-center space-x-1">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span>{modelsData?.available_count} Available</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Download className="w-4 h-4 text-blue-500" />
-            <span>{modelsData?.total_count - (modelsData?.available_count || 0)} Download Required</span>
+        
+        {/* Availability Summary */}
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 mb-6 border border-green-200">
+          <div className="flex items-center justify-center space-x-8 text-sm">
+            <div className="flex items-center space-x-2 bg-green-100 px-3 py-1 rounded-full">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="font-medium text-green-700">{modelsData?.available_count} Ready to Use</span>
+            </div>
+            <div className="flex items-center space-x-2 bg-blue-100 px-3 py-1 rounded-full">
+              <Download className="w-4 h-4 text-blue-600" />
+              <span className="font-medium text-blue-700">{(modelsData?.total_count || 0) - (modelsData?.available_count || 0)} Need Download</span>
+            </div>
           </div>
         </div>
       </div>
@@ -239,95 +340,37 @@ export const ModelsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Models Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredModels.map((model) => {
-          const CategoryIcon = categoryIcons[model.category as keyof typeof categoryIcons] || Zap;
-          const orgColor = organizationColors[model.organization as keyof typeof organizationColors] || 'bg-gray-100 text-gray-800';
-          
-          return (
-            <div 
-              key={model.name}
-              className={`bg-white rounded-lg border-2 transition-all duration-200 hover:shadow-lg ${
-                model.is_available 
-                  ? 'border-green-200 hover:border-green-300' 
-                  : 'border-blue-200 hover:border-blue-300'
-              }`}
-            >
-              {/* Header */}
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <CategoryIcon className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">{model.display_name}</h3>
-                  </div>
-                  {model.is_available ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <Download className="w-5 h-5 text-blue-500" />
-                  )}
-                </div>
-                
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${orgColor}`}>
-                    {model.organization}
-                  </span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                    {model.parameters}
-                  </span>
-                </div>
-                
-                <p className="text-sm text-gray-600 line-clamp-2">{model.description}</p>
-              </div>
+      {/* Available Models Section */}
+      {availableModels.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+            <h2 className="text-2xl font-bold text-green-700">Ready to Use</h2>
+            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-medium">
+              {availableModels.length} model{availableModels.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {availableModels.map((model) => renderModelCard(model, true))}
+          </div>
+        </div>
+      )}
 
-              {/* Tags */}
-              <div className="px-4 py-2 border-b border-gray-100">
-                <div className="flex flex-wrap gap-1">
-                  {model.tags.slice(0, 3).map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {model.tags.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-full text-xs">
-                      +{model.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-gray-500">License: {model.license}</span>
-                  <span className={`text-xs font-medium ${
-                    model.is_available ? 'text-green-600' : 'text-blue-600'
-                  }`}>
-                    {model.status}
-                  </span>
-                </div>
-                
-                <button
-                  onClick={() => copyToClipboard(model.download_command)}
-                  className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    copiedCommand === model.download_command
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Tag className="w-4 h-4" />
-                  <span className="font-mono text-xs">
-                    {copiedCommand === model.download_command ? 'Copied!' : model.download_command}
-                  </span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Download Required Models Section */}
+      {downloadRequiredModels.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <Download className="w-6 h-6 text-blue-600" />
+            <h2 className="text-2xl font-bold text-blue-700">Download Required</h2>
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm font-medium">
+              {downloadRequiredModels.length} model{downloadRequiredModels.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {downloadRequiredModels.map((model) => renderModelCard(model, false))}
+          </div>
+        </div>
+      )}
 
       {/* No Results */}
       {filteredModels.length === 0 && (
