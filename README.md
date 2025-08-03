@@ -114,13 +114,6 @@ VITE_API_BASE_URL=http://localhost:8000
 - **📋 Structured Data Extraction** - Data processing and form extraction capabilities
 - **📈 Advanced Analytics** - Enhanced performance metrics and business intelligence
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
 ## 📄 License
 
 Apache License 2.0 - see [LICENSE](LICENSE) for details. 
