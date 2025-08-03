@@ -69,6 +69,8 @@ export const GeneratePage: React.FC = () => {
     setLatencyMs(undefined);
 
     try {
+      let finalResponse = '';
+      
       await apiService.generateTextStream(
         {
           system_prompt: systemPrompt,
@@ -84,6 +86,7 @@ export const GeneratePage: React.FC = () => {
         },
         (chunk: StreamChunk) => {
           setResponse(prev => prev + chunk.content);
+          finalResponse += chunk.content;
           if (chunk.token_usage) {
             setTokenUsage(chunk.token_usage);
           }
@@ -96,8 +99,8 @@ export const GeneratePage: React.FC = () => {
         }
       );
 
-      // Generate analytics
-      await generateAnalytics();
+      // Generate analytics with the complete response
+      await generateAnalytics(finalResponse);
 
       // Save to history
       const historyItem: PromptHistory = {
@@ -121,15 +124,16 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
-  const generateAnalytics = async () => {
-    if (!response) return;
+  const generateAnalytics = async (generatedText?: string) => {
+    const textToAnalyze = generatedText || response;
+    if (!textToAnalyze) return;
     
     setIsAnalyzing(true);
     try {
       const analyticsResponse = await apiService.analyzeGeneration({
         system_prompt: systemPrompt,
         user_prompt: userPrompt,
-        generated_text: response,
+        generated_text: textToAnalyze,
         output_format: outputFormat
       });
       setAnalytics(analyticsResponse.analytics);
