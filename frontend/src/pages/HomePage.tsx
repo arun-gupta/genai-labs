@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe, Github } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -113,6 +113,20 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-12">
+      {/* GitHub Link */}
+      <div className="flex justify-end">
+        <a
+          href="https://github.com/arungupta/genai-labs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100"
+          title="View on GitHub"
+        >
+          <Github size={20} />
+          <span className="text-sm font-medium">GitHub</span>
+        </a>
+      </div>
+
       {/* Hero Section */}
       <div className="text-center space-y-6">
         <div className="flex items-center justify-center space-x-2 mb-4">
