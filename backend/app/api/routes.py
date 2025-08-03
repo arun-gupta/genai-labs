@@ -546,16 +546,27 @@ async def get_available_models():
 @router.post("/rag/upload", response_model=DocumentUploadResponse)
 async def upload_document_for_rag(
     file: UploadFile = File(...),
-    collection_name: str = Form("default")
+    collection_name: str = Form("default"),
+    tags: Optional[str] = Form("")
 ):
     """Upload a document for RAG processing."""
     try:
         file_content = await file.read()
         
+        # Parse tags from JSON string
+        tag_list = []
+        if tags:
+            try:
+                tag_list = json.loads(tags)
+            except json.JSONDecodeError:
+                # If not JSON, treat as comma-separated string
+                tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()]
+        
         result = await rag_service.upload_document(
             file_content=file_content,
             file_name=file.filename,
-            collection_name=collection_name
+            collection_name=collection_name,
+            tags=tag_list
         )
         
         return DocumentUploadResponse(**result)
@@ -576,7 +587,8 @@ async def ask_rag_question(request: RAGQuestionRequest):
             temperature=request.temperature,
             max_tokens=request.max_tokens,
             top_k=request.top_k,
-            similarity_threshold=request.similarity_threshold
+            similarity_threshold=request.similarity_threshold,
+            filter_tags=request.filter_tags
         )
         
         return RAGQuestionResponse(**result)
@@ -598,7 +610,8 @@ async def ask_rag_question_stream(request: RAGQuestionRequest):
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
                 top_k=request.top_k,
-                similarity_threshold=request.similarity_threshold
+                similarity_threshold=request.similarity_threshold,
+                filter_tags=request.filter_tags
             ):
                 yield {
                     "event": "chunk",

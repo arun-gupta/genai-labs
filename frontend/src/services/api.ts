@@ -299,7 +299,11 @@ class ApiService {
   }
 
   // RAG Methods
-  async uploadRAGDocument(formData: FormData): Promise<any> {
+  async uploadRAGDocument(formData: FormData, tags?: string[]): Promise<any> {
+    if (tags && tags.length > 0) {
+      formData.append('tags', JSON.stringify(tags));
+    }
+    
     const response = await fetch(`${this.baseUrl}/rag/upload`, {
       method: 'POST',
       body: formData,
@@ -312,17 +316,23 @@ class ApiService {
     return response.json();
   }
 
-  async askRAGQuestion(request: any): Promise<any> {
+  async askRAGQuestion(request: any, filterTags?: string[]): Promise<any> {
+    const requestWithTags = {
+      ...request,
+      filter_tags: filterTags
+    };
+    
     return this.request<any>('/rag/question', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify(requestWithTags),
     });
   }
 
   async askRAGQuestionStream(
     request: any,
     onChunk: (chunk: StreamChunk) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    filterTags?: string[]
   ): Promise<void> {
     const url = `${this.baseUrl}/rag/question/stream`;
     
@@ -332,7 +342,10 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          ...request,
+          filter_tags: filterTags
+        }),
       });
 
       if (!response.ok) {
