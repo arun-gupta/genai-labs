@@ -68,7 +68,8 @@ class GenerationService:
         max_tokens: Optional[int] = None,
         target_language: str = "en",
         translate_response: bool = False,
-        output_format: str = "text"
+        output_format: str = "text",
+        num_candidates: int = 1
     ) -> AsyncGenerator[StreamChunk, None]:
         """Generate text with streaming response."""
         start_time = time.time()
@@ -103,49 +104,80 @@ class GenerationService:
             if system_prompt.strip():
                 messages.append(HumanMessage(content=user_prompt))
             
-            # Generate response - handle Ollama models differently
-            if model_provider == "ollama":
-                # For Ollama, use a different approach
-                try:
-                    # Convert messages to simple text for Ollama
-                    prompt_text = ""
-                    for message in messages:
-                        if hasattr(message, 'content'):
-                            prompt_text += message.content + "\n"
-                    
-                    # Use the model's __call__ method for Ollama
-                    response = await model.ainvoke(prompt_text)
-                    callback_handler.content = response
-                except Exception as ollama_error:
-                    raise Exception(f"Ollama model error: {str(ollama_error)}")
-            else:
-                # For other models, use agenerate
-                await model.agenerate([messages], callbacks=[callback_handler])
+            # Generate multiple candidates
+            all_candidates = []
+            total_token_usage = None
+            
+            for candidate_num in range(num_candidates):
+                # Create a new callback handler for each candidate
+                candidate_handler = StreamingCallbackHandler()
+                
+                # Generate response - handle Ollama models differently
+                if model_provider == "ollama":
+                    # For Ollama, use a different approach
+                    try:
+                        # Convert messages to simple text for Ollama
+                        prompt_text = ""
+                        for message in messages:
+                            if hasattr(message, 'content'):
+                                prompt_text += message.content + "\n"
+                        
+                        # Use the model's __call__ method for Ollama
+                        response = await model.ainvoke(prompt_text)
+                        candidate_handler.content = response
+                    except Exception as ollama_error:
+                        raise Exception(f"Ollama model error: {str(ollama_error)}")
+                else:
+                    # For other models, use agenerate
+                    await model.agenerate([messages], callbacks=[candidate_handler])
+                
+                # Handle translation if requested
+                candidate_content = candidate_handler.content
+                if translate_response and target_language != "en":
+                    try:
+                        translation_result = language_service.translate_text(
+                            candidate_content, 
+                            target_language, 
+                            "auto"
+                        )
+                        candidate_content = translation_result['translated_text']
+                    except Exception as translation_error:
+                        # If translation fails, keep original content
+                        print(f"Translation failed: {translation_error}")
+                
+                all_candidates.append(candidate_content)
+                
+                # Accumulate token usage
+                if candidate_handler.token_usage:
+                    if total_token_usage is None:
+                        total_token_usage = candidate_handler.token_usage.copy()
+                    else:
+                        # Add token counts
+                        for key in total_token_usage:
+                            if key in candidate_handler.token_usage:
+                                total_token_usage[key] += candidate_handler.token_usage[key]
             
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
             
-            # Handle translation if requested
-            final_content = callback_handler.content
-            if translate_response and target_language != "en":
-                try:
-                    translation_result = language_service.translate_text(
-                        final_content, 
-                        target_language, 
-                        "auto"
-                    )
-                    final_content = translation_result['translated_text']
-                except Exception as translation_error:
-                    # If translation fails, keep original content
-                    print(f"Translation failed: {translation_error}")
-            
-            # Yield final chunk with complete information
-            yield StreamChunk(
-                content=final_content,
-                is_complete=True,
-                token_usage=callback_handler.token_usage,
-                latency_ms=latency_ms
-            )
+            # Yield candidates
+            if num_candidates == 1:
+                # Single candidate - yield as before
+                yield StreamChunk(
+                    content=all_candidates[0],
+                    is_complete=True,
+                    token_usage=total_token_usage,
+                    latency_ms=latency_ms
+                )
+            else:
+                # Multiple candidates - yield as JSON array
+                candidates_json = json.dumps(all_candidates, ensure_ascii=False)
+                yield StreamChunk(
+                    content=candidates_json,
+                    is_complete=True,
+                    token_usage=total_token_usage,
+                    latency_ms=latency_ms
+                )
             
         except Exception as e:
             # Yield error chunk

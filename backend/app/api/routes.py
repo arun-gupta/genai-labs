@@ -9,10 +9,13 @@ from app.services.analytics_service import analytics_service
 from app.services.generation_analytics_service import generation_analytics_service
 from app.services.language_service import language_service
 from app.services.model_availability_service import model_availability_service
+from app.services.prompt_template_service import prompt_template_service
+from app.services.export_service import export_service
 from app.models.requests import ModelProvider
 import json
 import time
 import datetime
+import io
 
 router = APIRouter()
 generation_service = GenerationService()
@@ -70,7 +73,8 @@ async def generate_text_stream(request: GenerateRequest):
                 max_tokens=request.max_tokens,
                 target_language=request.target_language or "en",
                 translate_response=request.translate_response or False,
-                output_format=request.output_format.value
+                output_format=request.output_format.value,
+                num_candidates=request.num_candidates
             ):
                 yield {
                     "event": "chunk",
@@ -332,6 +336,89 @@ async def analyze_generation(request: dict):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation analytics failed: {str(e)}")
+
+
+@router.get("/templates")
+async def get_prompt_templates():
+    """Get all available prompt templates."""
+    try:
+        templates = prompt_template_service.get_all_templates()
+        categories = prompt_template_service.get_categories()
+        
+        return {
+            "templates": templates,
+            "categories": categories
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get templates: {str(e)}")
+
+
+@router.get("/templates/{category}")
+async def get_templates_by_category(category: str):
+    """Get templates filtered by category."""
+    try:
+        templates = prompt_template_service.get_templates_by_category(category)
+        return {
+            "templates": templates,
+            "category": category
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get templates: {str(e)}")
+
+
+@router.post("/templates/fill")
+async def fill_template(request: dict):
+    """Fill a template with provided variables."""
+    try:
+        template_id = request.get("template_id")
+        variables = request.get("variables", {})
+        
+        if not template_id:
+            raise HTTPException(status_code=400, detail="template_id is required")
+        
+        result = prompt_template_service.fill_template(template_id, variables)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fill template: {str(e)}")
+
+
+@router.post("/export/{format_type}")
+async def export_content(format_type: str, request: dict):
+    """Export content to various formats (pdf, word, markdown)."""
+    try:
+        if format_type not in ["pdf", "word", "markdown"]:
+            raise HTTPException(status_code=400, detail="Invalid format. Supported: pdf, word, markdown")
+        
+        content = request.get("content", {})
+        if not content:
+            raise HTTPException(status_code=400, detail="Content is required")
+        
+        if format_type == "pdf":
+            file_content = export_service.export_to_pdf(content)
+            return StreamingResponse(
+                io.BytesIO(file_content),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=generated_content.pdf"}
+            )
+        elif format_type == "word":
+            file_content = export_service.export_to_word(content)
+            return StreamingResponse(
+                io.BytesIO(file_content),
+                media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                headers={"Content-Disposition": f"attachment; filename=generated_content.docx"}
+            )
+        elif format_type == "markdown":
+            file_content = export_service.export_to_markdown(content)
+            return StreamingResponse(
+                io.BytesIO(file_content.encode('utf-8')),
+                media_type="text/markdown",
+                headers={"Content-Disposition": f"attachment; filename=generated_content.md"}
+            )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
 @router.post("/detect-language")
