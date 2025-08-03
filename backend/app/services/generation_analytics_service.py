@@ -142,6 +142,7 @@ class GenerationAnalyticsService:
             sentences = [s.strip() for s in generated_text.split('.') if s.strip()]
         
         content_words = [word for word in words if word.isalpha() and word not in self.stop_words]
+        paragraphs = [p for p in generated_text.split('\n\n') if p.strip()]
         
         return {
             "vocabulary": {
@@ -325,6 +326,7 @@ class GenerationAnalyticsService:
             words = generated_text.lower().split()
         
         content_words = [word for word in words if word.isalpha() and word not in self.stop_words]
+        paragraphs = [p for p in generated_text.split('\n\n') if p.strip()]
         
         return {
             "lexical_diversity": {
