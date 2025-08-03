@@ -15,11 +15,14 @@ cd genai-labs
 
 ## ✨ Features
 
+### 🤖 Core GenAI Capabilities
 - **Text Generation** - Advanced text creation with 12+ writing styles
 - **Text Summarization** - Multi-format summarization with analytics  
 - **Q&A over Documents** - RAG-powered document question answering
 - **Model Comparison** - Side-by-side model performance analysis for generation and summarization
 - **Models Explorer** - Browse and manage 12+ open-source LLM models
+
+### 🛠️ Platform Features
 - **Voice Features** - Speech-to-text and text-to-speech
 - **Real-time Streaming** - Live output with token usage tracking
 - **Export Options** - PDF, Word, Markdown, HTML export
