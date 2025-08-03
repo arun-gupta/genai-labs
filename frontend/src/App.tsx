@@ -4,6 +4,7 @@ import { Navigation } from './components/Navigation';
 import { HomePage } from './pages/HomePage';
 import { GeneratePage } from './pages/GeneratePage';
 import { SummarizePage } from './pages/SummarizePage';
+import { ModelsPage } from './pages/ModelsPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/generate" element={<GeneratePage />} />
           <Route path="/summarize" element={<SummarizePage />} />
+          <Route path="/models" element={<ModelsPage />} />
         </Routes>
       </main>
     </div>

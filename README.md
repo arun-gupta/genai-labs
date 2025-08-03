@@ -10,6 +10,7 @@ A full-stack web application for experimenting with different GenAI use cases us
 - **Use Cases**: 
   - Text generation (`/generate`)
   - Text summarization (`/summarize`)
+- **Models Explorer**: Comprehensive view of open-source models with availability status (`/models`)
 - **Real-time Streaming**: Live output with token usage and latency tracking
 - **Prompt History**: Local storage for session-based prompt history
 - **Modular Architecture**: LangChain-based model abstractions
@@ -18,6 +19,32 @@ A full-stack web application for experimenting with different GenAI use cases us
 - **Frontend**: React + TypeScript + Tailwind CSS
 - **Backend**: FastAPI (Python) + LangChain
 - **Deployment**: Docker-ready with modular architecture
+
+## 🤖 Supported Models
+
+### Open Source Models (via Ollama)
+The application includes a comprehensive **Models Explorer** page that showcases 12+ open-source language models:
+
+#### Available Models:
+- **Qwen 2.5 (3B)** - Alibaba's efficient reasoning model
+- **Phi-3 (3.8B)** - Microsoft's compact reasoning model  
+- **DeepSeek Coder (3B)** - Specialized coding model
+- **Llama 3.1 (3B)** - Meta's latest compact model
+- **Grok (3B)** - xAI's conversational model
+- **BLOOM (3B)** - Multilingual model (46+ languages)
+- **Gemma 2 (3B)** - Google's lightweight model
+- **Mistral (7B)** - High-performance reasoning model
+- **Code Llama (3B)** - Meta's coding specialist
+- **Neural Chat (3B)** - Intel's conversational model
+- **Orca Mini (3B)** - Microsoft's high-quality model
+- **Llama 2 (3B)** - Meta's foundational model
+
+#### Features:
+- **Availability Status**: Shows which models are installed vs. need downloading
+- **One-Click Copy**: Copy download commands with a single click
+- **Advanced Filtering**: Filter by category, organization, and availability
+- **Search**: Search across model names, descriptions, and tags
+- **Visual Indicators**: Color-coded organization badges and status icons
 
 ## 📁 Project Structure
 

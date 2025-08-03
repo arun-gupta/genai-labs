@@ -7,6 +7,7 @@ from app.services.generation_service import GenerationService
 from app.services.input_processor import input_processor
 from app.services.analytics_service import analytics_service
 from app.services.language_service import language_service
+from app.services.model_availability_service import model_availability_service
 from app.models.requests import ModelProvider
 import json
 import time
@@ -382,6 +383,9 @@ async def get_supported_languages():
 @router.get("/models")
 async def get_available_models():
     """Get available model providers and their configurations."""
+    # Get Ollama models with availability status
+    ollama_models_data = await model_availability_service.get_models_with_availability()
+    
     return {
         "providers": [
             {
@@ -399,10 +403,11 @@ async def get_available_models():
             {
                 "id": "ollama",
                 "name": "Ollama (Local)",
-                "models": ["mistral:7b"],
+                "models": [model["name"] for model in ollama_models_data["models"] if model["is_available"]],
                 "requires_api_key": False
             }
         ],
+        "ollama_models": ollama_models_data,
         "summary_types": [
             {"id": "general", "name": "General Summary", "description": "Standard summary of main points"},
             {"id": "bullet_points", "name": "Bullet Points", "description": "Key points in bullet format"},
