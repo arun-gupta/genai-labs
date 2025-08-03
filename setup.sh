@@ -207,6 +207,9 @@ main() {
     echo -e "1. Edit backend/.env and add your API keys"
     echo -e "2. Run ./quickstart.sh to start the application"
     echo -e "3. Visit http://localhost:3000 to use the app"
+    echo -e ""
+    echo -e "${BLUE}Quick Start:${NC}"
+    echo -e "For immediate use, just run: ./quickstart.sh"
 }
 
 # Run main function
