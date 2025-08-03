@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown } from 'lucide-react';
+import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown, BarChart3 } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -481,29 +481,31 @@ export const GeneratePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Response */}
-          <div>
+          {/* Response Section with Tabs */}
+          <div className="card">
             {/* Tab Navigation */}
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+            <div className="flex space-x-2 mb-4">
               <button
                 onClick={() => setActiveTab('response')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'response'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Response
+                <FileText size={16} />
+                <span>Response</span>
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'analytics'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Analytics
+                <BarChart3 size={16} />
+                <span>Analytics</span>
               </button>
             </div>
 
