@@ -180,6 +180,11 @@ export const GeneratePage: React.FC = () => {
     setUserPrompt(userPrompt);
   };
 
+  const handleClearTemplate = () => {
+    setSystemPrompt('');
+    setUserPrompt('');
+  };
+
   const handleCandidateSelect = (index: number) => {
     setSelectedCandidate(index);
     setResponse(candidates[index] || '');
@@ -296,6 +301,26 @@ export const GeneratePage: React.FC = () => {
                   placeholder="1000"
                 />
               </div>
+            </div>
+
+            {/* Multiple Candidates Settings */}
+            <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <MultipleCandidatesSelector
+                numCandidates={numCandidates}
+                onNumCandidatesChange={setNumCandidates}
+                className="w-full"
+              />
+            </div>
+
+            {/* Prompt Templates */}
+            <div className="mt-4">
+              <PromptTemplateSelector
+                onTemplateSelect={handleTemplateSelect}
+                onClearTemplate={handleClearTemplate}
+                currentSystemPrompt={systemPrompt}
+                currentUserPrompt={userPrompt}
+                className="w-full"
+              />
             </div>
           </div>
 

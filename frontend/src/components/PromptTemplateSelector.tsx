@@ -5,11 +5,17 @@ import { apiService } from '../services/api';
 
 interface PromptTemplateSelectorProps {
   onTemplateSelect: (systemPrompt: string, userPrompt: string) => void;
+  onClearTemplate: () => void;
+  currentSystemPrompt?: string;
+  currentUserPrompt?: string;
   className?: string;
 }
 
 export const PromptTemplateSelector: React.FC<PromptTemplateSelectorProps> = ({
   onTemplateSelect,
+  onClearTemplate,
+  currentSystemPrompt = "",
+  currentUserPrompt = "",
   className = ""
 }) => {
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
@@ -76,6 +82,12 @@ export const PromptTemplateSelector: React.FC<PromptTemplateSelectorProps> = ({
     }
   };
 
+  const handleClearTemplate = () => {
+    onClearTemplate();
+    setSelectedTemplate(null);
+    setVariables({});
+  };
+
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'creative': return '🎨';
@@ -93,14 +105,29 @@ export const PromptTemplateSelector: React.FC<PromptTemplateSelectorProps> = ({
         <div className="flex items-center space-x-2">
           <FileText className="text-gray-500" size={20} />
           <h3 className="text-lg font-medium text-gray-900">Prompt Templates</h3>
+          {(currentSystemPrompt || currentUserPrompt) && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+              Template Active
+            </span>
+          )}
         </div>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800"
-        >
-          {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          <span>{isOpen ? 'Hide' : 'Show'} Templates</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          {(currentSystemPrompt || currentUserPrompt) && (
+            <button
+              onClick={handleClearTemplate}
+              className="text-sm text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800"
+          >
+            {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <span>{isOpen ? 'Hide' : 'Show'} Templates</span>
+          </button>
+        </div>
       </div>
 
       {isOpen && (
