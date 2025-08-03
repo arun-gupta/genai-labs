@@ -9,8 +9,8 @@ import { StreamChunk } from '../types/api';
 export const GeneratePage: React.FC = () => {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState('openai');
-  const [selectedModel, setSelectedModel] = useState('gpt-4');
+  const [selectedProvider, setSelectedProvider] = useState('ollama');
+  const [selectedModel, setSelectedModel] = useState('llama2');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState<number | undefined>(1000);
   const [isGenerating, setIsGenerating] = useState(false);
