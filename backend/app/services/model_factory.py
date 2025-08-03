@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any
 from langchain.llms.base import LLM
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from app.core.config import settings
 import time
 
@@ -69,13 +69,13 @@ class ModelFactory:
             **model_kwargs
         )
     
-    def _create_ollama_model(self, model_name: Optional[str] = None, **kwargs) -> Ollama:
+    def _create_ollama_model(self, model_name: Optional[str] = None, **kwargs) -> OllamaLLM:
         """Create Ollama model instance."""
         model = model_name or settings.ollama_model
         # Remove temperature and streaming from kwargs to avoid duplicates
         model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming']}
         
-        return Ollama(
+        return OllamaLLM(
             model=model,
             base_url=settings.ollama_base_url,
             temperature=kwargs.get('temperature', 0.7),

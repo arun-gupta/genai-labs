@@ -5,6 +5,7 @@ from app.models.requests import GenerateRequest, SummarizeRequest
 from app.models.responses import GenerationResponse, SummarizeResponse, StreamChunk, ErrorResponse
 from app.services.generation_service import GenerationService
 from app.services.input_processor import input_processor
+from app.services.analytics_service import analytics_service
 from app.models.requests import ModelProvider
 import json
 import time
@@ -278,6 +279,27 @@ async def summarize_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/analytics")
+async def analyze_summary(request: dict):
+    """Analyze summary and provide comprehensive analytics."""
+    try:
+        original_text = request.get("original_text", "")
+        summary_text = request.get("summary_text", "")
+        
+        if not original_text or not summary_text:
+            raise HTTPException(status_code=400, detail="Both original_text and summary_text are required")
+        
+        analytics = analytics_service.analyze_text(original_text, summary_text)
+        
+        return {
+            "analytics": analytics,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+
 @router.get("/models")
 async def get_available_models():
     """Get available model providers and their configurations."""
@@ -298,7 +320,7 @@ async def get_available_models():
             {
                 "id": "ollama",
                 "name": "Ollama (Local)",
-                "models": ["llama2", "mistral", "codellama", "llama2:13b"],
+                "models": ["mistral:7b"],
                 "requires_api_key": False
             }
         ],

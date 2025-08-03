@@ -14,7 +14,12 @@ class Settings(BaseSettings):
     
     # Ollama Configuration
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama2"
+    ollama_model: str = "mistral:7b"
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Override .env setting for Ollama model
+        self.ollama_model = "mistral:7b"
     
     # Application Configuration
     debug: bool = True
