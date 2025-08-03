@@ -150,4 +150,42 @@ class CollectionInfo(BaseModel):
 
 class DeleteDocumentRequest(BaseModel):
     document_id: str = Field(..., description="ID of the document to delete")
-    collection_name: Optional[str] = Field("default", description="Vector collection name") 
+    collection_name: Optional[str] = Field("default", description="Vector collection name")
+
+
+# Model Comparison Models
+class ModelComparisonRequest(BaseModel):
+    text: Optional[str] = Field(None, description="Text to summarize")
+    url: Optional[str] = Field(None, description="URL to summarize")
+    file_content: Optional[bytes] = Field(None, description="File content to summarize")
+    file_type: Optional[str] = Field(None, description="Type of file being processed")
+    models: List[dict] = Field(..., description="List of models to compare")
+    max_length: int = Field(150, ge=10, le=1000, description="Maximum length of summary")
+    temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
+    summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive")
+    target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
+    translate_summary: bool = Field(False, description="Whether to translate the summary")
+
+
+class ModelComparisonResult(BaseModel):
+    model_provider: str
+    model_name: str
+    summary: str
+    original_length: int
+    summary_length: int
+    compression_ratio: float
+    token_usage: Optional[dict] = None
+    latency_ms: Optional[float] = None
+    quality_score: Optional[float] = None
+    coherence_score: Optional[float] = None
+    relevance_score: Optional[float] = None
+    timestamp: str
+
+
+class ModelComparisonResponse(BaseModel):
+    comparison_id: str
+    original_text: str
+    results: List[ModelComparisonResult]
+    comparison_metrics: dict
+    recommendations: List[str]
+    timestamp: str 

@@ -12,7 +12,8 @@ from app.services.model_availability_service import model_availability_service
 from app.services.prompt_template_service import prompt_template_service
 from app.services.export_service import export_service
 from app.services.rag_service import rag_service
-from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest
+from app.services.model_comparison_service import model_comparison_service
+from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse
 import json
 import time
 import datetime
@@ -649,5 +650,42 @@ async def delete_rag_collection(collection_name: str):
     try:
         result = rag_service.delete_collection(collection_name=collection_name)
         return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Model Comparison Endpoints
+@router.post("/summarize/compare", response_model=ModelComparisonResponse)
+async def compare_summarization_models(request: ModelComparisonRequest):
+    """Compare multiple models for text summarization."""
+    try:
+        # Extract text from request
+        text = None
+        if request.text:
+            text = request.text
+        elif request.url:
+            # Process URL to extract text
+            text = await input_processor.process_url(request.url)
+        elif request.file_content:
+            # Process file content
+            text = await input_processor.process_file_content(request.file_content, request.file_type)
+        else:
+            raise HTTPException(status_code=400, detail="No text, URL, or file content provided")
+        
+        # Validate models
+        if not request.models or len(request.models) < 2:
+            raise HTTPException(status_code=400, detail="At least 2 models must be specified for comparison")
+        
+        # Compare models
+        result = await model_comparison_service.compare_models(
+            text=text,
+            models=request.models,
+            max_length=request.max_length,
+            temperature=request.temperature,
+            summary_type=request.summary_type
+        )
+        
+        return result
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 

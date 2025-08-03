@@ -399,6 +399,45 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Model Comparison Methods
+  async compareSummarizationModels(request: {
+    text?: string;
+    url?: string;
+    file_content?: File;
+    models: Array<{ provider: string; model: string }>;
+    max_length: number;
+    temperature: number;
+    summary_type: string;
+  }): Promise<any> {
+    const formData = new FormData();
+    
+    if (request.text) {
+      formData.append('text', request.text);
+    }
+    if (request.url) {
+      formData.append('url', request.url);
+    }
+    if (request.file_content) {
+      formData.append('file_content', request.file_content);
+    }
+    
+    formData.append('models', JSON.stringify(request.models));
+    formData.append('max_length', request.max_length.toString());
+    formData.append('temperature', request.temperature.toString());
+    formData.append('summary_type', request.summary_type);
+
+    const response = await fetch(`${this.baseUrl}/summarize/compare`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Model comparison failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService(); 
