@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Settings, History, Languages, FileText } from 'lucide-react';
+import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -8,7 +8,8 @@ import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { GenerationAnalyticsDisplay } from '../components/GenerationAnalyticsDisplay';
 import { PromptTemplateSelector } from '../components/PromptTemplateSelector';
 import { MultipleCandidatesSelector } from '../components/MultipleCandidatesSelector';
-import { WritingStyleSelector } from '../components/WritingStyleSelector';
+import { VoiceInput } from '../components/VoiceInput';
+import { VoiceOutput } from '../components/VoiceOutput';
 import { ExportOptions } from '../components/ExportOptions';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
@@ -28,7 +29,7 @@ export const GeneratePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateResponse, setTranslateResponse] = useState(false);
-  const [outputFormat, setOutputFormat] = useState('text');
+  const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
   const [numCandidates, setNumCandidates] = useState(1);
   const [selectedWritingStyle, setSelectedWritingStyle] = useState('none');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
@@ -38,6 +39,7 @@ export const GeneratePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'response' | 'analytics'>('response');
   const [candidates, setCandidates] = useState<string[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<number>(0);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   // Language detection effect
   useEffect(() => {
@@ -189,6 +191,14 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
+  const handleVoiceInput = (transcript: string) => {
+    setUserPrompt(prev => prev + (prev ? ' ' : '') + transcript);
+  };
+
+  const handleOutputFormatChange = (format: string) => {
+    setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
+  };
+
   const handleClearTemplate = () => {
     setSystemPrompt('');
     setUserPrompt('');
@@ -200,23 +210,24 @@ export const GeneratePage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
+      {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Text Generation</h1>
         <p className="text-gray-600">
-          Generate text using different large language models with custom prompts
+          Create compelling content with AI-powered text generation
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Section */}
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Left Panel - Input & Settings */}
+        <div className="xl:col-span-1 space-y-6">
+          {/* Model Selection */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
-              <Settings className="text-gray-500" size={20} />
-              <h2 className="text-xl font-semibold text-gray-900">Configuration</h2>
+              <Zap className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model</h2>
             </div>
-            
             <ModelSelector
               selectedProvider={selectedProvider}
               selectedModel={selectedModel}
@@ -224,64 +235,73 @@ export const GeneratePage: React.FC = () => {
               onModelChange={setSelectedModel}
               disabled={isGenerating}
             />
+          </div>
 
-            {/* Output Format Settings */}
-            <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="flex items-center space-x-2 mb-3">
-                <FileText className="text-purple-600" size={20} />
-                <h3 className="text-lg font-medium text-gray-900">Output Format</h3>
-              </div>
-              
-              <OutputFormatSelector
-                selectedFormat={outputFormat}
-                onFormatChange={setOutputFormat}
-                className="w-full"
-              />
+          {/* Writing Style */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Palette className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Writing Style</h2>
             </div>
-
-            {/* Language Settings */}
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center space-x-2 mb-3">
-                <Languages className="text-blue-600" size={20} />
-                <h3 className="text-lg font-medium text-gray-900">Language Settings</h3>
-              </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                className="w-full flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <span className="text-gray-700">
+                  {selectedWritingStyle === 'none' ? 'Default Style' : selectedWritingStyle.charAt(0).toUpperCase() + selectedWritingStyle.slice(1)}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`} />
+              </button>
               
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="translate-response"
-                    checked={translateResponse}
-                    onChange={(e) => setTranslateResponse(e.target.checked)}
-                    disabled={isGenerating}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="translate-response" className="text-sm font-medium text-gray-700">
-                    Translate response to different language
-                  </label>
+              {showAdvancedSettings && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {[
+                    { id: 'none', name: 'Default Style', icon: '⚪' },
+                    { id: 'creative', name: 'Creative', icon: '🎨' },
+                    { id: 'business', name: 'Business', icon: '💼' },
+                    { id: 'academic', name: 'Academic', icon: '📚' },
+                    { id: 'technical', name: 'Technical', icon: '⚙️' },
+                    { id: 'conversational', name: 'Conversational', icon: '💬' },
+                    { id: 'poetic', name: 'Poetic', icon: '📝' },
+                    { id: 'storytelling', name: 'Storytelling', icon: '📖' },
+                    { id: 'persuasive', name: 'Persuasive', icon: '🎯' },
+                    { id: 'minimalist', name: 'Minimalist', icon: '✨' },
+                    { id: 'formal', name: 'Formal', icon: '🎩' },
+                    { id: 'humorous', name: 'Humorous', icon: '😄' },
+                    { id: 'journalistic', name: 'Journalistic', icon: '📰' }
+                  ].map(style => (
+                    <div
+                      key={style.id}
+                      onClick={() => {
+                        handleWritingStyleChange(style.id);
+                        setShowAdvancedSettings(false);
+                      }}
+                      className="flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <span className="text-lg">{style.icon}</span>
+                      <span className="font-medium text-gray-900">{style.name}</span>
+                    </div>
+                  ))}
                 </div>
-                
-                {translateResponse && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Target Language
-                    </label>
-                    <LanguageSelector
-                      selectedLanguage={targetLanguage}
-                      onLanguageChange={setTargetLanguage}
-                      placeholder="Select target language..."
-                      className="w-full"
-                    />
-                  </div>
-                )}
-              </div>
+              )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
+          {/* Quick Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Settings className="text-gray-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Quick Settings</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Temperature */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Temperature
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700">Creativity</label>
+                  <span className="text-xs text-gray-500">{temperature}</span>
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -292,91 +312,104 @@ export const GeneratePage: React.FC = () => {
                   disabled={isGenerating}
                   className="w-full"
                 />
-                <div className="text-xs text-gray-500 mt-1">{temperature}</div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Focused</span>
+                  <span>Creative</span>
+                </div>
               </div>
-              
+
+              {/* Output Format */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Tokens
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="4000"
-                  value={maxTokens || ''}
-                  onChange={(e) => setMaxTokens(e.target.value ? parseInt(e.target.value) : undefined)}
-                  disabled={isGenerating}
-                  className="input-field"
-                  placeholder="1000"
+                <label className="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+                <OutputFormatSelector
+                  selectedFormat={outputFormat}
+                  onFormatChange={handleOutputFormatChange}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Multiple Candidates */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Response Variations</label>
+                <MultipleCandidatesSelector
+                  numCandidates={numCandidates}
+                  onNumCandidatesChange={setNumCandidates}
+                  className="w-full"
                 />
               </div>
             </div>
-
-            {/* Writing Style Settings */}
-            <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <WritingStyleSelector
-                selectedStyle={selectedWritingStyle}
-                onStyleChange={handleWritingStyleChange}
-                onSystemPromptChange={setSystemPrompt}
-                className="w-full"
-              />
-            </div>
-
-            {/* Multiple Candidates Settings */}
-            <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-              <MultipleCandidatesSelector
-                numCandidates={numCandidates}
-                onNumCandidatesChange={setNumCandidates}
-                className="w-full"
-              />
-            </div>
-
-            {/* Prompt Templates */}
-            <div className="mt-4">
-              <PromptTemplateSelector
-                onTemplateSelect={handleTemplateSelect}
-                onClearTemplate={handleClearTemplate}
-                currentSystemPrompt={systemPrompt}
-                currentUserPrompt={userPrompt}
-                className="w-full"
-              />
-            </div>
           </div>
 
+          {/* Prompt Templates */}
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Prompts</h2>
+            <PromptTemplateSelector
+              onTemplateSelect={handleTemplateSelect}
+              onClearTemplate={handleClearTemplate}
+              currentSystemPrompt={systemPrompt}
+              currentUserPrompt={userPrompt}
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        {/* Center Panel - Main Content */}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Prompts */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Prompts</h2>
+              <div className="flex items-center space-x-2">
+                <VoiceInput
+                  onTranscript={handleVoiceInput}
+                  disabled={isGenerating}
+                  className="text-xs"
+                />
+              </div>
+            </div>
             
             <div className="space-y-4">
+              {/* System Prompt */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  System Prompt (Optional)
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">System Prompt (Optional)</label>
+                  <VoiceInput
+                    onTranscript={(transcript) => setSystemPrompt(prev => prev + (prev ? ' ' : '') + transcript)}
+                    disabled={isGenerating}
+                    className="text-xs"
+                  />
+                </div>
                 <textarea
                   value={systemPrompt}
                   onChange={(e) => setSystemPrompt(e.target.value)}
                   disabled={isGenerating}
-                  className="input-field h-24 resize-none"
+                  className="input-field h-20 resize-none"
                   placeholder="You are a helpful assistant that..."
                   onKeyDown={handleKeyPress}
                 />
               </div>
 
+              {/* User Prompt */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  User Prompt *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">User Prompt *</label>
+                  <VoiceInput
+                    onTranscript={handleVoiceInput}
+                    disabled={isGenerating}
+                    className="text-xs"
+                  />
+                </div>
                 <textarea
                   value={userPrompt}
                   onChange={(e) => setUserPrompt(e.target.value)}
                   disabled={isGenerating}
                   className="input-field h-32 resize-none"
-                  placeholder="Enter your prompt here..."
+                  placeholder="Enter your prompt here or use voice input..."
                   onKeyDown={handleKeyPress}
                 />
                 
-                {/* Language Detection Display */}
+                {/* Language Detection */}
                 {userPrompt.trim() && (
-                  <div className="mt-3">
+                  <div className="mt-2">
                     <LanguageDetectionDisplay
                       detection={languageDetection}
                       isLoading={isDetectingLanguage}
@@ -386,16 +419,18 @@ export const GeneratePage: React.FC = () => {
               </div>
             </div>
 
+            {/* Error Display */}
             {error && (
               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
+            {/* Generate Button */}
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !userPrompt.trim()}
-              className="mt-4 btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 w-full btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
@@ -414,52 +449,52 @@ export const GeneratePage: React.FC = () => {
               Press Cmd/Ctrl + Enter to generate
             </div>
           </div>
-        </div>
 
-        {/* Output Section */}
-        <div>
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
-            <button
-              onClick={() => setActiveTab('response')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'response'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Response
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'analytics'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Analytics
-            </button>
+          {/* Response */}
+          <div>
+            {/* Tab Navigation */}
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+              <button
+                onClick={() => setActiveTab('response')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'response'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Response
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Analytics
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'response' && (
+              <ResponseDisplay
+                content={response}
+                isStreaming={isGenerating}
+                tokenUsage={tokenUsage}
+                latencyMs={latencyMs}
+                modelName={selectedModel}
+                modelProvider={selectedProvider}
+              />
+            )}
+
+            {activeTab === 'analytics' && (
+              <GenerationAnalyticsDisplay
+                analytics={analytics}
+                isLoading={isAnalyzing}
+              />
+            )}
           </div>
-
-          {/* Tab Content */}
-          {activeTab === 'response' && (
-            <ResponseDisplay
-              content={response}
-              isStreaming={isGenerating}
-              tokenUsage={tokenUsage}
-              latencyMs={latencyMs}
-              modelName={selectedModel}
-              modelProvider={selectedProvider}
-            />
-          )}
-
-          {activeTab === 'analytics' && (
-            <GenerationAnalyticsDisplay
-              analytics={analytics}
-              isLoading={isAnalyzing}
-            />
-          )}
         </div>
       </div>
     </div>

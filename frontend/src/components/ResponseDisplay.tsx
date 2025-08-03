@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, Zap, Copy, Check } from 'lucide-react';
 import { TokenUsage } from '../types/api';
+import { VoiceOutput } from './VoiceOutput';
 
 interface ResponseDisplayProps {
   content: string;
@@ -50,23 +51,30 @@ export const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
             </div>
           )}
         </div>
-        <button
-          onClick={copyToClipboard}
-          className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors"
-          title="Copy to clipboard"
-        >
-          {copied ? (
-            <>
-              <Check size={16} />
-              <span className="text-sm">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy size={16} />
-              <span className="text-sm">Copy</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center space-x-2">
+          <VoiceOutput
+            text={content}
+            disabled={isStreaming || !content}
+            className="text-xs"
+          />
+          <button
+            onClick={copyToClipboard}
+            className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors"
+            title="Copy to clipboard"
+          >
+            {copied ? (
+              <>
+                <Check size={16} />
+                <span className="text-sm">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={16} />
+                <span className="text-sm">Copy</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Response Content */}
