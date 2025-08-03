@@ -36,7 +36,7 @@ export const SummarizePage: React.FC = () => {
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateOutput, setTranslateOutput] = useState(false);
-  const [outputFormat, setOutputFormat] = useState('text');
+  const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -245,6 +245,10 @@ export const SummarizePage: React.FC = () => {
     setText(prev => prev + (prev ? ' ' : '') + transcript);
   };
 
+  const handleOutputFormatChange = (format: string) => {
+    setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
+  };
+
   const getExportContent = () => {
     return {
       system_prompt: `Summarize the following text as a ${summaryType} summary with maximum ${maxLength} words.`,
@@ -388,7 +392,7 @@ export const SummarizePage: React.FC = () => {
               <div>
                 <OutputFormatSelector
                   selectedFormat={outputFormat}
-                  onFormatChange={setOutputFormat}
+                  onFormatChange={handleOutputFormatChange}
                   className="w-full"
                 />
               </div>

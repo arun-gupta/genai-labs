@@ -363,6 +363,42 @@ export const GeneratePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Language Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Languages className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Language</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="translate-output"
+                  checked={translateOutput}
+                  onChange={(e) => setTranslateOutput(e.target.checked)}
+                  disabled={isGenerating}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="translate-output" className="text-sm text-gray-700">
+                  Translate output
+                </label>
+              </div>
+              
+              {translateOutput && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Language</label>
+                  <LanguageSelector
+                    selectedLanguage={targetLanguage}
+                    onLanguageChange={setTargetLanguage}
+                    placeholder="Select target language..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Prompt Templates */}
           <div className="card">
             <PromptTemplateSelector
