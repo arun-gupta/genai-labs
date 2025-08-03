@@ -35,7 +35,7 @@ export const SummarizePage: React.FC = () => {
 
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
-  const [translateSummary, setTranslateSummary] = useState(false);
+  const [translateOutput, setTranslateOutput] = useState(false);
   const [outputFormat, setOutputFormat] = useState('text');
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
@@ -145,7 +145,7 @@ export const SummarizePage: React.FC = () => {
           summary_type: summaryType as any,
           stream: true,
           target_language: targetLanguage,
-          translate_summary: translateSummary,
+          translate_summary: translateOutput,
           output_format: outputFormat as any,
         };
 
@@ -406,18 +406,18 @@ export const SummarizePage: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="translate-summary"
-                  checked={translateSummary}
-                  onChange={(e) => setTranslateSummary(e.target.checked)}
+                  id="translate-output"
+                  checked={translateOutput}
+                  onChange={(e) => setTranslateOutput(e.target.checked)}
                   disabled={isSummarizing}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="translate-summary" className="text-sm text-gray-700">
-                  Translate summary
+                <label htmlFor="translate-output" className="text-sm text-gray-700">
+                  Translate output
                 </label>
               </div>
               
-              {translateSummary && (
+              {translateOutput && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Target Language</label>
                   <LanguageSelector

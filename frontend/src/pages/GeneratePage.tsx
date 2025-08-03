@@ -29,7 +29,7 @@ export const GeneratePage: React.FC = () => {
   const [latencyMs, setLatencyMs] = useState<number | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [targetLanguage, setTargetLanguage] = useState('en');
-  const [translateResponse, setTranslateResponse] = useState(false);
+  const [translateOutput, setTranslateOutput] = useState(false);
   const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
   const [numCandidates, setNumCandidates] = useState(1);
   const [selectedWritingStyle, setSelectedWritingStyle] = useState('none');
@@ -95,7 +95,7 @@ export const GeneratePage: React.FC = () => {
           max_tokens: maxTokens,
           stream: true,
           target_language: targetLanguage,
-          translate_response: translateResponse,
+          translate_response: translateOutput,
           output_format: outputFormat,
           num_candidates: numCandidates,
         },
@@ -215,6 +215,22 @@ export const GeneratePage: React.FC = () => {
     setSystemPrompt(systemPrompt);
     setUserPrompt(userPrompt);
     setShowHistory(false);
+  };
+
+  const getExportContent = () => {
+    return {
+      system_prompt: systemPrompt,
+      user_prompt: userPrompt,
+      generated_content: response,
+      metadata: {
+        model_provider: selectedProvider,
+        model_name: selectedModel,
+        timestamp: new Date().toISOString(),
+        token_usage: tokenUsage,
+        latency_ms: latencyMs,
+      },
+      analytics: analytics,
+    };
   };
 
   return (
@@ -503,14 +519,23 @@ export const GeneratePage: React.FC = () => {
 
             {/* Tab Content */}
             {activeTab === 'response' && (
-              <ResponseDisplay
-                content={response}
-                isStreaming={isGenerating}
-                tokenUsage={tokenUsage}
-                latencyMs={latencyMs}
-                modelName={selectedModel}
-                modelProvider={selectedProvider}
-              />
+              <div className="space-y-6">
+                <ResponseDisplay
+                  content={response}
+                  isStreaming={isGenerating}
+                  tokenUsage={tokenUsage}
+                  latencyMs={latencyMs}
+                  modelName={selectedModel}
+                  modelProvider={selectedProvider}
+                />
+                
+                {response && (
+                  <ExportOptions
+                    content={getExportContent()}
+                    className="w-full"
+                  />
+                )}
+              </div>
             )}
 
             {activeTab === 'analytics' && (
