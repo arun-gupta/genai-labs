@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, Clock, Target, TrendingUp, Award, Zap, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { BarChart3, Clock, Target, TrendingUp, Award, Zap, FileText, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ModelResult {
   model_provider: string;
@@ -45,26 +45,17 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   recommendations,
   isComparing
 }) => {
-  const [selectedMetric, setSelectedMetric] = useState<'quality' | 'speed' | 'compression'>('quality');
-  const [expandedResults, setExpandedResults] = useState<Set<number>>(new Set());
+  const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
+  const [showDetailedMetrics, setShowDetailedMetrics] = useState(false);
 
-  const toggleExpanded = (index: number) => {
-    const newExpanded = new Set(expandedResults);
+  const toggleExpandedSummary = (index: number) => {
+    const newExpanded = new Set(expandedSummaries);
     if (newExpanded.has(index)) {
       newExpanded.delete(index);
     } else {
       newExpanded.add(index);
     }
-    setExpandedResults(newExpanded);
-  };
-
-  const getMetricIcon = (metric: string) => {
-    switch (metric) {
-      case 'quality': return <Target className="text-blue-500" size={16} />;
-      case 'speed': return <Zap className="text-green-500" size={16} />;
-      case 'compression': return <FileText className="text-purple-500" size={16} />;
-      default: return <BarChart3 className="text-gray-500" size={16} />;
-    }
+    setExpandedSummaries(newExpanded);
   };
 
   const getMetricColor = (score: number) => {
@@ -180,147 +171,216 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
         )}
       </div>
 
-      {/* Model Results */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {results.map((result, index) => (
-          <div key={index} className="card">
-            {/* Model Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {result.model_provider}/{result.model_name}
-                </h3>
-                <div className="flex items-center space-x-2 mt-1">
-                  {getPerformanceBadge(result)}
-                </div>
-              </div>
-              <button
-                onClick={() => toggleExpanded(index)}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                {expandedResults.has(index) ? 'Show Less' : 'Show More'}
-              </button>
-            </div>
+      {/* Model Comparison Table */}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            {/* Table Header */}
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                  Model
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b">
+                  Summary
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                  Words
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                  Compression
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                  Speed (s)
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border-b">
+                  Quality
+                </th>
+              </tr>
+            </thead>
+            
+            {/* Table Body */}
+            <tbody className="divide-y divide-gray-200">
+              {results.map((result, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  {/* Model Name & Badges */}
+                  <td className="px-4 py-4">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {result.model_provider}/{result.model_name}
+                      </div>
+                      <div className="flex items-center space-x-1 mt-1">
+                        {getPerformanceBadge(result)}
+                      </div>
+                    </div>
+                  </td>
+                  
+                  {/* Summary */}
+                  <td className="px-4 py-4">
+                    <div className="max-w-md">
+                      <div className="text-sm text-gray-800">
+                        {expandedSummaries.has(index) 
+                          ? result.summary 
+                          : result.summary.length > 150 
+                            ? `${result.summary.substring(0, 150)}...` 
+                            : result.summary
+                        }
+                      </div>
+                      {result.summary.length > 150 && (
+                        <button
+                          onClick={() => toggleExpandedSummary(index)}
+                          className="text-blue-500 hover:text-blue-700 text-xs mt-1 flex items-center"
+                        >
+                          {expandedSummaries.has(index) ? (
+                            <>
+                              <ChevronUp size={12} className="mr-1" />
+                              Show Less
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={12} className="mr-1" />
+                              Show More
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  
+                  {/* Words */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="text-sm font-medium text-gray-900">
+                      {result.summary_length}
+                    </div>
+                  </td>
+                  
+                  {/* Compression */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="text-sm font-medium text-gray-900">
+                      {(result.compression_ratio * 100).toFixed(1)}%
+                    </div>
+                  </td>
+                  
+                  {/* Speed */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="text-sm font-medium text-gray-900">
+                      {result.latency_ms ? (result.latency_ms / 1000).toFixed(1) : 'N/A'}
+                    </div>
+                  </td>
+                  
+                  {/* Quality */}
+                  <td className="px-4 py-4 text-center">
+                    <div className="text-sm font-medium text-gray-900">
+                      {result.quality_score ? `${(result.quality_score * 100).toFixed(1)}%` : 'N/A'}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-            {/* Summary */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Summary</h4>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {expandedResults.has(index) 
-                    ? result.summary 
-                    : result.summary.length > 200 
-                      ? `${result.summary.substring(0, 200)}...` 
-                      : result.summary
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Basic Metrics */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">
-                  {result.summary_length}
-                </div>
-                <div className="text-xs text-gray-500">Words</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">
-                  {(result.compression_ratio * 100).toFixed(1)}%
-                </div>
-                <div className="text-xs text-gray-500">Compression</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-900">
-                  {result.latency_ms ? (result.latency_ms / 1000).toFixed(1) : 'N/A'}
-                </div>
-                <div className="text-xs text-gray-500">Seconds</div>
-              </div>
-            </div>
-
-            {/* Quality Metrics */}
-            {expandedResults.has(index) && (
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700">Quality Metrics</h4>
+      {/* Detailed Metrics Toggle */}
+      <div className="card">
+        <button
+          onClick={() => setShowDetailedMetrics(!showDetailedMetrics)}
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
+        >
+          {showDetailedMetrics ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <span>{showDetailedMetrics ? 'Hide' : 'Show'} Detailed Metrics</span>
+        </button>
+        
+        {showDetailedMetrics && (
+          <div className="mt-4 space-y-4">
+            {results.map((result, index) => (
+              <div key={index} className="border-t pt-4">
+                <h4 className="font-medium text-gray-900 mb-3">
+                  {result.model_provider}/{result.model_name} - Detailed Metrics
+                </h4>
                 
-                <div className="space-y-2">
-                  {result.quality_score !== undefined && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Overall Quality</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full" 
-                            style={{ width: `${(result.quality_score * 100)}%` }}
-                          ></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Quality Metrics */}
+                  <div className="space-y-3">
+                    <h5 className="text-sm font-medium text-gray-700">Quality Metrics</h5>
+                    
+                    {result.quality_score !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Overall Quality</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full" 
+                              style={{ width: `${(result.quality_score * 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className={`text-sm font-medium ${getMetricColor(result.quality_score)}`}>
+                            {(result.quality_score * 100).toFixed(1)}%
+                          </span>
                         </div>
-                        <span className={`text-sm font-medium ${getMetricColor(result.quality_score)}`}>
-                          {(result.quality_score * 100).toFixed(1)}%
-                        </span>
                       </div>
-                    </div>
-                  )}
-                  
-                  {result.coherence_score !== undefined && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Coherence</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${(result.coherence_score * 100)}%` }}
-                          ></div>
+                    )}
+                    
+                    {result.coherence_score !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Coherence</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full" 
+                              style={{ width: `${(result.coherence_score * 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className={`text-sm font-medium ${getMetricColor(result.coherence_score)}`}>
+                            {(result.coherence_score * 100).toFixed(1)}%
+                          </span>
                         </div>
-                        <span className={`text-sm font-medium ${getMetricColor(result.coherence_score)}`}>
-                          {(result.coherence_score * 100).toFixed(1)}%
-                        </span>
                       </div>
-                    </div>
-                  )}
-                  
-                  {result.relevance_score !== undefined && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Relevance</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-purple-500 h-2 rounded-full" 
-                            style={{ width: `${(result.relevance_score * 100)}%` }}
-                          ></div>
+                    )}
+                    
+                    {result.relevance_score !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Relevance</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-purple-500 h-2 rounded-full" 
+                              style={{ width: `${(result.relevance_score * 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className={`text-sm font-medium ${getMetricColor(result.relevance_score)}`}>
+                            {(result.relevance_score * 100).toFixed(1)}%
+                          </span>
                         </div>
-                        <span className={`text-sm font-medium ${getMetricColor(result.relevance_score)}`}>
-                          {(result.relevance_score * 100).toFixed(1)}%
-                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Token Usage */}
+                  {result.token_usage && (
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">Token Usage</h5>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Total Tokens:</span>
+                          <span className="text-sm font-medium">{result.token_usage.total_tokens}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Prompt Tokens:</span>
+                          <span className="text-sm font-medium">{result.token_usage.prompt_tokens}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Completion Tokens:</span>
+                          <span className="text-sm font-medium">{result.token_usage.completion_tokens}</span>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Token Usage */}
-                {result.token_usage && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Token Usage</h5>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-500">Total:</span>
-                        <span className="font-medium ml-1">{result.token_usage.total_tokens}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Prompt:</span>
-                        <span className="font-medium ml-1">{result.token_usage.prompt_tokens}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Completion:</span>
-                        <span className="font-medium ml-1">{result.token_usage.completion_tokens}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
