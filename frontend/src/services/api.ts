@@ -7,7 +7,10 @@ import {
   StreamChunk,
   LanguageDetection,
   Translation,
-  SupportedLanguages
+  SupportedLanguages,
+  PromptTemplatesResponse,
+  TemplateFillRequest,
+  TemplateFillResponse
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -102,6 +105,37 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  }
+
+  async getPromptTemplates(): Promise<PromptTemplatesResponse> {
+    return this.request<PromptTemplatesResponse>('/templates');
+  }
+
+  async getTemplatesByCategory(category: string): Promise<{ templates: PromptTemplate[]; category: string }> {
+    return this.request<{ templates: PromptTemplate[]; category: string }>(`/templates/${category}`);
+  }
+
+  async fillTemplate(request: TemplateFillRequest): Promise<TemplateFillResponse> {
+    return this.request<TemplateFillResponse>('/templates/fill', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async exportContent(format: 'pdf' | 'word' | 'markdown', content: any): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/export/${format}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.statusText}`);
+    }
+
+    return response.blob();
   }
 
   async detectLanguage(text: string): Promise<{ detection: LanguageDetection }> {

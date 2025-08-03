@@ -6,6 +6,9 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { GenerationAnalyticsDisplay } from '../components/GenerationAnalyticsDisplay';
+import { PromptTemplateSelector } from '../components/PromptTemplateSelector';
+import { MultipleCandidatesSelector } from '../components/MultipleCandidatesSelector';
+import { ExportOptions } from '../components/ExportOptions';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
 import { StreamChunk, LanguageDetection } from '../types/api';
@@ -25,11 +28,14 @@ export const GeneratePage: React.FC = () => {
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateResponse, setTranslateResponse] = useState(false);
   const [outputFormat, setOutputFormat] = useState('text');
+  const [numCandidates, setNumCandidates] = useState(3);
   const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
   const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [analytics, setAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'response' | 'analytics'>('response');
+  const [candidates, setCandidates] = useState<string[]>([]);
+  const [selectedCandidate, setSelectedCandidate] = useState<number>(0);
 
   // Language detection effect
   useEffect(() => {
@@ -64,6 +70,8 @@ export const GeneratePage: React.FC = () => {
 
     setIsGenerating(true);
     setResponse('');
+    setCandidates([]);
+    setSelectedCandidate(0);
     setError(null);
     setTokenUsage(null);
     setLatencyMs(undefined);
@@ -83,9 +91,25 @@ export const GeneratePage: React.FC = () => {
           target_language: targetLanguage,
           translate_response: translateResponse,
           output_format: outputFormat,
+          num_candidates: numCandidates,
         },
         (chunk: StreamChunk) => {
-          setResponse(prev => prev + chunk.content);
+          if (chunk.is_complete && numCandidates > 1) {
+            // Handle multiple candidates
+            try {
+              const candidatesArray = JSON.parse(chunk.content);
+              setCandidates(candidatesArray);
+              setResponse(candidatesArray[0] || '');
+              setSelectedCandidate(0);
+            } catch (e) {
+              // Fallback to single response
+              setResponse(chunk.content);
+              setCandidates([chunk.content]);
+              setSelectedCandidate(0);
+            }
+          } else {
+            setResponse(prev => prev + chunk.content);
+          }
           finalResponse += chunk.content;
           if (chunk.token_usage) {
             setTokenUsage(chunk.token_usage);
@@ -149,6 +173,16 @@ export const GeneratePage: React.FC = () => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       handleGenerate();
     }
+  };
+
+  const handleTemplateSelect = (systemPrompt: string, userPrompt: string) => {
+    setSystemPrompt(systemPrompt);
+    setUserPrompt(userPrompt);
+  };
+
+  const handleCandidateSelect = (index: number) => {
+    setSelectedCandidate(index);
+    setResponse(candidates[index] || '');
   };
 
   return (

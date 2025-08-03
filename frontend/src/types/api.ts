@@ -44,6 +44,7 @@ export interface GenerateRequest {
   target_language?: string;
   translate_response?: boolean;
   output_format?: 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table';
+  num_candidates?: number;
 }
 
 export interface SummarizeRequest {
@@ -254,4 +255,30 @@ export interface LanguageFamily {
 export interface SupportedLanguages {
   languages: Record<string, { name: string; native: string }>;
   families: Record<string, Language[]>;
+}
+
+export interface PromptTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  system_prompt: string;
+  user_prompt_template: string;
+  variables: string[];
+}
+
+export interface PromptTemplatesResponse {
+  templates: PromptTemplate[];
+  categories: string[];
+}
+
+export interface TemplateFillRequest {
+  template_id: string;
+  variables: Record<string, string>;
+}
+
+export interface TemplateFillResponse {
+  system_prompt: string;
+  user_prompt: string;
+  template_info: PromptTemplate;
 } 
