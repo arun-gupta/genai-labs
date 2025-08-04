@@ -28,6 +28,23 @@ cd genai-labs
 - **Export Options** - PDF, Word, Markdown, HTML export
 - **Prompt History** - Local storage for session management
 
+## 🆕 Recent Updates
+
+### Q&A System Enhancements (Latest)
+- **✨ Intelligent Question Suggestions** - AI-powered suggestions based on document content analysis
+- **🏷️ Document Tagging System** - Add custom tags to organize and filter documents
+- **📁 Collection Management** - Create, manage, and delete document collections
+- **🎯 Multi-Collection Queries** - Target questions at specific collections or query across multiple
+- **🔍 Smart Retrieval** - Improved similarity matching with fallback thresholds
+- **📊 Enhanced Source Tracking** - Detailed citations with similarity scores and metadata
+- **🎨 Improved UI/UX** - Better question suggestion interface with confidence scores and categories
+
+### Technical Improvements
+- **⚡ Performance Optimization** - Faster document processing and retrieval
+- **🛡️ Error Handling** - Better error messages and fallback mechanisms
+- **🔧 API Enhancements** - New endpoints for collection and suggestion management
+- **📱 Responsive Design** - Improved mobile and tablet experience
+
 ## 🛠️ Alternative Setup Options
 
 ### 🔧 Development Setup
@@ -85,11 +102,24 @@ VITE_API_BASE_URL=http://localhost:8000
 3. Check availability status
 4. Copy download commands for Ollama
 
-### Q&A over Documents
+### Q&A over Documents (RAG)
 1. Navigate to `/rag`
 2. Upload documents (PDF, DOCX, TXT, MD, CSV)
-3. Ask questions about your documents
-4. View source citations and export results
+3. **Tag documents** for better organization and filtering
+4. **Create and manage collections** to organize related documents
+5. **Get intelligent question suggestions** based on document content
+6. **Ask questions** about your documents with multi-collection support
+7. **Filter by tags** to focus on specific document categories
+8. **View source citations** with similarity scores and document references
+9. **Export results** in multiple formats
+
+**Advanced Features:**
+- **Document Tagging**: Add custom tags to categorize and filter documents
+- **Collection Management**: Create multiple collections, add documents to existing collections, delete collections
+- **Multi-Collection Queries**: Target questions at specific collections or query across multiple collections
+- **Intelligent Question Suggestions**: AI-powered suggestions based on document content, topics, and actions
+- **Smart Retrieval**: Advanced similarity matching with fallback thresholds for better answer quality
+- **Source Tracking**: Detailed source citations with document names, chunk indices, and similarity scores
 
 ### Model Comparison
 **For Text Generation:**
