@@ -49,7 +49,7 @@ export const RAGPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [topK, setTopK] = useState(5);
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.3);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.1);
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [documentTags, setDocumentTags] = useState<string[]>([]);
