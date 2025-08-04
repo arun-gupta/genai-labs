@@ -511,15 +511,26 @@ class ModelComparisonService:
                 similarity_threshold=similarity_threshold,
                 filter_tags=filter_tags
             ):
-                full_content += chunk.content
-                if chunk.token_usage:
-                    token_usage = chunk.token_usage
-                if chunk.latency_ms:
-                    latency_ms = chunk.latency_ms
-                if chunk.sources:
-                    sources = chunk.sources
-                if chunk.confidence:
-                    confidence = chunk.confidence
+                # Handle dictionary format from RAG service
+                if isinstance(chunk, dict):
+                    full_content += chunk.get("content", "")
+                    if chunk.get("latency_ms"):
+                        latency_ms = chunk.get("latency_ms")
+                    if chunk.get("sources"):
+                        sources = chunk.get("sources")
+                    if chunk.get("confidence"):
+                        confidence = chunk.get("confidence")
+                else:
+                    # Handle object format (fallback)
+                    full_content += getattr(chunk, 'content', '')
+                    if hasattr(chunk, 'token_usage'):
+                        token_usage = chunk.token_usage
+                    if hasattr(chunk, 'latency_ms'):
+                        latency_ms = chunk.latency_ms
+                    if hasattr(chunk, 'sources'):
+                        sources = chunk.sources
+                    if hasattr(chunk, 'confidence'):
+                        confidence = chunk.confidence
             
             # Calculate quality metrics
             quality_metrics = self._calculate_rag_quality_metrics(question, full_content, sources, confidence)
