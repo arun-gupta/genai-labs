@@ -5,6 +5,7 @@ import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
 import { VoiceOutput } from '../components/VoiceOutput';
 import { ExportOptions } from '../components/ExportOptions';
+import { QuestionSuggestions } from '../components/QuestionSuggestions';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
 
@@ -202,6 +203,10 @@ export const RAGPage: React.FC = () => {
       e.preventDefault();
       handleAskQuestion();
     }
+  };
+
+  const handleSuggestionClick = (suggestedQuestion: string) => {
+    setQuestion(suggestedQuestion);
   };
 
   const copySourceText = async (source: Source) => {
@@ -545,6 +550,7 @@ export const RAGPage: React.FC = () => {
 
         {/* Center Panel - Question Input */}
         <div className="space-y-6">
+          {/* Question Input */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
               <Search className="text-blue-500" size={20} />
@@ -590,7 +596,8 @@ export const RAGPage: React.FC = () => {
               onChange={(e) => setQuestion(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask a question about your uploaded documents..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-md resize-none"
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none"
+              rows={4}
             />
             
             {/* Tag Filtering */}
@@ -628,7 +635,7 @@ export const RAGPage: React.FC = () => {
               </div>
             )}
             
-            <div className="mt-4 flex items-center space-x-2">
+            <div className="flex justify-between items-center mt-4">
               <button
                 onClick={handleAskQuestion}
                 disabled={isAsking || !question.trim() || selectedCollections.length === 0}
@@ -648,6 +655,13 @@ export const RAGPage: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Question Suggestions */}
+          <QuestionSuggestions
+            collectionNames={selectedCollections}
+            onSuggestionClick={handleSuggestionClick}
+            className="mt-4"
+          />
 
           {/* Sources */}
           {showSources && sources.length > 0 && (
