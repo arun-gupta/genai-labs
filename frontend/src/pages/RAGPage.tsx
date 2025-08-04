@@ -8,6 +8,7 @@ import { ExportOptions } from '../components/ExportOptions';
 import { QuestionSuggestions } from '../components/QuestionSuggestions';
 import { ConfidenceDisplay } from '../components/ConfidenceDisplay';
 import { DocumentAnalytics } from '../components/DocumentAnalytics';
+import { PerformanceMetrics } from '../components/PerformanceMetrics';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
 
@@ -65,6 +66,21 @@ export const RAGPage: React.FC = () => {
   const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('response'); // 'response', 'analytics'
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
+  
+  // Performance metrics
+  const [performanceMetrics, setPerformanceMetrics] = useState<{
+    responseTime: number | null;
+    accuracyScore: number | null;
+    tokenCount: number | null;
+    processingTime: number | null;
+    timestamp: string | null;
+  }>({
+    responseTime: null,
+    accuracyScore: null,
+    tokenCount: null,
+    processingTime: null,
+    timestamp: null
+  });
   
   // Predefined sample tags for easy selection
   const sampleTags = [
@@ -180,11 +196,25 @@ export const RAGPage: React.FC = () => {
     setSources([]);
     setConfidence(null);
     setError(null);
+    
+    // Reset performance metrics
+    setPerformanceMetrics({
+      responseTime: null,
+      accuracyScore: null,
+      tokenCount: null,
+      processingTime: null,
+      timestamp: null
+    });
+
+    const startTime = Date.now();
+    let processingStartTime: number | null = null;
+    let processingEndTime: number | null = null;
 
     try {
       let fullAnswer = '';
       let finalSources: Source[] = [];
       let confidenceData: any = null;
+      let tokenCount = 0;
 
       await apiService.askRAGQuestionStream(
         {
@@ -201,8 +231,17 @@ export const RAGPage: React.FC = () => {
         },
         (chunk: StreamChunk) => {
           console.log('Received chunk:', chunk);
+          
+          // Track processing start time on first chunk
+          if (processingStartTime === null) {
+            processingStartTime = Date.now();
+          }
+          
           fullAnswer += chunk.content;
           setAnswer(fullAnswer);
+          
+          // Estimate token count (rough approximation: 1 token ≈ 4 characters)
+          tokenCount = Math.ceil(fullAnswer.length / 4);
           
           if (chunk.is_complete && chunk.sources) {
             finalSources = chunk.sources;
@@ -215,12 +254,43 @@ export const RAGPage: React.FC = () => {
             setConfidence(confidenceData);
             console.log('Confidence received:', confidenceData);
           }
+          
+          // Track processing end time on last chunk
+          if (chunk.is_complete) {
+            processingEndTime = Date.now();
+          }
         },
         (error: string) => {
           setError(error);
         },
         filterTags
       );
+      
+      // Calculate performance metrics
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+      const processingTime = processingEndTime && processingStartTime ? processingEndTime - processingStartTime : null;
+      
+      // Calculate accuracy score based on confidence and sources
+      let accuracyScore: number | null = null;
+      if (confidenceData && finalSources.length > 0) {
+        const confidenceWeight = 0.6;
+        const sourceWeight = 0.4;
+        
+        const confidenceComponent = confidenceData.overall_confidence * confidenceWeight;
+        const sourceComponent = Math.min(finalSources.length / 5, 1) * sourceWeight; // Normalize to 0-1
+        
+        accuracyScore = Math.round((confidenceComponent + sourceComponent) * 100);
+      }
+      
+      setPerformanceMetrics({
+        responseTime,
+        accuracyScore,
+        tokenCount,
+        processingTime,
+        timestamp: new Date().toISOString()
+      });
+      
     } catch (error) {
       setError(`Failed to get answer: ${error}`);
     } finally {
@@ -841,6 +911,9 @@ export const RAGPage: React.FC = () => {
 
             {activeTab === 'analytics' && (
               <div className="space-y-6">
+                {/* Performance Metrics */}
+                <PerformanceMetrics metrics={performanceMetrics} />
+
                 {/* Confidence Analysis */}
                 {confidence && (
                   <div className="space-y-4">
@@ -898,19 +971,20 @@ export const RAGPage: React.FC = () => {
                 )}
 
                 {/* Empty State - only show if both confidence and sources are missing */}
-                {!confidence && sources.length === 0 && (
+                {!confidence && sources.length === 0 && !performanceMetrics.responseTime && (
                   <div className="text-center text-gray-500 py-8">
                     <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
                     <p className="mt-2">No analytics available yet</p>
-                    <p className="text-sm">Ask a question to see confidence analysis and sources</p>
+                    <p className="text-sm">Ask a question to see performance metrics, confidence analysis and sources</p>
                   </div>
                 )}
 
                 {/* Debug Info - show what's available */}
-                {(confidence || sources.length > 0) && (
+                {(confidence || sources.length > 0 || performanceMetrics.responseTime) && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Analytics Summary</h4>
                     <div className="text-xs text-gray-600 space-y-1">
+                      <p>• Performance Metrics: {performanceMetrics.responseTime ? 'Available' : 'Not available'}</p>
                       <p>• Confidence Analysis: {confidence ? 'Available' : 'Not available'}</p>
                       <p>• Sources: {sources.length} document(s) found</p>
                       {sources.length > 0 && (
