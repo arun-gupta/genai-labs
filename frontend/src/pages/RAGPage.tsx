@@ -132,6 +132,8 @@ export const RAGPage: React.FC = () => {
       console.log('Loading available models...');
       const models = await apiService.getAvailableModels();
       console.log('Available models loaded:', models);
+      console.log('Models providers:', models?.providers);
+      console.log('Models providers length:', models?.providers?.length);
       setAvailableModels(models);
     } catch (error) {
       console.error('Failed to load available models:', error);
@@ -607,6 +609,14 @@ export const RAGPage: React.FC = () => {
                   </p>
                 </div>
               )}
+              
+              {/* Debug info */}
+              <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                <p>Debug: availableModels exists: {availableModels ? 'Yes' : 'No'}</p>
+                <p>Debug: providers count: {availableModels?.providers?.length || 0}</p>
+                <p>Debug: selectedModels count: {selectedModels.length}</p>
+                <p>Debug: Compare button should show: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
+              </div>
             </div>
           </div>
 
@@ -1014,6 +1024,12 @@ export const RAGPage: React.FC = () => {
                     <span>{isComparing ? 'Comparing...' : 'Compare Models'}</span>
                   </button>
                 )}
+              </div>
+              
+              {/* Debug info for button */}
+              <div className="text-xs text-gray-500">
+                <p>Selected models: {selectedModels.length}</p>
+                <p>Button should show: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
 
