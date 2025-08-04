@@ -107,7 +107,7 @@ class RAGService:
                     "chunk_index": i,
                     "total_chunks": len(chunks),
                     "source": file_name,
-                    "tags": tags or []
+                    "tags": ",".join(tags) if tags else ""
                 }
             )
             documents.append(doc)
@@ -201,7 +201,8 @@ class RAGService:
                 similarity_score = 1 - distance  # Convert distance to similarity
                 
                 # Check if document has required tags
-                doc_tags = metadata.get("tags", [])
+                doc_tags_str = metadata.get("tags", "")
+                doc_tags = doc_tags_str.split(",") if doc_tags_str else []
                 tag_match = True
                 if filter_tags:
                     tag_match = any(tag in doc_tags for tag in filter_tags)
@@ -304,7 +305,8 @@ Question: {question}"""
                 similarity_score = 1 - distance
                 
                 # Check if document has required tags
-                doc_tags = metadata.get("tags", [])
+                doc_tags_str = metadata.get("tags", "")
+                doc_tags = doc_tags_str.split(",") if doc_tags_str else []
                 tag_match = True
                 if filter_tags:
                     tag_match = any(tag in doc_tags for tag in filter_tags)
@@ -387,7 +389,8 @@ Question: {question}"""
                 results = collection_info.get(limit=count)
                 for metadata in results['metadatas']:
                     doc_id = metadata.get('document_id', '')
-                    tags = metadata.get('tags', [])
+                    tags_str = metadata.get('tags', '')
+                    tags = tags_str.split(",") if tags_str else []
                     
                     # Add tags to available tags set
                     available_tags.update(tags)
