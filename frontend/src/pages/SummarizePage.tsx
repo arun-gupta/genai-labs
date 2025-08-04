@@ -32,7 +32,7 @@ export const SummarizePage: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<any>(null);
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'analytics'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'analytics' | 'comparison'>('summary');
 
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
@@ -280,6 +280,7 @@ export const SummarizePage: React.FC = () => {
       const result = await apiService.compareSummarizationModels(request);
       setComparisonResults(result);
       setShowComparison(true);
+      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
@@ -834,6 +835,17 @@ An Open Source AI is an AI system made available under terms and in a way that g
                 <BarChart3 size={16} />
                 <span>Analytics</span>
               </button>
+              <button
+                onClick={() => setActiveTab('comparison')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'comparison'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <CompareIcon size={16} />
+                <span>Comparison</span>
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -863,19 +875,40 @@ An Open Source AI is an AI system made available under terms and in a way that g
                 isLoading={isAnalyzing}
               />
             )}
+
+            {activeTab === 'comparison' && (
+              <div className="space-y-6">
+                {comparisonResults ? (
+                  <ModelComparison
+                    results={comparisonResults.results}
+                    metrics={comparisonResults.comparison_metrics}
+                    recommendations={comparisonResults.recommendations}
+                    isComparing={isComparing}
+                    comparisonType="summarization"
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
+                    <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                      Compare how different AI models summarize the same content to find the best one for your needs.
+                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                      <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
+                      <ol className="text-sm text-blue-800 space-y-1 text-left">
+                        <li>1. Enter your text, URL, or upload a file above</li>
+                        <li>2. Select 2 or more models in the Model Comparison section</li>
+                        <li>3. Click "Compare Models" to see results</li>
+                        <li>4. View quality scores, compression ratios, and recommendations</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Model Comparison Results */}
-      {showComparison && comparisonResults && (
-        <ModelComparison
-          results={comparisonResults.results}
-          metrics={comparisonResults.comparison_metrics}
-          recommendations={comparisonResults.recommendations}
-          isComparing={isComparing}
-        />
-      )}
     </div>
   );
 }; 
