@@ -174,7 +174,7 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = 0.3, filter_tags: List[str] = None,
+                          top_k: int = 5, similarity_threshold: float = 0.1, filter_tags: List[str] = None,
                           collection_names: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
@@ -384,7 +384,7 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = 0.3, filter_tags: List[str] = None,
+                                 top_k: int = 5, similarity_threshold: float = 0.1, filter_tags: List[str] = None,
                                  collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
@@ -410,6 +410,14 @@ Question: {question}"""
                         n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
                         include=["documents", "metadatas", "distances"]
                     )
+                    
+                    # Debug logging
+                    logger.info(f"ChromaDB query for '{question}' returned {len(results['documents'][0])} documents")
+                    if len(results['documents'][0]) > 0:
+                        logger.info(f"First few distances: {results['distances'][0][:5]}")
+                        logger.info(f"First document preview: {results['documents'][0][0][:100]}...")
+                    else:
+                        logger.warning(f"No documents returned from ChromaDB query for: {question}")
                     
                     # Add collection name to metadata for tracking
                     for metadata in results['metadatas'][0]:
