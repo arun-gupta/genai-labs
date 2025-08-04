@@ -1,8 +1,13 @@
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form, Depends
 from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 from typing import Optional
-from app.models.requests import GenerateRequest, SummarizeRequest
+from app.models.requests import (
+    GenerateRequest, SummarizeRequest, ModelProvider, RAGQuestionRequest, 
+    RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, 
+    CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, 
+    ModelComparisonResponse, GenerationComparisonRequest, RAGModelComparisonRequest
+)
 from app.models.responses import GenerationResponse, SummarizeResponse, StreamChunk, ErrorResponse
 from app.services.generation_service import GenerationService
 from app.services.input_processor import input_processor
@@ -13,17 +18,13 @@ from app.services.model_availability_service import model_availability_service
 from app.services.prompt_template_service import prompt_template_service
 from app.services.export_service import export_service
 from app.services.rag_service import rag_service
-from app.services.model_comparison_service import model_comparison_service
+from app.services.model_comparison_service import ModelComparisonService, get_model_comparison_service
 from app.services.question_suggestion_service import question_suggestion_service
 from app.services.document_analytics_service import document_analytics_service
-from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse, GenerationComparisonRequest
 import json
 import time
 import datetime
 import io
-from fastapi import Depends
-from app.services.model_comparison_service import ModelComparisonService, get_model_comparison_service
-from app.models.requests import RAGModelComparisonRequest
 import logging
 
 logger = logging.getLogger(__name__)
