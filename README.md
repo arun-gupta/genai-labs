@@ -38,6 +38,11 @@ cd genai-labs
 - **🔍 Smart Retrieval** - Improved similarity matching with fallback thresholds
 - **📊 Enhanced Source Tracking** - Detailed citations with similarity scores and metadata
 - **🎨 Improved UI/UX** - Better question suggestion interface with confidence scores and categories
+- **🎯 Answer Confidence Scores** - AI-generated confidence ratings with detailed breakdowns
+- **📈 Document Analytics** - Comprehensive analysis of uploaded documents (topics, entities, readability)
+- **⚡ Performance Metrics** - Response time, accuracy tracking, and processing statistics
+- **🔄 Quick Model Combinations** - Pre-built model combinations for easy comparison setup
+- **🎨 Consistent UI Design** - Unified button layout and tab structure across all pages
 
 ### Technical Improvements
 - **⚡ Performance Optimization** - Faster document processing and retrieval
@@ -120,6 +125,10 @@ VITE_API_BASE_URL=http://localhost:8000
 - **Intelligent Question Suggestions**: AI-powered suggestions based on document content, topics, and actions
 - **Smart Retrieval**: Advanced similarity matching with fallback thresholds for better answer quality
 - **Source Tracking**: Detailed source citations with document names, chunk indices, and similarity scores
+- **Answer Confidence Scores**: AI-generated confidence ratings with detailed breakdowns
+- **Document Analytics**: Comprehensive analysis of uploaded documents (topics, entities, readability, insights)
+- **Performance Metrics**: Response time, accuracy tracking, and processing statistics
+- **Quick Model Combinations**: Pre-built model combinations for easy comparison setup
 
 ### Model Comparison
 **For Text Generation:**
@@ -133,6 +142,17 @@ VITE_API_BASE_URL=http://localhost:8000
 2. Select 2+ models in the Model Comparison section
 3. Enter text to summarize
 4. Click "Compare Models" to see side-by-side analysis
+
+**For Q&A over Documents:**
+1. Navigate to `/rag`
+2. Upload documents and ask a question
+3. Select 2+ models in the Model Comparison section
+4. Click "Compare Models" to see how different models answer the same question
+
+**Quick Combinations:**
+- **Local vs Cloud**: Compare local Ollama models with cloud models
+- **Efficient Models**: Compare lightweight models for speed
+- **High Performance**: Compare high-quality models for accuracy
 
 ## 🏗️ Tech Stack
 

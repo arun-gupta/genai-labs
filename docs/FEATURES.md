@@ -15,6 +15,9 @@ Advanced text generation with multiple writing styles and real-time streaming.
 - **Language Detection**: Automatic language detection for input text
 - **Prompt Templates**: Pre-built templates with variable substitution
 - **Generation Analytics**: Comprehensive analysis of generated content
+- **Model Comparison**: Compare multiple models side-by-side with quality metrics
+- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance)
+- **Sample Prompts**: 8 diverse, clickable sample prompts for quick start
 
 ### Text Summarization (`/summarize`)
 Multi-format summarization with comprehensive analytics and multiple input methods.
@@ -27,6 +30,8 @@ Multi-format summarization with comprehensive analytics and multiple input metho
 - **Readability Scores**: Multiple readability metrics (Flesch, Gunning Fog, SMOG, etc.)
 - **Sentiment Analysis**: Sentiment tracking and preservation analysis
 - **Keyword Analysis**: Keyword extraction and overlap tracking
+- **Model Comparison**: Compare multiple models side-by-side with quality metrics
+- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance)
 
 ### Models Explorer (`/models`)
 Comprehensive view of open-source models with availability status and management tools.
@@ -37,6 +42,25 @@ Comprehensive view of open-source models with availability status and management
 - **Advanced Filtering**: Filter by category, organization, and availability
 - **Search**: Search across model names, descriptions, and tags
 - **Visual Indicators**: Color-coded organization badges and status icons
+
+### Q&A over Documents (RAG) (`/rag`)
+Advanced document question answering with intelligent retrieval and comprehensive analytics.
+
+**Key Features:**
+- **Document Upload**: Support for PDF, DOCX, TXT, MD, CSV files
+- **Document Tagging**: Add custom tags to organize and filter documents
+- **Collection Management**: Create, manage, and delete document collections
+- **Multi-Collection Queries**: Target questions at specific collections or query across multiple
+- **Intelligent Question Suggestions**: AI-powered suggestions based on document content analysis
+- **Smart Retrieval**: Advanced similarity matching with fallback thresholds
+- **Source Tracking**: Detailed citations with document names, chunk indices, and similarity scores
+- **Answer Confidence Scores**: AI-generated confidence ratings with detailed breakdowns
+- **Document Analytics**: Comprehensive analysis of uploaded documents (topics, entities, readability, insights)
+- **Performance Metrics**: Response time, accuracy tracking, and processing statistics
+- **Model Comparison**: Compare multiple models for Q&A performance
+- **Quick Model Combinations**: Pre-built combinations for easy comparison setup
+- **Filter by Tags**: Focus on specific document categories
+- **Export Options**: Export Q&A results in multiple formats
 
 ## 🎤 Voice Features
 
@@ -67,6 +91,25 @@ Comprehensive view of open-source models with availability status and management
 - **Latency Metrics**: Response time analysis
 - **Content Analysis**: Readability, sentiment, and quality metrics
 - **Performance Tracking**: Historical performance data
+
+## 🔄 Model Comparison
+
+### Side-by-Side Analysis
+- **Quality Metrics**: Coherence, relevance, and overall quality scores
+- **Performance Metrics**: Response time, token usage, and processing speed
+- **Recommendations**: AI-powered suggestions for best model selection
+- **Visual Comparison**: Easy-to-read comparison tables and charts
+
+### Quick Combinations
+- **Local vs Cloud**: Compare local Ollama models with cloud models
+- **Efficient Models**: Compare lightweight models for speed optimization
+- **High Performance**: Compare high-quality models for accuracy
+- **Smart Filtering**: Only shows combinations with available models
+
+### Supported Tasks
+- **Text Generation**: Compare models for creative and technical writing
+- **Text Summarization**: Compare models for different summary types
+- **Q&A over Documents**: Compare models for document question answering
 
 ### Export Options
 - **Multiple Formats**: PDF, Word, Markdown, HTML export
