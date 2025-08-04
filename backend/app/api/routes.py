@@ -6,7 +6,9 @@ from app.models.requests import (
     GenerateRequest, SummarizeRequest, ModelProvider, RAGQuestionRequest, 
     RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, 
     CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, 
-    ModelComparisonResponse, GenerationComparisonRequest, RAGModelComparisonRequest
+    ModelComparisonResponse, GenerationComparisonRequest, RAGModelComparisonRequest,
+    ImageAnalysisRequest, ImageAnalysisResponse, ImageComparisonRequest, ImageComparisonResponse,
+    ImageGenerationRequest, ImageGenerationResponse, ImageVariationRequest, ImageEditRequest
 )
 from app.models.responses import GenerationResponse, SummarizeResponse, StreamChunk, ErrorResponse
 from app.services.generation_service import GenerationService
@@ -21,6 +23,8 @@ from app.services.rag_service import rag_service
 from app.services.model_comparison_service import ModelComparisonService, get_model_comparison_service
 from app.services.question_suggestion_service import question_suggestion_service
 from app.services.document_analytics_service import document_analytics_service
+from app.services.image_analysis_service import image_analysis_service
+from app.services.image_generation_service import image_generation_service
 import json
 import time
 import datetime
@@ -842,4 +846,106 @@ async def compare_rag_models(
         
     except Exception as e:
         logger.error(f"Error in RAG model comparison: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Image Analysis Endpoints
+@router.post("/vision/analyze", response_model=ImageAnalysisResponse)
+async def analyze_image(request: ImageAnalysisRequest):
+    """Analyze image content using vision models."""
+    try:
+        result = await image_analysis_service.analyze_image(
+            image_bytes=request.image,
+            analysis_type=request.analysis_type,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            custom_prompt=request.custom_prompt,
+            temperature=request.temperature
+        )
+        
+        return ImageAnalysisResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error in image analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/vision/compare", response_model=ImageComparisonResponse)
+async def compare_images(request: ImageComparisonRequest):
+    """Compare multiple images using vision models."""
+    try:
+        result = await image_analysis_service.compare_images(
+            images=request.images,
+            comparison_type=request.comparison_type,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            temperature=request.temperature
+        )
+        
+        return ImageComparisonResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error in image comparison: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Image Generation Endpoints
+@router.post("/generate/image", response_model=ImageGenerationResponse)
+async def generate_image(request: ImageGenerationRequest):
+    """Generate images from text prompts."""
+    try:
+        result = await image_generation_service.generate_image(
+            prompt=request.prompt,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            size=request.size,
+            quality=request.quality,
+            style=request.style,
+            num_images=request.num_images,
+            temperature=request.temperature
+        )
+        
+        return ImageGenerationResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error in image generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate/image/variations", response_model=ImageGenerationResponse)
+async def generate_image_variations(request: ImageVariationRequest):
+    """Generate variations of an existing image."""
+    try:
+        result = await image_generation_service.generate_image_variations(
+            image_bytes=request.image,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            size=request.size,
+            num_variations=request.num_variations
+        )
+        
+        return ImageGenerationResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error in image variation generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate/image/edit", response_model=ImageGenerationResponse)
+async def edit_image(request: ImageEditRequest):
+    """Edit an existing image using inpainting/outpainting."""
+    try:
+        result = await image_generation_service.edit_image(
+            image_bytes=request.image,
+            mask_bytes=request.mask,
+            prompt=request.prompt,
+            model_provider=request.model_provider.value,
+            model_name=request.model_name,
+            size=request.size
+        )
+        
+        return ImageGenerationResponse(**result)
+        
+    except Exception as e:
+        logger.error(f"Error in image editing: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 

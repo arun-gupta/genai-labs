@@ -217,4 +217,80 @@ class ModelComparisonResponse(BaseModel):
     results: List[ModelComparisonResult]
     comparison_metrics: dict
     recommendations: List[str]
-    timestamp: str 
+    timestamp: str
+
+
+# Image Analysis Models
+class ImageAnalysisRequest(BaseModel):
+    image: bytes = Field(..., description="Image file content")
+    analysis_type: Literal["describe", "extract", "analyze", "compare"] = Field("describe", description="Type of analysis to perform")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    custom_prompt: Optional[str] = Field(None, description="Custom analysis prompt")
+    temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
+
+
+class ImageAnalysisResponse(BaseModel):
+    analysis_type: str
+    analysis: dict
+    raw_response: str
+    model_provider: str
+    model_name: str
+    latency_ms: float
+    timestamp: float
+
+
+class ImageComparisonRequest(BaseModel):
+    images: List[bytes] = Field(..., description="List of images to compare")
+    comparison_type: Literal["similarity", "style", "content", "quality"] = Field("similarity", description="Type of comparison")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
+
+
+class ImageComparisonResponse(BaseModel):
+    comparison_type: str
+    comparison: str
+    model_provider: str
+    model_name: str
+    latency_ms: float
+    image_count: int
+    timestamp: float
+
+
+# Image Generation Models
+class ImageGenerationRequest(BaseModel):
+    prompt: str = Field(..., description="Text prompt for image generation")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    size: str = Field("1024x1024", description="Image size (e.g., 1024x1024)")
+    quality: str = Field("standard", description="Image quality (standard, hd)")
+    style: Optional[str] = Field(None, description="Artistic style to apply")
+    num_images: int = Field(1, ge=1, le=4, description="Number of images to generate")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
+
+
+class ImageGenerationResponse(BaseModel):
+    provider: str
+    model: str
+    prompt: str
+    images: List[dict]
+    generation_id: str
+    timestamp: float
+
+
+class ImageVariationRequest(BaseModel):
+    image: bytes = Field(..., description="Base image for variations")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    size: str = Field("1024x1024", description="Image size")
+    num_variations: int = Field(1, ge=1, le=4, description="Number of variations to generate")
+
+
+class ImageEditRequest(BaseModel):
+    image: bytes = Field(..., description="Image to edit")
+    mask: Optional[bytes] = Field(None, description="Mask for inpainting")
+    prompt: str = Field(..., description="Edit prompt")
+    model_provider: ModelProvider = Field(..., description="Model provider to use")
+    model_name: Optional[str] = Field(None, description="Specific model name")
+    size: str = Field("1024x1024", description="Image size") 
