@@ -432,6 +432,7 @@ export const RAGPage: React.FC = () => {
       
       setComparisonResults(result);
       setShowComparison(true);
+      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
@@ -1082,6 +1083,17 @@ export const RAGPage: React.FC = () => {
                 <BarChart3 size={16} />
                 <span>Analytics</span>
               </button>
+              <button
+                onClick={() => setActiveTab('comparison')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'comparison'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <GitCompare size={16} />
+                <span>Model Comparison</span>
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -1212,6 +1224,95 @@ export const RAGPage: React.FC = () => {
               </div>
             )}
 
+            {activeTab === 'comparison' && (
+              <div className="space-y-6">
+                {showComparison && comparisonResults ? (
+                  <>
+                    {/* Question */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-medium text-blue-900 mb-2">Question</h4>
+                      <p className="text-blue-800">{comparisonResults.original_text}</p>
+                    </div>
+
+                    {/* Comparison Metrics */}
+                    {comparisonResults.comparison_metrics && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Comparison Metrics</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Best Quality:</span>
+                            <p className="font-medium">{comparisonResults.comparison_metrics.best_quality_model}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Fastest:</span>
+                            <p className="font-medium">{comparisonResults.comparison_metrics.fastest_model}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Most Coherent:</span>
+                            <p className="font-medium">{comparisonResults.comparison_metrics.most_coherent_model}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Most Relevant:</span>
+                            <p className="font-medium">{comparisonResults.comparison_metrics.most_relevant_model}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Model Results */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900">Model Results</h4>
+                      {comparisonResults.results.map((result: any, index: number) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <h5 className="font-medium text-gray-900">
+                                {result.model_provider}/{result.model_name}
+                              </h5>
+                              <div className="flex space-x-4 text-sm text-gray-600 mt-1">
+                                <span>Quality: {(result.quality_score * 100).toFixed(1)}%</span>
+                                <span>Coherence: {(result.coherence_score * 100).toFixed(1)}%</span>
+                                <span>Relevance: {(result.relevance_score * 100).toFixed(1)}%</span>
+                                {result.latency_ms && (
+                                  <span>Time: {result.latency_ms.toFixed(0)}ms</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 rounded p-3">
+                            <p className="text-sm text-gray-700">{result.generated_text}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Recommendations */}
+                    {comparisonResults.recommendations && comparisonResults.recommendations.length > 0 && (
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h4 className="font-medium text-purple-900 mb-3">Recommendations</h4>
+                        <ul className="space-y-2">
+                          {comparisonResults.recommendations.map((rec: string, index: number) => (
+                            <li key={index} className="text-sm text-purple-800 flex items-start space-x-2">
+                              <span className="text-purple-600 mt-1">•</span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <GitCompare className="mx-auto text-gray-400 mb-4" size={48} />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
+                    <p className="text-gray-600">
+                      Select 2 or more models and click "Compare Models" to see comparison results here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {!answer && activeTab === 'response' && (
               <div className="text-center text-gray-500 py-8">
                 <FileText className="mx-auto h-12 w-12 text-gray-300" />
@@ -1220,98 +1321,7 @@ export const RAGPage: React.FC = () => {
             )}
           </div>
 
-          {/* Model Comparison Results */}
-          {showComparison && comparisonResults && (
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <GitCompare className="text-purple-600" size={20} />
-                  <h2 className="text-lg font-semibold text-gray-900">Model Comparison Results</h2>
-                </div>
-                <button
-                  onClick={() => setShowComparison(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
-              </div>
 
-              <div className="space-y-6">
-                {/* Question */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 mb-2">Question</h4>
-                  <p className="text-blue-800">{comparisonResults.original_text}</p>
-                </div>
-
-                {/* Comparison Metrics */}
-                {comparisonResults.comparison_metrics && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Comparison Metrics</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Best Quality:</span>
-                        <p className="font-medium">{comparisonResults.comparison_metrics.best_quality_model}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Fastest:</span>
-                        <p className="font-medium">{comparisonResults.comparison_metrics.fastest_model}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Most Coherent:</span>
-                        <p className="font-medium">{comparisonResults.comparison_metrics.most_coherent_model}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Most Relevant:</span>
-                        <p className="font-medium">{comparisonResults.comparison_metrics.most_relevant_model}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Model Results */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Model Results</h4>
-                  {comparisonResults.results.map((result: any, index: number) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h5 className="font-medium text-gray-900">
-                            {result.model_provider}/{result.model_name}
-                          </h5>
-                          <div className="flex space-x-4 text-sm text-gray-600 mt-1">
-                            <span>Quality: {(result.quality_score * 100).toFixed(1)}%</span>
-                            <span>Coherence: {(result.coherence_score * 100).toFixed(1)}%</span>
-                            <span>Relevance: {(result.relevance_score * 100).toFixed(1)}%</span>
-                            {result.latency_ms && (
-                              <span>Time: {result.latency_ms.toFixed(0)}ms</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-gray-50 rounded p-3">
-                        <p className="text-sm text-gray-700">{result.generated_text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Recommendations */}
-                {comparisonResults.recommendations && comparisonResults.recommendations.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <h4 className="font-medium text-purple-900 mb-3">Recommendations</h4>
-                    <ul className="space-y-2">
-                      {comparisonResults.recommendations.map((rec: string, index: number) => (
-                        <li key={index} className="text-sm text-purple-800 flex items-start space-x-2">
-                          <span className="text-purple-600 mt-1">•</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
