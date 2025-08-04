@@ -200,17 +200,20 @@ export const RAGPage: React.FC = () => {
           similarity_threshold: similarityThreshold
         },
         (chunk: StreamChunk) => {
+          console.log('Received chunk:', chunk);
           fullAnswer += chunk.content;
           setAnswer(fullAnswer);
           
           if (chunk.is_complete && chunk.sources) {
             finalSources = chunk.sources;
             setSources(finalSources);
+            console.log('Sources received:', finalSources);
           }
           
           if (chunk.confidence) {
             confidenceData = chunk.confidence;
             setConfidence(confidenceData);
+            console.log('Confidence received:', confidenceData);
           }
         },
         (error: string) => {
@@ -894,11 +897,26 @@ export const RAGPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Empty State - only show if both confidence and sources are missing */}
                 {!confidence && sources.length === 0 && (
                   <div className="text-center text-gray-500 py-8">
                     <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
                     <p className="mt-2">No analytics available yet</p>
                     <p className="text-sm">Ask a question to see confidence analysis and sources</p>
+                  </div>
+                )}
+
+                {/* Debug Info - show what's available */}
+                {(confidence || sources.length > 0) && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Analytics Summary</h4>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>• Confidence Analysis: {confidence ? 'Available' : 'Not available'}</p>
+                      <p>• Sources: {sources.length} document(s) found</p>
+                      {sources.length > 0 && (
+                        <p>• Average Similarity: {((sources.reduce((sum, s) => sum + s.similarity_score, 0) / sources.length) * 100).toFixed(1)}%</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
