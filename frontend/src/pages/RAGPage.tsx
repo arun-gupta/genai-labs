@@ -6,6 +6,7 @@ import { VoiceInput } from '../components/VoiceInput';
 import { VoiceOutput } from '../components/VoiceOutput';
 import { ExportOptions } from '../components/ExportOptions';
 import { QuestionSuggestions } from '../components/QuestionSuggestions';
+import { ConfidenceDisplay } from '../components/ConfidenceDisplay';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
 
@@ -53,6 +54,7 @@ export const RAGPage: React.FC = () => {
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(-0.2);
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
+  const [confidence, setConfidence] = useState<any>(null);
   const [documentTags, setDocumentTags] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -154,11 +156,13 @@ export const RAGPage: React.FC = () => {
     setIsAsking(true);
     setAnswer('');
     setSources([]);
+    setConfidence(null);
     setError(null);
 
     try {
       let fullAnswer = '';
       let finalSources: Source[] = [];
+      let confidenceData: any = null;
 
       await apiService.askRAGQuestionStream(
         {
@@ -180,6 +184,11 @@ export const RAGPage: React.FC = () => {
           if (chunk.is_complete && chunk.sources) {
             finalSources = chunk.sources;
             setSources(finalSources);
+          }
+          
+          if (chunk.confidence) {
+            confidenceData = chunk.confidence;
+            setConfidence(confidenceData);
           }
         },
         (error: string) => {
@@ -732,6 +741,11 @@ export const RAGPage: React.FC = () => {
                 <div className="prose max-w-none">
                   <p className="whitespace-pre-wrap">{answer}</p>
                 </div>
+                
+                {/* Confidence Display */}
+                {confidence && (
+                  <ConfidenceDisplay confidence={confidence} />
+                )}
                 
                 <ExportOptions content={getExportContent()} />
               </div>

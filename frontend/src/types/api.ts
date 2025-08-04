@@ -29,9 +29,25 @@ export interface SummarizeResponse {
 export interface StreamChunk {
   content: string;
   is_complete: boolean;
-  token_usage?: TokenUsage;
+  token_usage?: any;
   latency_ms?: number;
-  sources?: any[]; // For RAG responses
+  sources?: any[];
+  confidence?: ConfidenceData;
+}
+
+export interface ConfidenceData {
+  overall_confidence: number;
+  confidence_level: 'high' | 'medium' | 'low' | 'very_low';
+  source_confidence: number;
+  answer_confidence: number;
+  explanation: string;
+  factors: {
+    source_count: number;
+    avg_similarity: number;
+    unique_documents: number;
+    answer_length: number;
+    has_sources: boolean;
+  };
 }
 
 export interface GenerateRequest {
