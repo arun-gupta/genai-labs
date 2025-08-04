@@ -65,8 +65,8 @@ export const GeneratePage: React.FC = () => {
       description: "Compare lightweight models for speed",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "ollama", model: "llama2:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" }
+        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "anthropic", model: "claude-3-haiku-20240307" }
       ]
     },
     {

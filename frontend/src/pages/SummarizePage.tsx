@@ -31,36 +31,57 @@ export const SummarizePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
+  // Function to get available model combinations
+  const getAvailableModelCombinations = () => {
+    if (!availableModels?.providers) return [];
+    
+    const availableModelsList = availableModels.providers.flatMap((provider: any) =>
+      provider.models?.map((model: string) => ({ provider: provider.id, model })) || []
+    );
+    
+    const baseCombinations = [
+      {
+        name: "Local vs Cloud",
+        description: "Compare local Ollama model with cloud models",
+        models: [
+          { provider: "ollama", model: "mistral:7b" },
+          { provider: "openai", model: "gpt-3.5-turbo" },
+          { provider: "anthropic", model: "claude-3-haiku-20240307" }
+        ]
+      },
+      {
+        name: "Efficient Models",
+        description: "Compare lightweight models for speed",
+        models: [
+          { provider: "ollama", model: "mistral:7b" },
+          { provider: "openai", model: "gpt-3.5-turbo" },
+          { provider: "anthropic", model: "claude-3-haiku-20240307" }
+        ]
+      },
+      {
+        name: "High Performance",
+        description: "Compare high-quality models for accuracy",
+        models: [
+          { provider: "ollama", model: "mistral:7b" },
+          { provider: "openai", model: "gpt-4" },
+          { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+        ]
+      }
+    ];
+    
+    // Filter combinations to only include available models
+    return baseCombinations.map(combination => ({
+      ...combination,
+      models: combination.models.filter(model => 
+        availableModelsList.some(available => 
+          available.provider === model.provider && available.model === model.model
+        )
+      )
+    })).filter(combination => combination.models.length >= 2); // Only show combinations with at least 2 models
+  };
+
   // Default model combinations for quick comparison
-  const defaultModelCombinations = [
-    {
-      name: "Local vs Cloud",
-      description: "Compare local Ollama model with cloud models",
-      models: [
-        { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" },
-        { provider: "anthropic", model: "claude-3-haiku-20240307" }
-      ]
-    },
-    {
-      name: "Efficient Models",
-      description: "Compare lightweight models for speed",
-      models: [
-        { provider: "ollama", model: "mistral:7b" },
-        { provider: "ollama", model: "llama2:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" }
-      ]
-    },
-    {
-      name: "High Performance",
-      description: "Compare high-quality models for accuracy",
-      models: [
-        { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-4" },
-        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
-      ]
-    }
-  ];
+  const defaultModelCombinations = getAvailableModelCombinations();
 
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -521,20 +542,26 @@ export const SummarizePage: React.FC = () => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                  {defaultModelCombinations.map((combination, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        console.log('Setting models for combination:', combination.name, combination.models); // Debug log
-                        setSelectedModels(combination.models);
-                      }}
-                      disabled={isComparing}
-                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
-                    >
-                      <div className="text-sm font-medium text-gray-900">{combination.name}</div>
-                      <div className="text-xs text-gray-600">{combination.description}</div>
-                    </button>
-                  ))}
+                  {defaultModelCombinations.length > 0 ? (
+                    defaultModelCombinations.map((combination, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          console.log('Setting models for combination:', combination.name, combination.models); // Debug log
+                          setSelectedModels(combination.models);
+                        }}
+                        disabled={isComparing}
+                        className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                      >
+                        <div className="text-sm font-medium text-gray-900">{combination.name}</div>
+                        <div className="text-xs text-gray-600">{combination.description}</div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500 p-2">
+                      No quick combinations available with current models. Select models manually above.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
