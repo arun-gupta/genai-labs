@@ -739,7 +739,8 @@ async def compare_summarization_models(
     temperature: float = Form(0.3),
     summary_type: str = Form("general"),
     target_language: Optional[str] = Form("en"),
-    translate_summary: bool = Form(False)
+    translate_summary: bool = Form(False),
+    model_comparison_service: ModelComparisonService = Depends(get_model_comparison_service)
 ):
     """Compare multiple models for text summarization."""
     try:
