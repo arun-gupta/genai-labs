@@ -847,45 +847,51 @@ An Open Source AI is an AI system made available under terms and in a way that g
               </div>
             )}
 
-            <div className="flex justify-between items-center mt-4">
+                        <div className="flex justify-between items-center mt-4">
               <div className="flex space-x-2">
                 <button
                   onClick={handleSummarize}
                   disabled={isSummarizing || !inputContent}
                   className="btn-primary flex items-center space-x-2"
                 >
-                {isSummarizing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Summarizing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    <span>Summarize</span>
-                  </>
-                )}
-              </button>
+                  {isSummarizing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Summarizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Summarize</span>
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleModelComparison}
+                  disabled={isComparing || !inputContent || selectedModels.length < 2}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isComparing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Comparing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CompareIcon size={16} />
+                      <span>Compare Models</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {/* Debug info for button */}
+              <div className="text-xs text-gray-500">
+                <p>Selected models: {selectedModels.length}</p>
+                <p>Button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
+              </div>
             </div>
-            
-            <button
-              onClick={handleModelComparison}
-              disabled={isComparing || !inputContent || selectedModels.length < 2}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isComparing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Comparing...</span>
-                </>
-              ) : (
-                <>
-                  <CompareIcon size={16} />
-                  <span>Compare Models</span>
-                </>
-              )}
-            </button>
-          </div>
 
             <div className="mt-2 text-xs text-gray-500 text-center">
               Press Cmd/Ctrl + Enter to summarize • Select 2+ models to compare
