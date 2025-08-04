@@ -119,7 +119,7 @@ class RAGQuestionRequest(BaseModel):
     max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
     stream: bool = Field(True, description="Whether to stream the response")
     top_k: int = Field(5, ge=1, le=20, description="Number of relevant chunks to retrieve")
-    similarity_threshold: float = Field(0.7, ge=0.0, le=1.0, description="Minimum similarity threshold")
+    similarity_threshold: float = Field(-0.2, ge=-1.0, le=1.0, description="Minimum similarity threshold (can be negative for distance-based calculation)")
     filter_tags: Optional[List[str]] = Field(None, description="Filter documents by specific tags")
 
 

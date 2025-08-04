@@ -174,7 +174,7 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = 0.1, filter_tags: List[str] = None,
+                          top_k: int = 5, similarity_threshold: float = -0.2, filter_tags: List[str] = None,
                           collection_names: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
@@ -276,7 +276,7 @@ class RAGService:
             
             if not relevant_chunks:
                 # Try with a lower similarity threshold if no results found
-                lower_threshold = max(0.1, similarity_threshold - 0.2)
+                lower_threshold = max(-0.5, similarity_threshold - 0.3)
                 
                 # Re-filter with lower threshold
                 relevant_chunks = []
@@ -384,7 +384,7 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = 0.1, filter_tags: List[str] = None,
+                                 top_k: int = 5, similarity_threshold: float = -0.2, filter_tags: List[str] = None,
                                  collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
