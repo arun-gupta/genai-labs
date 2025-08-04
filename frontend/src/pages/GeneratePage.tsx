@@ -573,7 +573,7 @@ export const GeneratePage: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors"
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
               >
                 {showHistory ? 'Hide' : 'Show'} History
               </button>

@@ -85,7 +85,7 @@ export const SummarizePage: React.FC = () => {
 
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'analytics' | 'comparison'>('summary');
+  const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
 
   const [originalText, setOriginalText] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
@@ -903,15 +903,15 @@ An Open Source AI is an AI system made available under terms and in a way that g
             {/* Tab Navigation */}
             <div className="flex space-x-2 mb-4">
               <button
-                onClick={() => setActiveTab('summary')}
+                onClick={() => setActiveTab('response')}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'summary'
+                  activeTab === 'response'
                     ? 'bg-primary-100 text-primary-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 <FileText size={16} />
-                <span>Summary</span>
+                <span>Response</span>
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
@@ -938,7 +938,7 @@ An Open Source AI is an AI system made available under terms and in a way that g
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'summary' && (
+            {activeTab === 'response' && (
               <div className="space-y-6">
                 <ResponseDisplay
                   content={summary}
