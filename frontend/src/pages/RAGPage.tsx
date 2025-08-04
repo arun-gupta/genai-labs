@@ -1018,7 +1018,7 @@ export const RAGPage: React.FC = () => {
                 <button
                   onClick={handleModelComparison}
                   disabled={isComparing || !question.trim() || selectedCollections.length === 0 || selectedModels.length < 2}
-                  className="btn-secondary flex items-center space-x-2"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={
                     isComparing 
                       ? "Currently comparing models..." 
@@ -1031,8 +1031,17 @@ export const RAGPage: React.FC = () => {
                             : "Compare selected models for this question"
                   }
                 >
-                  <GitCompare size={16} />
-                  <span>{isComparing ? 'Comparing...' : 'Compare Models'}</span>
+                  {isComparing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Comparing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <GitCompare size={16} />
+                      <span>Compare Models</span>
+                    </>
+                  )}
                 </button>
               </div>
               
