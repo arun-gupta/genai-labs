@@ -9,11 +9,35 @@ from app.services.input_processor import input_processor
 from app.services.analytics_service import analytics_service
 from app.models.requests import ModelComparisonResult, ModelComparisonResponse
 import textstat
-import nltk
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
 import re
 import logging
+
+# Simple text processing functions to avoid NLTK issues
+def simple_sent_tokenize(text: str) -> List[str]:
+    """Simple sentence tokenization without NLTK."""
+    sentences = []
+    for sentence in text.split('.'):
+        sentence = sentence.strip()
+        if sentence:
+            sentences.append(sentence)
+    return sentences
+
+def simple_word_tokenize(text: str) -> List[str]:
+    """Simple word tokenization without NLTK."""
+    import string
+    # Remove punctuation and split
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    return text.split()
+
+# Common English stop words
+COMMON_STOP_WORDS = {
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has', 'he', 
+    'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 'to', 'was', 'will', 'with',
+    'i', 'you', 'your', 'we', 'they', 'them', 'this', 'these', 'those', 'but', 'or',
+    'if', 'then', 'else', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each',
+    'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own',
+    'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should', 'now'
+}
 
 logger = logging.getLogger(__name__)
 
@@ -21,29 +45,6 @@ class ModelComparisonService:
     def __init__(self):
         self.generation_service = GenerationService()
         self.rag_service = rag_service
-        
-        # Download required NLTK data with better error handling
-        try:
-            import ssl
-            ssl._create_default_https_context = ssl._create_unverified_context
-        except:
-            pass
-        
-        try:
-            nltk.data.find('tokenizers/punkt')
-        except LookupError:
-            try:
-                nltk.download('punkt', quiet=True)
-            except Exception as e:
-                logger.warning(f"Could not download punkt: {e}")
-        
-        try:
-            nltk.data.find('corpora/stopwords')
-        except LookupError:
-            try:
-                nltk.download('stopwords', quiet=True)
-            except Exception as e:
-                logger.warning(f"Could not download stopwords: {e}")
     
     def _calculate_quality_metrics(self, original_text: str, summary: str) -> Dict[str, float]:
         """Calculate various quality metrics for the summary."""
@@ -98,12 +99,8 @@ class ModelComparisonService:
     def _calculate_coherence_score(self, summary: str) -> float:
         """Calculate coherence score based on sentence flow and transitions."""
         try:
-            # Try NLTK tokenization first, fallback to simple splitting
-            try:
-                sentences = sent_tokenize(summary)
-            except Exception as e:
-                logger.warning(f"NLTK sent_tokenize failed, using simple split: {e}")
-                sentences = [s.strip() for s in summary.split('.') if s.strip()]
+            # Use simple sentence tokenization
+            sentences = simple_sent_tokenize(summary)
             
             if len(sentences) < 2:
                 return 1.0
@@ -147,28 +144,15 @@ class ModelComparisonService:
     def _calculate_relevance_score(self, original_text: str, summary: str) -> float:
         """Calculate relevance score based on keyword overlap."""
         try:
-            # Try NLTK tokenization first, fallback to simple splitting
-            try:
-                original_words = set(word.lower() for word in word_tokenize(original_text) 
-                                   if word.isalnum() and len(word) > 3)
-                summary_words = set(word.lower() for word in word_tokenize(summary) 
-                                  if word.isalnum() and len(word) > 3)
-            except Exception as e:
-                logger.warning(f"NLTK word_tokenize failed, using simple split: {e}")
-                original_words = set(word.lower() for word in original_text.split() 
-                                   if word.isalnum() and len(word) > 3)
-                summary_words = set(word.lower() for word in summary.split() 
-                                  if word.isalnum() and len(word) > 3)
+            # Use simple word tokenization
+            original_words = set(word.lower() for word in simple_word_tokenize(original_text) 
+                               if word.isalnum() and len(word) > 3)
+            summary_words = set(word.lower() for word in simple_word_tokenize(summary) 
+                              if word.isalnum() and len(word) > 3)
             
-            # Remove common stop words (with fallback)
-            try:
-                stop_words = set(stopwords.words('english'))
-            except Exception as e:
-                logger.warning(f"Could not load stopwords, using empty set: {e}")
-                stop_words = set()
-            
-            original_keywords = original_words - stop_words
-            summary_keywords = summary_words - stop_words
+            # Remove common stop words using our predefined set
+            original_keywords = original_words - COMMON_STOP_WORDS
+            summary_keywords = summary_words - COMMON_STOP_WORDS
             
             if not original_keywords:
                 return 0.5
