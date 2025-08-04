@@ -514,6 +514,134 @@ class ApiService {
 
     return response.json();
   }
+
+  // Image Analysis Methods
+  async analyzeImage(request: {
+    image: Uint8Array;
+    analysis_type: 'describe' | 'extract' | 'analyze' | 'compare';
+    model_provider: string;
+    model_name?: string;
+    custom_prompt?: string;
+    temperature?: number;
+  }): Promise<any> {
+    const formData = new FormData();
+    formData.append('image', new Blob([request.image]), 'image.png');
+    formData.append('analysis_type', request.analysis_type);
+    formData.append('model_provider', request.model_provider);
+    if (request.model_name) formData.append('model_name', request.model_name);
+    if (request.custom_prompt) formData.append('custom_prompt', request.custom_prompt);
+    if (request.temperature !== undefined) formData.append('temperature', request.temperature.toString());
+
+    const response = await fetch(`${this.baseUrl}/vision/analyze`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image analysis failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async compareImages(request: {
+    images: Uint8Array[];
+    comparison_type: 'similarity' | 'style' | 'content' | 'quality';
+    model_provider: string;
+    model_name?: string;
+    temperature?: number;
+  }): Promise<any> {
+    const formData = new FormData();
+    request.images.forEach((image, index) => {
+      formData.append('images', new Blob([image]), `image-${index}.png`);
+    });
+    formData.append('comparison_type', request.comparison_type);
+    formData.append('model_provider', request.model_provider);
+    if (request.model_name) formData.append('model_name', request.model_name);
+    if (request.temperature !== undefined) formData.append('temperature', request.temperature.toString());
+
+    const response = await fetch(`${this.baseUrl}/vision/compare`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image comparison failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  // Image Generation Methods
+  async generateImage(request: {
+    prompt: string;
+    model_provider: string;
+    model_name?: string;
+    size?: string;
+    quality?: string;
+    style?: string;
+    num_images?: number;
+    temperature?: number;
+  }): Promise<any> {
+    return this.request('/generate/image', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async generateImageVariations(request: {
+    image: Uint8Array;
+    model_provider: string;
+    model_name?: string;
+    size?: string;
+    num_variations?: number;
+  }): Promise<any> {
+    const formData = new FormData();
+    formData.append('image', new Blob([request.image]), 'image.png');
+    formData.append('model_provider', request.model_provider);
+    if (request.model_name) formData.append('model_name', request.model_name);
+    if (request.size) formData.append('size', request.size);
+    if (request.num_variations !== undefined) formData.append('num_variations', request.num_variations.toString());
+
+    const response = await fetch(`${this.baseUrl}/generate/image/variations`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image variation generation failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async editImage(request: {
+    image: Uint8Array;
+    mask?: Uint8Array;
+    prompt: string;
+    model_provider: string;
+    model_name?: string;
+    size?: string;
+  }): Promise<any> {
+    const formData = new FormData();
+    formData.append('image', new Blob([request.image]), 'image.png');
+    if (request.mask) formData.append('mask', new Blob([request.mask]), 'mask.png');
+    formData.append('prompt', request.prompt);
+    formData.append('model_provider', request.model_provider);
+    if (request.model_name) formData.append('model_name', request.model_name);
+    if (request.size) formData.append('size', request.size);
+
+    const response = await fetch(`${this.baseUrl}/generate/image/edit`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image editing failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService(); 

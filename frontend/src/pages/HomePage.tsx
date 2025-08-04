@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe, Github } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe, Github, Eye } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -27,6 +27,14 @@ export const HomePage: React.FC = () => {
       path: '/rag',
       color: 'bg-purple-500',
       highlights: ['Document Upload', 'Source Citations', 'Collection Management']
+    },
+    {
+      title: 'Vision AI',
+      description: 'Analyze images and generate new ones using AI vision models and image generation.',
+      icon: Eye,
+      path: '/vision',
+      color: 'bg-orange-500',
+      highlights: ['Image Analysis', 'Text-to-Image', 'Image Gallery']
     },
   ];
 

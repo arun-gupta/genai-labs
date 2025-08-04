@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Zap, FileText, Home, Database, Search } from 'lucide-react';
+import { Zap, FileText, Home, Database, Search, Eye } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
   const location = useLocation();
@@ -25,6 +25,11 @@ export const Navigation: React.FC = () => {
       path: '/rag',
       label: 'Q&A',
       icon: Search,
+    },
+    {
+      path: '/vision',
+      label: 'Vision',
+      icon: Eye,
     },
     {
       path: '/models',
