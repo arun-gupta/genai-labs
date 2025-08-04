@@ -415,11 +415,20 @@ class ModelComparisonService:
                 temperature=temperature,
                 max_tokens=max_length * 2  # Allow more tokens for generation
             ):
-                full_content += chunk.content
-                if chunk.token_usage:
-                    token_usage = chunk.token_usage
-                if chunk.latency_ms:
-                    latency_ms = chunk.latency_ms
+                # Handle both dictionary and object formats
+                if isinstance(chunk, dict):
+                    full_content += chunk.get("content", "")
+                    if chunk.get("token_usage"):
+                        token_usage = chunk.get("token_usage")
+                    if chunk.get("latency_ms"):
+                        latency_ms = chunk.get("latency_ms")
+                else:
+                    # Handle object format (fallback)
+                    full_content += getattr(chunk, 'content', '')
+                    if hasattr(chunk, 'token_usage'):
+                        token_usage = chunk.token_usage
+                    if hasattr(chunk, 'latency_ms'):
+                        latency_ms = chunk.latency_ms
             
             # Calculate quality metrics
             quality_metrics = self._calculate_quality_metrics(text, full_content)
@@ -472,11 +481,20 @@ class ModelComparisonService:
                 translate_response=translate_response,
                 output_format=output_format
             ):
-                full_content += chunk.content
-                if chunk.token_usage:
-                    token_usage = chunk.token_usage
-                if chunk.latency_ms:
-                    latency_ms = chunk.latency_ms
+                # Handle both dictionary and object formats
+                if isinstance(chunk, dict):
+                    full_content += chunk.get("content", "")
+                    if chunk.get("token_usage"):
+                        token_usage = chunk.get("token_usage")
+                    if chunk.get("latency_ms"):
+                        latency_ms = chunk.get("latency_ms")
+                else:
+                    # Handle object format (fallback)
+                    full_content += getattr(chunk, 'content', '')
+                    if hasattr(chunk, 'token_usage'):
+                        token_usage = chunk.token_usage
+                    if hasattr(chunk, 'latency_ms'):
+                        latency_ms = chunk.latency_ms
             
             # Calculate quality metrics (using user prompt as reference)
             quality_metrics = self._calculate_quality_metrics(user_prompt, full_content)
