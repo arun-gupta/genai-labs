@@ -588,7 +588,8 @@ async def ask_rag_question(request: RAGQuestionRequest):
             max_tokens=request.max_tokens,
             top_k=request.top_k,
             similarity_threshold=request.similarity_threshold,
-            filter_tags=request.filter_tags
+            filter_tags=request.filter_tags,
+            collection_names=request.collection_names
         )
         
         return RAGQuestionResponse(**result)
@@ -611,7 +612,8 @@ async def ask_rag_question_stream(request: RAGQuestionRequest):
                 max_tokens=request.max_tokens,
                 top_k=request.top_k,
                 similarity_threshold=request.similarity_threshold,
-                filter_tags=request.filter_tags
+                filter_tags=request.filter_tags,
+                collection_names=request.collection_names
             ):
                 yield {
                     "event": "chunk",

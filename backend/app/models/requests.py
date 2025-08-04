@@ -112,6 +112,7 @@ class DocumentUploadResponse(BaseModel):
 class RAGQuestionRequest(BaseModel):
     question: str = Field(..., description="Question to ask about the documents")
     collection_name: Optional[str] = Field("default", description="Vector collection to search")
+    collection_names: Optional[List[str]] = Field(None, description="Multiple vector collections to search")
     model_provider: ModelProvider = Field(..., description="Model provider to use")
     model_name: Optional[str] = Field(None, description="Specific model name")
     temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")

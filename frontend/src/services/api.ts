@@ -344,7 +344,8 @@ class ApiService {
         },
         body: JSON.stringify({
           ...request,
-          filter_tags: filterTags
+          filter_tags: filterTags,
+          collection_names: request.collection_names
         }),
       });
 
