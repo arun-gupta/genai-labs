@@ -198,6 +198,226 @@ Get available models and their status.
 }
 ```
 
+
+
+### Model Comparison
+
+#### `POST /api/v1/generate/compare`
+Compare multiple models for text generation.
+
+**Request Body:**
+```json
+{
+  "system_prompt": "You are a helpful assistant.",
+  "user_prompt": "Write a short story about a robot.",
+  "models": [
+    {"provider": "ollama", "name": "mistral:7b"},
+    {"provider": "openai", "name": "gpt-3.5-turbo"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 1000,
+  "output_format": "text"
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "model": "mistral:7b",
+      "provider": "ollama",
+      "response": "Generated text...",
+      "metrics": {
+        "quality_score": 8.5,
+        "coherence": 0.85,
+        "relevance": 0.92
+      },
+      "performance": {
+        "response_time_ms": 2500,
+        "token_usage": 150
+      }
+    }
+  ],
+  "recommendations": {
+    "best_overall": "gpt-3.5-turbo",
+    "best_speed": "mistral:7b",
+    "best_quality": "gpt-3.5-turbo"
+  }
+}
+```
+
+#### `POST /api/v1/summarize/compare`
+Compare multiple models for text summarization.
+
+**Request Body:**
+```json
+{
+  "text": "Long text to summarize",
+  "models": [
+    {"provider": "ollama", "name": "mistral:7b"},
+    {"provider": "openai", "name": "gpt-3.5-turbo"}
+  ],
+  "summary_type": "general",
+  "max_length": 150,
+  "temperature": 0.3
+}
+```
+
+**Response:** Similar structure to generation comparison
+
+### Q&A over Documents (RAG)
+
+#### `POST /api/v1/rag/upload`
+Upload a document for RAG processing.
+
+**Request Body:**
+```json
+{
+  "file": "base64_encoded_file_content",
+  "filename": "document.pdf",
+  "collection_name": "my_collection",
+  "tags": ["research", "technical"]
+}
+```
+
+**Response:**
+```json
+{
+  "document_id": "doc_123",
+  "filename": "document.pdf",
+  "collection_name": "my_collection",
+  "tags": ["research", "technical"],
+  "chunks_created": 15,
+  "processing_time_ms": 1200
+}
+```
+
+#### `POST /api/v1/rag/question`
+Ask a question about uploaded documents.
+
+**Request Body:**
+```json
+{
+  "question": "What are the main findings?",
+  "collection_names": ["my_collection"],
+  "model_provider": "ollama",
+  "model_name": "mistral:7b",
+  "temperature": 0.3,
+  "max_tokens": 500
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "The main findings include...",
+  "sources": [
+    {
+      "document_name": "document.pdf",
+      "chunk_index": 5,
+      "similarity_score": 0.92,
+      "content": "Relevant document excerpt..."
+    }
+  ],
+  "confidence_score": 0.85,
+  "processing_time_ms": 1800
+}
+```
+
+#### `POST /api/v1/rag/question/stream`
+Stream Q&A responses in real-time.
+
+**Request Body:** Same as `/rag/question`
+
+**Response:** Server-Sent Events (SSE) stream
+
+#### `GET /api/v1/rag/collections`
+Get all RAG collections.
+
+**Response:**
+```json
+{
+  "collections": [
+    {
+      "name": "my_collection",
+      "document_count": 5,
+      "total_chunks": 75,
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+#### `DELETE /api/v1/rag/collection/{collection_name}`
+Delete a RAG collection.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Collection deleted successfully"
+}
+```
+
+#### `GET /api/v1/rag/suggestions/{collection_name}`
+Get intelligent question suggestions.
+
+**Response:**
+```json
+{
+  "suggestions": [
+    {
+      "question": "What are the key topics covered?",
+      "category": "overview",
+      "confidence": 0.9
+    },
+    {
+      "question": "What are the main conclusions?",
+      "category": "analysis",
+      "confidence": 0.85
+    }
+  ]
+}
+```
+
+#### `GET /api/v1/rag/analytics/{collection_name}/document/{document_id}`
+Get document analytics.
+
+**Response:**
+```json
+{
+  "analytics": {
+    "topics": ["AI", "Machine Learning", "Data Science"],
+    "entities": ["OpenAI", "GPT-4", "Neural Networks"],
+    "readability": {
+      "flesch_reading_ease": 65.2,
+      "gunning_fog": 12.1
+    },
+    "insights": ["Technical content", "Research-focused", "Academic tone"]
+  }
+}
+```
+
+#### `POST /api/v1/rag/compare`
+Compare multiple models for Q&A performance.
+
+**Request Body:**
+```json
+{
+  "question": "What are the main findings?",
+  "collection_names": ["my_collection"],
+  "models": [
+    {"provider": "ollama", "name": "mistral:7b"},
+    {"provider": "openai", "name": "gpt-3.5-turbo"}
+  ],
+  "temperature": 0.3,
+  "max_tokens": 500
+}
+```
+
+**Response:** Similar structure to other comparison endpoints
+
 #### `GET /api/v1/models/{provider}`
 Get models for a specific provider.
 
