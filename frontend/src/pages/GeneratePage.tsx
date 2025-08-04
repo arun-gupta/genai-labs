@@ -266,6 +266,7 @@ export const GeneratePage: React.FC = () => {
       
       setComparisonResults(result);
       setShowComparison(true);
+      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
@@ -738,19 +739,17 @@ export const GeneratePage: React.FC = () => {
                 <BarChart3 size={16} />
                 <span>Analytics</span>
               </button>
-              {showComparison && (
-                <button
-                  onClick={() => setActiveTab('comparison')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'comparison'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <GitCompare size={16} />
-                  <span>Comparison</span>
-                </button>
-              )}
+              <button
+                onClick={() => setActiveTab('comparison')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'comparison'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <GitCompare size={16} />
+                <span>Comparison</span>
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -781,14 +780,35 @@ export const GeneratePage: React.FC = () => {
               />
             )}
 
-            {activeTab === 'comparison' && comparisonResults && (
-              <ModelComparison
-                results={comparisonResults.results}
-                metrics={comparisonResults.comparison_metrics}
-                recommendations={comparisonResults.recommendations}
-                isComparing={isComparing}
-                comparisonType="generation"
-              />
+            {activeTab === 'comparison' && (
+              <div className="space-y-6">
+                {comparisonResults ? (
+                  <ModelComparison
+                    results={comparisonResults.results}
+                    metrics={comparisonResults.comparison_metrics}
+                    recommendations={comparisonResults.recommendations}
+                    isComparing={isComparing}
+                    comparisonType="generation"
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <GitCompare className="mx-auto text-gray-400 mb-4" size={48} />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
+                    <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                      Compare how different AI models handle the same prompt to find the best one for your needs.
+                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                      <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
+                      <ol className="text-sm text-blue-800 space-y-1 text-left">
+                        <li>1. Enter your prompt in the text area above</li>
+                        <li>2. Select 2 or more models in the Model Comparison section</li>
+                        <li>3. Click "Compare Models" to see results</li>
+                        <li>4. View quality scores, speed, and recommendations</li>
+                      </ol>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
