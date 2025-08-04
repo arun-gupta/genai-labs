@@ -63,7 +63,8 @@ export const RAGPage: React.FC = () => {
   const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
   const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('response'); // 'response', 'sources', 'confidence'
+  const [activeTab, setActiveTab] = useState('response'); // 'response', 'analytics'
+  const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
   
   // Predefined sample tags for easy selection
   const sampleTags = [
@@ -159,6 +160,7 @@ export const RAGPage: React.FC = () => {
         
         setUploadedFiles(prev => [...prev, file]);
         await loadCollections(); // Refresh collections
+        setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
       }
     } catch (error) {
       setError(`Upload failed: ${error}`);
@@ -255,6 +257,7 @@ export const RAGPage: React.FC = () => {
         collection_name: selectedCollection
       });
       await loadCollections();
+      setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
     } catch (error) {
       setError(`Failed to delete document: ${error}`);
     }
@@ -272,6 +275,7 @@ export const RAGPage: React.FC = () => {
         setSelectedCollection('default');
       }
       await loadCollections();
+      setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
     } catch (error) {
       setError(`Failed to delete collection: ${error}`);
     }
@@ -756,9 +760,11 @@ export const RAGPage: React.FC = () => {
 
           {/* Question Suggestions */}
           <QuestionSuggestions
+            key={suggestionsRefreshKey}
             collectionNames={selectedCollections}
             onSuggestionClick={handleSuggestionClick}
             className="mt-4"
+            refreshKey={suggestionsRefreshKey}
           />
 
           {/* Response Section with Tabs */}
