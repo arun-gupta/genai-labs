@@ -40,10 +40,10 @@ class RAGService:
         )
         
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
+            chunk_size=800,
+            chunk_overlap=150,
             length_function=len,
-            separators=["\n\n", "\n", " ", ""]
+            separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]
         )
         
         self.model_factory = ModelFactory()
@@ -174,7 +174,7 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None,
+                          top_k: int = 5, similarity_threshold: float = 0.3, filter_tags: List[str] = None,
                           collection_names: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
@@ -201,6 +201,21 @@ class RAGService:
                         include=["documents", "metadatas", "distances"]
                     )
                     
+                    # If no results from semantic search, try to get some documents anyway
+                    if len(results['documents'][0]) == 0:
+                        logger.warning(f"No results from semantic search, trying to get documents without query")
+                        try:
+                            fallback_results = collection.get(limit=top_k)
+                            if len(fallback_results['documents']) > 0:
+                                logger.info(f"Fallback query found {len(fallback_results['documents'])} documents")
+                                results = {
+                                    'documents': [fallback_results['documents']],
+                                    'metadatas': [fallback_results['metadatas']],
+                                    'distances': [[0.0] * len(fallback_results['documents'])]  # Assume perfect similarity
+                                }
+                        except Exception as e:
+                            logger.error(f"Fallback query also failed: {str(e)}")
+                    
                     # Add collection name to metadata for tracking
                     for metadata in results['metadatas'][0]:
                         metadata['collection_name'] = coll_name
@@ -213,6 +228,8 @@ class RAGService:
                 except Exception as e:
                     logger.warning(f"Could not query collection {coll_name}: {str(e)}")
                     continue
+            
+
             
             # Sort combined results by distance (similarity)
             combined_results = list(zip(all_results['documents'], all_results['metadatas'], all_results['distances']))
@@ -258,16 +275,50 @@ class RAGService:
                     })
             
             if not relevant_chunks:
-                return {
-                    "answer": "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents.",
-                    "question": question,
-                    "sources": [],
-                    "model_provider": model_provider,
-                    "model_name": model_name,
-                    "token_usage": None,
-                    "latency_ms": (time.time() - start_time) * 1000,
-                    "timestamp": datetime.datetime.utcnow().isoformat()
-                }
+                # Try with a lower similarity threshold if no results found
+                lower_threshold = max(0.1, similarity_threshold - 0.2)
+                
+                # Re-filter with lower threshold
+                relevant_chunks = []
+                sources = []
+                
+                for i, (doc, metadata, distance) in enumerate(zip(
+                    results['documents'][0], 
+                    results['metadatas'][0], 
+                    results['distances'][0]
+                )):
+                    similarity_score = 1 - distance
+                    
+                    # Check if document has required tags
+                    doc_tags_str = metadata.get("tags", "")
+                    doc_tags = doc_tags_str.split(",") if doc_tags_str else []
+                    tag_match = True
+                    if filter_tags:
+                        tag_match = any(tag in doc_tags for tag in filter_tags)
+                    
+                    if similarity_score >= lower_threshold and tag_match:
+                        relevant_chunks.append(doc)
+                        sources.append({
+                            "document_id": metadata.get("document_id", ""),
+                            "file_name": metadata.get("file_name", ""),
+                            "chunk_text": doc,
+                            "similarity_score": similarity_score,
+                            "chunk_index": metadata.get("chunk_index", i),
+                            "tags": doc_tags,
+                            "collection_name": metadata.get("collection_name", collection_name)
+                        })
+                
+                if not relevant_chunks:
+                    return {
+                        "answer": "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents.",
+                        "question": question,
+                        "sources": [],
+                        "model_provider": model_provider,
+                        "model_name": model_name,
+                        "token_usage": None,
+                        "latency_ms": (time.time() - start_time) * 1000,
+                        "timestamp": datetime.datetime.utcnow().isoformat()
+                    }
             
             # Create context from relevant chunks
             context = "\n\n".join(relevant_chunks)
@@ -290,12 +341,28 @@ Question: {question}"""
             # Get model and generate response
             model = self.model_factory.get_model(model_provider, model_name)
             
-            response = await model.agenerate(
-                system_prompt=system_prompt,
-                user_prompt=question,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+            # Handle Ollama models differently
+            if model_provider == "ollama":
+                # For Ollama, use ainvoke with the full prompt
+                full_prompt = f"{system_prompt}\n\nQuestion: {question}"
+                response_content = await model.ainvoke(full_prompt)
+                response = type('Response', (), {
+                    'content': response_content,
+                    'token_usage': None
+                })()
+            else:
+                # For other models, use agenerate
+                from langchain.schema import HumanMessage, SystemMessage
+                messages = [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=question)
+                ]
+                response_result = await model.agenerate([messages])
+                response = response_result.generations[0][0]
+                response = type('Response', (), {
+                    'content': response.text,
+                    'token_usage': response.generation_info.get('token_usage') if hasattr(response, 'generation_info') else None
+                })()
             
             latency_ms = (time.time() - start_time) * 1000
             
@@ -317,7 +384,7 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None,
+                                 top_k: int = 5, similarity_threshold: float = 0.3, filter_tags: List[str] = None,
                                  collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
@@ -430,17 +497,33 @@ Question: {question}"""
             # Get model and generate streaming response
             model = self.model_factory.get_model(model_provider, model_name)
             
-            async for chunk in model.agenerate_stream(
-                system_prompt=system_prompt,
-                user_prompt=question,
-                temperature=temperature,
-                max_tokens=max_tokens
-            ):
+            # Handle Ollama models differently for streaming
+            if model_provider == "ollama":
+                # For Ollama, generate the full response and yield it as a single chunk
+                full_prompt = f"{system_prompt}\n\nQuestion: {question}"
+                response_content = await model.ainvoke(full_prompt)
                 yield {
-                    "content": chunk.content,
-                    "is_complete": chunk.is_complete,
-                    "sources": sources if chunk.is_complete else [],
-                    "latency_ms": (time.time() - start_time) * 1000 if chunk.is_complete else None
+                    "content": response_content,
+                    "is_complete": True,
+                    "sources": sources,
+                    "latency_ms": (time.time() - start_time) * 1000
+                }
+            else:
+                # For other models, use streaming
+                from langchain.schema import HumanMessage, SystemMessage
+                messages = [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=question)
+                ]
+                # Note: This would need to be implemented for other models
+                # For now, just generate the full response
+                response_result = await model.agenerate([messages])
+                response_content = response_result.generations[0][0].text
+                yield {
+                    "content": response_content,
+                    "is_complete": True,
+                    "sources": sources,
+                    "latency_ms": (time.time() - start_time) * 1000
                 }
                 
         except Exception as e:
@@ -451,6 +534,34 @@ Question: {question}"""
                 "sources": [],
                 "latency_ms": (time.time() - start_time) * 1000
             }
+    
+    def list_all_collections(self) -> Dict:
+        """List all collections and their document counts for debugging."""
+        try:
+            collections = self.chroma_client.list_collections()
+            result = {}
+            
+            for collection in collections:
+                try:
+                    count = collection.count()
+                    result[collection.name] = {
+                        "name": collection.name,
+                        "document_count": count,
+                        "metadata": collection.metadata
+                    }
+                    logger.info(f"Collection {collection.name}: {count} documents")
+                except Exception as e:
+                    logger.error(f"Error getting count for collection {collection.name}: {str(e)}")
+                    result[collection.name] = {
+                        "name": collection.name,
+                        "document_count": "error",
+                        "error": str(e)
+                    }
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error listing collections: {str(e)}")
+            return {"error": str(e)}
     
     def get_collections(self) -> List[CollectionInfo]:
         """Get information about all collections."""

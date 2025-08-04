@@ -85,61 +85,34 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({
   const formats: Array<'pdf' | 'word' | 'markdown' | 'html'> = ['pdf', 'word', 'markdown', 'html'];
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center space-x-2">
-        <Download className="text-gray-500" size={20} />
-        <h3 className="text-lg font-medium text-gray-900">Export Options</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {formats.map((format) => {
-          const Icon = getFormatIcon(format);
-          const isExporting = exporting === format;
-          
-          return (
-            <button
-              key={format}
-              onClick={() => handleExport(format)}
-              disabled={isExporting || !content.generated_content}
-              className={`p-4 rounded-lg border-2 transition-all text-left ${
-                isExporting
-                  ? 'border-blue-300 bg-blue-50 cursor-not-allowed'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 cursor-pointer'
-              }`}
-            >
-              <div className="flex items-center space-x-3 mb-2">
-                <Icon className={`w-5 h-5 ${
-                  isExporting ? 'text-blue-600' : 'text-gray-500'
-                }`} />
-                <span className="font-medium text-gray-900">
-                  {getFormatName(format)}
-                </span>
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-3">
-                {getFormatDescription(format)}
-              </p>
-              
-              {isExporting ? (
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm">Exporting...</span>
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500">
-                  Click to download
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      
-      {!content.generated_content && (
-        <div className="text-center py-4 text-sm text-gray-500">
-          Generate content first to enable export options
-        </div>
-      )}
+    <div className={`flex flex-wrap gap-3 items-center ${className}`}>
+      {formats.map((format) => {
+        const Icon = getFormatIcon(format);
+        const isExporting = exporting === format;
+        const tooltip = `${getFormatName(format)}: ${getFormatDescription(format)}`;
+        return (
+          <button
+            key={format}
+            onClick={() => handleExport(format)}
+            disabled={isExporting || !content.generated_content}
+            className={`p-2 rounded-lg border transition-all bg-white hover:bg-gray-50 flex flex-col items-center ${
+              isExporting
+                ? 'border-blue-300 bg-blue-50 cursor-not-allowed'
+                : 'border-gray-200 hover:border-gray-300 cursor-pointer'
+            }`}
+            title={tooltip}
+          >
+            <Icon className={`w-6 h-6 ${isExporting ? 'text-blue-600' : 'text-gray-700'}`} />
+            <span className="text-xs text-gray-600 mt-1 font-medium">
+              {format}
+            </span>
+            {/* Optionally, show a spinner overlay if exporting */}
+            {isExporting && (
+              <span className="absolute top-0 right-0 animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }; 
