@@ -129,7 +129,9 @@ export const RAGPage: React.FC = () => {
 
   const loadAvailableModels = async () => {
     try {
+      console.log('Loading available models...');
       const models = await apiService.getAvailableModels();
+      console.log('Available models loaded:', models);
       setAvailableModels(models);
     } catch (error) {
       console.error('Failed to load available models:', error);
@@ -566,31 +568,37 @@ export const RAGPage: React.FC = () => {
                 Select models to compare for RAG question answering performance
               </p>
               
-              {availableModels?.providers?.map((provider: any) => (
-                <div key={provider.id} className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
-                  <div className="space-y-1">
-                    {provider.models?.slice(0, 3).map((model: string) => (
-                      <label key={model} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
-                            } else {
-                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
-                            }
-                          }}
-                          disabled={isComparing}
-                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        />
-                        <span className="text-sm text-gray-700">{model}</span>
-                      </label>
-                    ))}
+              {!availableModels ? (
+                <div className="text-sm text-gray-500">Loading models...</div>
+              ) : availableModels.providers && availableModels.providers.length > 0 ? (
+                availableModels.providers.map((provider: any) => (
+                  <div key={provider.id} className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                    <div className="space-y-1">
+                      {provider.models?.slice(0, 3).map((model: string) => (
+                        <label key={model} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                              } else {
+                                setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                              }
+                            }}
+                            disabled={isComparing}
+                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <span className="text-sm text-gray-700">{model}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-sm text-gray-500">No models available</div>
+              )}
               
               {selectedModels.length > 0 && (
                 <div className="mt-3 p-2 bg-purple-50 rounded-lg">

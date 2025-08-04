@@ -820,4 +820,8 @@ class ModelComparisonService:
 
 
 # Global model comparison service instance
-model_comparison_service = ModelComparisonService() 
+model_comparison_service = ModelComparisonService()
+
+def get_model_comparison_service() -> ModelComparisonService:
+    """Get the global model comparison service instance."""
+    return model_comparison_service 
