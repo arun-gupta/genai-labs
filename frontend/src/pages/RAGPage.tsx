@@ -63,6 +63,18 @@ export const RAGPage: React.FC = () => {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
+  
+  // Predefined sample tags for easy selection
+  const sampleTags = [
+    'legal', 'contract', 'agreement', 'policy', 'manual', 'guide',
+    'financial', 'budget', 'invoice', 'receipt', 'tax',
+    'hr', 'employee', 'hiring', 'training', 'benefits',
+    'technical', 'specification', 'requirements', 'design', 'code',
+    'marketing', 'campaign', 'advertising', 'social-media', 'brand',
+    'operations', 'process', 'procedure', 'workflow', 'sop',
+    'research', 'analysis', 'report', 'study', 'survey',
+    'compliance', 'regulatory', 'audit', 'certification', 'standards'
+  ];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -455,15 +467,64 @@ export const RAGPage: React.FC = () => {
             {/* Document Tags */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Document Tags (comma-separated)
+                Document Tags
               </label>
               <input
                 type="text"
                 value={documentTags.join(', ')}
                 onChange={(e) => setDocumentTags(e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag))}
                 placeholder="e.g., research, technical, manual"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
               />
+              
+              {/* Sample Tags */}
+              <div className="mb-2">
+                <p className="text-xs text-gray-600 mb-2">Quick select tags:</p>
+                <div className="flex flex-wrap gap-1">
+                  {sampleTags.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        if (!documentTags.includes(tag)) {
+                          setDocumentTags([...documentTags, tag]);
+                        }
+                      }}
+                      disabled={documentTags.includes(tag)}
+                      className={`px-2 py-1 text-xs rounded-full border ${
+                        documentTags.includes(tag)
+                          ? 'bg-blue-500 text-white border-blue-500 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Selected Tags */}
+              {documentTags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {documentTags.map(tag => (
+                    <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full flex items-center space-x-1">
+                      <span>{tag}</span>
+                      <button
+                        onClick={() => setDocumentTags(documentTags.filter(t => t !== tag))}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    onClick={() => setDocumentTags([])}
+                    className="px-2 py-1 text-xs text-red-600 hover:text-red-800 underline"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+              
               <p className="text-xs text-gray-500 mt-1">
                 Tags will be applied to uploaded documents for better organization
               </p>
@@ -630,11 +691,11 @@ export const RAGPage: React.FC = () => {
             />
             
             {/* Tag Filtering */}
-            {availableTags.length > 0 && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Tags (optional)
-                </label>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Tags (optional)
+              </label>
+              {availableTags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {availableTags.map(tag => (
                     <button
@@ -656,13 +717,40 @@ export const RAGPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                {filterTags.length > 0 && (
+              ) : (
+                <div className="text-xs text-gray-500 mb-2">
+                  No tags available yet. Upload documents with tags to filter by them.
+                </div>
+              )}
+              
+              {/* Selected Filter Tags */}
+              {filterTags.length > 0 && (
+                <div className="mt-2">
+                  <div className="flex flex-wrap gap-1">
+                    {filterTags.map(tag => (
+                      <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full flex items-center space-x-1">
+                        <span>{tag}</span>
+                        <button
+                          onClick={() => setFilterTags(filterTags.filter(t => t !== tag))}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                    <button
+                      onClick={() => setFilterTags([])}
+                      className="px-2 py-1 text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Filtering by: {filterTags.join(', ')}
                   </p>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
             
             <div className="flex justify-between items-center mt-4">
               <button
