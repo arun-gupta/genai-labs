@@ -1096,12 +1096,12 @@ export const RAGPage: React.FC = () => {
                 onClick={() => setActiveTab('comparison')}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'comparison'
-                    ? 'bg-primary-100 text-primary-700'
+                    ? 'bg-purple-100 text-purple-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 <GitCompare size={16} />
-                <span>Model Comparison</span>
+                <span>Comparison</span>
               </button>
             </div>
 
@@ -1311,12 +1311,22 @@ export const RAGPage: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-12">
                     <GitCompare className="mx-auto text-gray-400 mb-4" size={48} />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
-                    <p className="text-gray-600">
-                      Select 2 or more models and click "Compare Models" to see comparison results here.
+                    <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                      Compare how different AI models answer questions from your documents to find the best one for your needs.
                     </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                      <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
+                      <ol className="text-sm text-blue-800 space-y-1 text-left">
+                        <li>1. Upload documents or use existing collections</li>
+                        <li>2. Ask a question about your documents</li>
+                        <li>3. Select 2 or more models in the Model Comparison section</li>
+                        <li>4. Click "Compare Models" to see results</li>
+                        <li>5. View quality scores, source relevance, and recommendations</li>
+                      </ol>
+                    </div>
                   </div>
                 )}
               </div>
