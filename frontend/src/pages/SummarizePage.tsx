@@ -46,8 +46,8 @@ export const SummarizePage: React.FC = () => {
       name: "Efficient Models",
       description: "Compare lightweight models for speed",
       models: [
-        { provider: "ollama", model: "phi3:3.8b" },
-        { provider: "ollama", model: "qwen2.5:3b" },
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama2:7b" },
         { provider: "openai", model: "gpt-3.5-turbo" }
       ]
     },
@@ -87,6 +87,7 @@ export const SummarizePage: React.FC = () => {
     try {
       const models = await apiService.getAvailableModels();
       setAvailableModels(models);
+      console.log('Available models:', models); // Debug log
     } catch (err) {
       console.error('Error loading models:', err);
     }
@@ -523,7 +524,10 @@ export const SummarizePage: React.FC = () => {
                   {defaultModelCombinations.map((combination, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedModels(combination.models)}
+                      onClick={() => {
+                        console.log('Setting models for combination:', combination.name, combination.models); // Debug log
+                        setSelectedModels(combination.models);
+                      }}
                       disabled={isComparing}
                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                     >

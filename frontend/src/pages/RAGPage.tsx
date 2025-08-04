@@ -92,8 +92,8 @@ export const RAGPage: React.FC = () => {
       name: "Efficient Models",
       description: "Compare lightweight models for speed",
       models: [
-        { provider: "ollama", model: "phi3:3.8b" },
-        { provider: "ollama", model: "qwen2.5:3b" },
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama2:7b" },
         { provider: "openai", model: "gpt-3.5-turbo" }
       ]
     },
