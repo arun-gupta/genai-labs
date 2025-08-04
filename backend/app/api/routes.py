@@ -642,10 +642,18 @@ async def get_rag_collections():
     """Get information about all RAG collections."""
     try:
         collections = rag_service.get_collections()
-        return collections
+        return {"collections": collections}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/rag/debug/collections")
+async def debug_rag_collections():
+    """Debug endpoint to list all collections and their document counts."""
+    try:
+        collections_info = rag_service.list_all_collections()
+        return {"debug_info": collections_info}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/rag/document")
 async def delete_rag_document(request: DeleteDocumentRequest):

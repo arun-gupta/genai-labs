@@ -355,7 +355,7 @@ export const RAGPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Collection for Upload
               </label>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 items-center">
                 <select
                   value={selectedCollection}
                   onChange={(e) => setSelectedCollection(e.target.value)}
@@ -373,6 +373,26 @@ export const RAGPage: React.FC = () => {
                 >
                   <Plus size={16} />
                 </button>
+              </div>
+              {/* Collection delete buttons */}
+              <div className="mt-2 space-y-1">
+                {collections.map(collection => (
+                  <div key={collection.collection_name} className="flex items-center justify-between text-xs text-gray-700">
+                    <span>{collection.collection_name}</span>
+                    <button
+                      disabled={selectedCollection === collection.collection_name}
+                      onClick={async () => {
+                        if (window.confirm(`Delete collection '${collection.collection_name}'? This cannot be undone.`)) {
+                          await apiService.deleteRAGCollection(collection.collection_name);
+                          await loadCollections();
+                        }
+                      }}
+                      className={`ml-2 px-2 py-1 rounded ${selectedCollection === collection.collection_name ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
               </div>
               
               {/* New Collection Input */}
