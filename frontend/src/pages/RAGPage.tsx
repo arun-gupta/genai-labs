@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings } from 'lucide-react';
+import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings, Languages, History } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
@@ -11,6 +11,8 @@ import { DocumentAnalytics } from '../components/DocumentAnalytics';
 import { PerformanceMetrics } from '../components/PerformanceMetrics';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
+import { LanguageSelector } from '../components/LanguageSelector';
+import { PromptHistoryComponent } from '../components/PromptHistory';
 
 interface Document {
   document_id: string;
@@ -66,6 +68,9 @@ export const RAGPage: React.FC = () => {
   const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('response'); // 'response', 'analytics'
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
+  const [translateOutput, setTranslateOutput] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  const [showHistory, setShowHistory] = useState(false);
   
   // Performance metrics
   const [performanceMetrics, setPerformanceMetrics] = useState<{
@@ -372,6 +377,11 @@ export const RAGPage: React.FC = () => {
     };
   };
 
+  const handleLoadFromHistory = (prompt: string) => {
+    setQuestion(prompt);
+    setShowHistory(false); // Hide history after loading
+  };
+
   const currentCollection = collections.find(c => c.collection_name === selectedCollection);
 
   return (
@@ -452,6 +462,42 @@ export const RAGPage: React.FC = () => {
                   <span>Strict</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Language Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Languages className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Language</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="translate-output"
+                  checked={translateOutput}
+                  onChange={(e) => setTranslateOutput(e.target.checked)}
+                  disabled={isAsking}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="translate-output" className="text-sm text-gray-700">
+                  Translate output
+                </label>
+              </div>
+              
+              {translateOutput && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Language</label>
+                  <LanguageSelector
+                    selectedLanguage={targetLanguage}
+                    onLanguageChange={setTargetLanguage}
+                    placeholder="Select target language..."
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -659,6 +705,29 @@ export const RAGPage: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* History */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <History className="text-blue-600" size={20} />
+                <h2 className="text-lg font-semibold text-gray-900">History</h2>
+              </div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              >
+                {showHistory ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            
+            {showHistory && (
+              <PromptHistoryComponent
+                onLoadPrompt={handleLoadFromHistory}
+                className="w-full"
+              />
+            )}
           </div>
 
           {/* Upload Analytics */}
