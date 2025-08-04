@@ -31,6 +31,7 @@ export interface StreamChunk {
   is_complete: boolean;
   token_usage?: TokenUsage;
   latency_ms?: number;
+  sources?: any[]; // For RAG responses
 }
 
 export interface GenerateRequest {

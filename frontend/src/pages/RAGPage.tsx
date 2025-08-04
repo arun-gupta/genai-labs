@@ -21,6 +21,7 @@ interface Collection {
   documents: Document[];
   created_at: string;
   last_updated: string;
+  available_tags: string[];
 }
 
 interface Source {
@@ -48,7 +49,7 @@ export const RAGPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [topK, setTopK] = useState(5);
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.7);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.3);
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [documentTags, setDocumentTags] = useState<string[]>([]);
@@ -66,11 +67,12 @@ export const RAGPage: React.FC = () => {
   const loadCollections = async () => {
     try {
       const response = await apiService.getRAGCollections();
-      setCollections(response);
+      const collectionsData = (response as any).collections || response; // Handle both structures
+      setCollections(collectionsData);
       
       // Extract all available tags from collections
       const allTags = new Set<string>();
-      response.forEach(collection => {
+      collectionsData.forEach((collection: Collection) => {
         if (collection.available_tags) {
           collection.available_tags.forEach(tag => allTags.add(tag));
         }
@@ -243,9 +245,19 @@ export const RAGPage: React.FC = () => {
 
   const getExportContent = () => {
     return {
-      content: answer,
-      title: `RAG Q&A - ${question}`,
-      sources: sources.map(s => `${s.file_name}: ${s.chunk_text}`).join('\n\n')
+      system_prompt: `You are a helpful assistant that answers questions based on the provided context from uploaded documents.`,
+      user_prompt: question,
+      generated_content: answer,
+      metadata: {
+        model_provider: selectedProvider,
+        model_name: selectedModel,
+        timestamp: new Date().toISOString(),
+        token_usage: undefined,
+        latency_ms: undefined
+      },
+      analytics: {
+        sources: sources.map(s => `${s.file_name}: ${s.chunk_text}`).join('\n\n')
+      }
     };
   };
 
@@ -272,9 +284,9 @@ export const RAGPage: React.FC = () => {
             </div>
             <ModelSelector
               selectedProvider={selectedProvider}
-              setSelectedProvider={setSelectedProvider}
+              onProviderChange={setSelectedProvider}
               selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
+              onModelChange={setSelectedModel}
             />
             <div className="mt-4 space-y-4">
               <div>
