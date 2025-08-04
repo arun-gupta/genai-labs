@@ -615,7 +615,7 @@ export const RAGPage: React.FC = () => {
                 <p>Debug: availableModels exists: {availableModels ? 'Yes' : 'No'}</p>
                 <p>Debug: providers count: {availableModels?.providers?.length || 0}</p>
                 <p>Debug: selectedModels count: {selectedModels.length}</p>
-                <p>Debug: Compare button should show: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
+                <p>Debug: Compare button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
           </div>
@@ -1014,22 +1014,20 @@ export const RAGPage: React.FC = () => {
                   <span>{isAsking ? 'Asking...' : 'Ask Question'}</span>
                 </button>
                 
-                {selectedModels.length >= 2 && (
-                  <button
-                    onClick={handleModelComparison}
-                    disabled={isComparing || !question.trim() || selectedCollections.length === 0}
-                    className="btn-secondary flex items-center space-x-2"
-                  >
-                    <GitCompare size={16} />
-                    <span>{isComparing ? 'Comparing...' : 'Compare Models'}</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleModelComparison}
+                  disabled={isComparing || !question.trim() || selectedCollections.length === 0 || selectedModels.length < 2}
+                  className="btn-secondary flex items-center space-x-2"
+                >
+                  <GitCompare size={16} />
+                  <span>{isComparing ? 'Comparing...' : 'Compare Models'}</span>
+                </button>
               </div>
               
               {/* Debug info for button */}
               <div className="text-xs text-gray-500">
                 <p>Selected models: {selectedModels.length}</p>
-                <p>Button should show: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
+                <p>Button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
 
