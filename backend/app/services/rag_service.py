@@ -476,13 +476,47 @@ Question: {question}"""
                     })
             
             if not relevant_chunks:
-                yield {
-                    "content": "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents.",
-                    "is_complete": True,
-                    "sources": [],
-                    "latency_ms": (time.time() - start_time) * 1000
-                }
-                return
+                # Try with a lower similarity threshold if no results found
+                lower_threshold = max(-0.5, similarity_threshold - 0.3)
+                
+                # Re-filter with lower threshold
+                relevant_chunks = []
+                sources = []
+                
+                for i, (doc, metadata, distance) in enumerate(zip(
+                    results['documents'][0], 
+                    results['metadatas'][0], 
+                    results['distances'][0]
+                )):
+                    similarity_score = 1 - distance
+                    
+                    # Check if document has required tags
+                    doc_tags_str = metadata.get("tags", "")
+                    doc_tags = doc_tags_str.split(",") if doc_tags_str else []
+                    tag_match = True
+                    if filter_tags:
+                        tag_match = any(tag in doc_tags for tag in filter_tags)
+                    
+                    if similarity_score >= lower_threshold and tag_match:
+                        relevant_chunks.append(doc)
+                        sources.append({
+                            "document_id": metadata.get("document_id", ""),
+                            "file_name": metadata.get("file_name", ""),
+                            "chunk_text": doc,
+                            "similarity_score": similarity_score,
+                            "chunk_index": metadata.get("chunk_index", i),
+                            "tags": doc_tags,
+                            "collection_name": metadata.get("collection_name", collection_name)
+                        })
+                
+                if not relevant_chunks:
+                    yield {
+                        "content": "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents.",
+                        "is_complete": True,
+                        "sources": [],
+                        "latency_ms": (time.time() - start_time) * 1000
+                    }
+                    return
             
             # Create context from relevant chunks
             context = "\n\n".join(relevant_chunks)
