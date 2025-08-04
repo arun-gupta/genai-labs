@@ -120,9 +120,11 @@ class QuestionSuggestionService:
             
             # Extract topics from sample documents
             all_topics = []
+            document_texts = []
             for doc in sample_docs['documents']:
                 topics = self.extract_topics_from_text(doc)
                 all_topics.extend(topics)
+                document_texts.append(doc)
             
             # Get unique topics and their frequency
             topic_freq = {}
@@ -133,66 +135,97 @@ class QuestionSuggestionService:
             sorted_topics = sorted(topic_freq.items(), key=lambda x: x[1], reverse=True)
             top_topics = [topic for topic, freq in sorted_topics[:5]]
             
-            # Generate suggestions
+            # Analyze document content to determine document types and themes
+            combined_text = " ".join(document_texts).lower()
             suggestions = []
             
-            # Topic-based suggestions (limit to 8 to make room for actions)
+            # Topic-based suggestions (only from actual document content)
             seen_topics = set()
-            for topic in top_topics[:8]:
-                if topic not in seen_topics:  # Avoid duplicates
+            for topic in top_topics[:6]:  # Limit to 6 topics
+                if topic not in seen_topics:
                     seen_topics.add(topic)
-                    # Use only one template per topic to avoid duplicates
                     question = self.common_question_templates[0].format(topic=topic)
                     suggestions.append({
                         "question": question,
                         "type": "topic",
                         "topic": topic,
-                        "confidence": 0.4  # Lower confidence since we don't know if RAG can answer
+                        "confidence": 0.4
                     })
             
-            # Action-based suggestions (always include these)
-            for action in self.action_templates:
+            # Context-aware action suggestions based on document content
+            context_actions = []
+            
+            # Property management related
+            if any(term in combined_text for term in ['property', 'rent', 'lease', 'tenant', 'landlord']):
+                context_actions.extend([
+                    "request property maintenance",
+                    "pay rent or security deposit",
+                    "renew or terminate lease",
+                    "report property issues"
+                ])
+            
+            # Business/company related
+            if any(term in combined_text for term in ['company', 'business', 'management', 'corp', 'inc']):
+                context_actions.extend([
+                    "contact the company",
+                    "get business information",
+                    "find company services"
+                ])
+            
+            # Technical/documentation related
+            if any(term in combined_text for term in ['manual', 'guide', 'instruction', 'procedure', 'process']):
+                context_actions.extend([
+                    "follow the procedure",
+                    "understand the process",
+                    "get step-by-step instructions"
+                ])
+            
+            # Legal/agreement related
+            if any(term in combined_text for term in ['agreement', 'contract', 'terms', 'conditions', 'legal']):
+                context_actions.extend([
+                    "understand the terms",
+                    "review the agreement",
+                    "check contract conditions"
+                ])
+            
+            # Add context-aware actions
+            for action in context_actions[:4]:  # Limit to 4 context actions
                 suggestions.append({
                     "question": f"How do I {action}?",
                     "type": "action",
                     "action": action,
-                    "confidence": 0.2  # Lower confidence for generic actions
+                    "confidence": 0.3
                 })
             
-            # Add document-specific action suggestions
-            document_actions = [
-                "contact Real Property Management",
-                "request property maintenance", 
-                "pay rent or security deposit",
-                "renew or terminate lease",
-                "report property issues",
-                "schedule property inspection"
-            ]
+            # Collection-specific suggestions (always relevant)
+            suggestions.append({
+                "question": f"What documents are in the {collection_name} collection?",
+                "type": "collection",
+                "confidence": 0.6
+            })
             
-            for action in document_actions:
+            suggestions.append({
+                "question": f"Summarize the main topics in {collection_name}",
+                "type": "summary",
+                "confidence": 0.5
+            })
+            
+            # Document count specific suggestions
+            if target_collection.document_count == 1:
                 suggestions.append({
-                    "question": f"How do I {action}?",
-                    "type": "action",
-                    "action": action,
-                    "confidence": 0.3  # Slightly higher confidence for document-specific actions
+                    "question": f"What is the main content of the document in {collection_name}?",
+                    "type": "document_content",
+                    "confidence": 0.5
+                })
+            elif target_collection.document_count > 1:
+                suggestions.append({
+                    "question": f"What are the different types of documents in {collection_name}?",
+                    "type": "document_types",
+                    "confidence": 0.4
                 })
             
-            # Collection-specific suggestions
-            if target_collection.document_count > 0:
-                suggestions.append({
-                    "question": f"What documents are in the {collection_name} collection?",
-                    "type": "collection",
-                    "confidence": 0.6  # Higher confidence for collection info
-                })
-                
-                suggestions.append({
-                    "question": f"Summarize the main topics in {collection_name}",
-                    "type": "summary",
-                    "confidence": 0.5  # Medium confidence for summaries
-                })
-            
-            # Limit to top suggestions
-            return suggestions[:20]  # Increased limit to accommodate all types
+            # Limit to top suggestions and ensure variety
+            return suggestions[:15]  # Reduced limit for better quality
             
         except Exception as e:
             logger.error(f"Error generating suggestions: {str(e)}")
