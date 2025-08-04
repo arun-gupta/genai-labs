@@ -63,6 +63,7 @@ export const RAGPage: React.FC = () => {
   const [newCollectionName, setNewCollectionName] = useState('');
   const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
+  const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
   
   // Predefined sample tags for easy selection
   const sampleTags = [
@@ -150,6 +151,11 @@ export const RAGPage: React.FC = () => {
         formData.append('collection_name', selectedCollection);
 
         const response = await apiService.uploadRAGDocument(formData, documentTags);
+        
+        // Store analytics from the upload response
+        if (response.analytics) {
+          setLastUploadAnalytics(response.analytics);
+        }
         
         setUploadedFiles(prev => [...prev, file]);
         await loadCollections(); // Refresh collections
@@ -568,6 +574,43 @@ export const RAGPage: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Upload Analytics */}
+            {lastUploadAnalytics && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-2 mb-3">
+                  <BarChart3 className="w-4 h-4 text-green-500" />
+                  <h3 className="text-sm font-medium text-green-800">Document Analysis</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-600">Words:</span>
+                    <span className="font-medium ml-1">{lastUploadAnalytics.statistics?.word_count?.toLocaleString() || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Reading Time:</span>
+                    <span className="font-medium ml-1">{lastUploadAnalytics.statistics?.estimated_reading_time_minutes || 'N/A'} min</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-medium ml-1 capitalize">{lastUploadAnalytics.document_type || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Readability:</span>
+                    <span className="font-medium ml-1">{lastUploadAnalytics.readability?.level?.replace('_', ' ') || 'N/A'}</span>
+                  </div>
+                </div>
+                {lastUploadAnalytics.summary && (
+                  <p className="text-xs text-gray-600 mt-2">{lastUploadAnalytics.summary}</p>
+                )}
+                <button
+                  onClick={() => setLastUploadAnalytics(null)}
+                  className="text-xs text-green-600 hover:text-green-800 mt-2 underline"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
           </div>
