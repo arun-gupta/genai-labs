@@ -48,12 +48,14 @@ interface DocumentAnalyticsProps {
   collectionName: string;
   documentId: string;
   className?: string;
+  compact?: boolean;
 }
 
 export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({
   collectionName,
   documentId,
-  className = ""
+  className = "",
+  compact = false
 }) => {
   const [analytics, setAnalytics] = useState<DocumentAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -163,6 +165,60 @@ export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({
 
   if (!analytics) {
     return null;
+  }
+
+  // Compact version for collection view
+  if (compact) {
+    return (
+      <div className={`space-y-3 ${className}`}>
+        {/* Header */}
+        <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+          <BarChart3 className="w-4 h-4 text-blue-500" />
+          <span>Document Analytics</span>
+        </div>
+
+        {/* Compact Statistics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-gray-50 p-2 rounded">
+            <div className="text-xs text-gray-600">Words</div>
+            <div className="font-bold text-sm">{analytics.statistics.word_count.toLocaleString()}</div>
+          </div>
+          <div className="bg-gray-50 p-2 rounded">
+            <div className="text-xs text-gray-600">Reading Time</div>
+            <div className="font-bold text-sm">{analytics.statistics.estimated_reading_time_minutes} min</div>
+          </div>
+          <div className="bg-gray-50 p-2 rounded">
+            <div className="text-xs text-gray-600">Type</div>
+            <div className="font-bold text-sm capitalize">{analytics.document_type}</div>
+          </div>
+          <div className="bg-gray-50 p-2 rounded">
+            <div className="text-xs text-gray-600">Readability</div>
+            <div className="font-bold text-sm">{analytics.readability.level.replace('_', ' ')}</div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        {analytics.summary && (
+          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+            {analytics.summary}
+          </div>
+        )}
+
+        {/* Key Topics */}
+        {analytics.topics.length > 0 && (
+          <div className="text-xs">
+            <div className="font-medium text-gray-700 mb-1">Key Topics:</div>
+            <div className="flex flex-wrap gap-1">
+              {analytics.topics.slice(0, 5).map((topic, index) => (
+                <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {topic.topic}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

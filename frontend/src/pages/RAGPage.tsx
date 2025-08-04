@@ -584,30 +584,30 @@ export const RAGPage: React.FC = () => {
                   <BarChart3 className="w-4 h-4 text-green-500" />
                   <h3 className="text-sm font-medium text-green-800">Document Analysis</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div>
-                    <span className="text-gray-600">Words:</span>
-                    <span className="font-medium ml-1">{lastUploadAnalytics.statistics?.word_count?.toLocaleString() || 'N/A'}</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 text-xs">Words</span>
+                    <span className="font-medium">{lastUploadAnalytics.statistics?.word_count?.toLocaleString() || 'N/A'}</span>
                   </div>
-                  <div>
-                    <span className="text-gray-600">Reading Time:</span>
-                    <span className="font-medium ml-1">{lastUploadAnalytics.statistics?.estimated_reading_time_minutes || 'N/A'} min</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 text-xs">Reading Time</span>
+                    <span className="font-medium">{lastUploadAnalytics.statistics?.estimated_reading_time_minutes || 'N/A'} min</span>
                   </div>
-                  <div>
-                    <span className="text-gray-600">Type:</span>
-                    <span className="font-medium ml-1 capitalize">{lastUploadAnalytics.document_type || 'N/A'}</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 text-xs">Type</span>
+                    <span className="font-medium capitalize">{lastUploadAnalytics.document_type || 'N/A'}</span>
                   </div>
-                  <div>
-                    <span className="text-gray-600">Readability:</span>
-                    <span className="font-medium ml-1">{lastUploadAnalytics.readability?.level?.replace('_', ' ') || 'N/A'}</span>
+                  <div className="flex flex-col">
+                    <span className="text-gray-600 text-xs">Readability</span>
+                    <span className="font-medium">{lastUploadAnalytics.readability?.level?.replace('_', ' ') || 'N/A'}</span>
                   </div>
                 </div>
                 {lastUploadAnalytics.summary && (
-                  <p className="text-xs text-gray-600 mt-2">{lastUploadAnalytics.summary}</p>
+                  <p className="text-xs text-gray-600 mt-3 leading-relaxed">{lastUploadAnalytics.summary}</p>
                 )}
                 <button
                   onClick={() => setLastUploadAnalytics(null)}
-                  className="text-xs text-green-600 hover:text-green-800 mt-2 underline"
+                  className="text-xs text-green-600 hover:text-green-800 mt-3 underline"
                 >
                   Dismiss
                 </button>
@@ -643,20 +643,26 @@ export const RAGPage: React.FC = () => {
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Documents</h3>
                   <div className="space-y-2">
                     {currentCollection.documents.map(doc => (
-                      <div key={doc.document_id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
-                        <span className="truncate">{doc.file_name}</span>
-                        <div className="flex items-center space-x-2">
+                      <div key={doc.document_id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                        <button
+                          onClick={() => setSelectedDocumentForAnalytics(selectedDocumentForAnalytics === doc.document_id ? null : doc.document_id)}
+                          className="flex-1 text-left truncate hover:text-blue-600"
+                          title="Click to view analytics"
+                        >
+                          <span className="truncate">{doc.file_name}</span>
+                        </button>
+                        <div className="flex items-center space-x-2 ml-2">
                           <span className="text-xs text-gray-500">{doc.chunks} chunks</span>
                           <button
                             onClick={() => setSelectedDocumentForAnalytics(selectedDocumentForAnalytics === doc.document_id ? null : doc.document_id)}
-                            className="text-blue-500 hover:text-blue-700"
+                            className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50"
                             title="View Analytics"
                           >
                             <BarChart3 size={14} />
                           </button>
                           <button
                             onClick={() => deleteDocument(doc.document_id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
                             title="Delete Document"
                           >
                             <Trash2 size={14} />
@@ -674,6 +680,7 @@ export const RAGPage: React.FC = () => {
                   <DocumentAnalytics
                     collectionName={selectedCollection}
                     documentId={selectedDocumentForAnalytics}
+                    compact={true}
                   />
                 </div>
               )}
