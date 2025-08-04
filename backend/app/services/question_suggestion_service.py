@@ -129,7 +129,7 @@ class QuestionSuggestionService:
                         "question": question,
                         "type": "topic",
                         "topic": topic,
-                        "confidence": 0.8
+                        "confidence": 0.4  # Lower confidence since we don't know if RAG can answer
                     })
             
             # Action-based suggestions (always include these)
@@ -138,7 +138,7 @@ class QuestionSuggestionService:
                     "question": f"How do I {action}?",
                     "type": "action",
                     "action": action,
-                    "confidence": 0.6
+                    "confidence": 0.3  # Lower confidence for generic actions
                 })
             
             # Collection-specific suggestions
@@ -146,13 +146,13 @@ class QuestionSuggestionService:
                 suggestions.append({
                     "question": f"What documents are in the {collection_name} collection?",
                     "type": "collection",
-                    "confidence": 0.9
+                    "confidence": 0.6  # Higher confidence for collection info
                 })
                 
                 suggestions.append({
                     "question": f"Summarize the main topics in {collection_name}",
                     "type": "summary",
-                    "confidence": 0.7
+                    "confidence": 0.5  # Medium confidence for summaries
                 })
             
             # Limit to top suggestions
@@ -186,7 +186,7 @@ class QuestionSuggestionService:
                     "question": f"What does this document say about {topic}?",
                     "type": "document_topic",
                     "topic": topic,
-                    "confidence": 0.8
+                    "confidence": 0.4  # Lower confidence since we don't know if RAG can answer
                 })
             
             # Add general document questions
@@ -194,17 +194,17 @@ class QuestionSuggestionService:
                 {
                     "question": "What is the main purpose of this document?",
                     "type": "document_purpose",
-                    "confidence": 0.9
+                    "confidence": 0.5  # Medium confidence
                 },
                 {
                     "question": "What are the key points in this document?",
                     "type": "document_summary",
-                    "confidence": 0.8
+                    "confidence": 0.4  # Lower confidence
                 },
                 {
                     "question": "Who is this document for?",
                     "type": "document_audience",
-                    "confidence": 0.7
+                    "confidence": 0.3  # Lower confidence
                 }
             ])
             
