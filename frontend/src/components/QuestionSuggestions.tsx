@@ -67,11 +67,14 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
           }
         }
         
-        // Remove duplicates and sort by confidence
+        // Remove duplicates and organize by type
         const uniqueSuggestions = allSuggestions.filter((suggestion, index, self) =>
           index === self.findIndex(s => s.question === suggestion.question)
         );
-        allSuggestions = uniqueSuggestions.sort((a, b) => b.confidence - a.confidence);
+        
+        // Organize suggestions by type and priority
+        const organizedSuggestions = organizeSuggestions(uniqueSuggestions);
+        allSuggestions = organizedSuggestions;
       }
       
       setSuggestions(allSuggestions);
@@ -81,6 +84,31 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const organizeSuggestions = (suggestions: QuestionSuggestion[]): QuestionSuggestion[] => {
+    // Define priority order for suggestion types
+    const typePriority = {
+      'collection': 1,      // Collection info (highest priority)
+      'summary': 2,         // Summary questions
+      'document_content': 3, // Document content questions
+      'document_types': 4,   // Document type questions
+      'topic': 5,           // Topic-based questions
+      'action': 6           // Action questions (lowest priority)
+    };
+    
+    // Sort by type priority first, then by confidence
+    return suggestions.sort((a, b) => {
+      const aPriority = typePriority[a.type as keyof typeof typePriority] || 7;
+      const bPriority = typePriority[b.type as keyof typeof typePriority] || 7;
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      
+      // If same type, sort by confidence (higher first)
+      return b.confidence - a.confidence;
+    });
   };
 
   const getSuggestionIcon = (type: string) => {
