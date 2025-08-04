@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check } from 'lucide-react';
+import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3 } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
@@ -7,6 +7,7 @@ import { VoiceOutput } from '../components/VoiceOutput';
 import { ExportOptions } from '../components/ExportOptions';
 import { QuestionSuggestions } from '../components/QuestionSuggestions';
 import { ConfidenceDisplay } from '../components/ConfidenceDisplay';
+import { DocumentAnalytics } from '../components/DocumentAnalytics';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
 
@@ -55,6 +56,7 @@ export const RAGPage: React.FC = () => {
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<any>(null);
+  const [selectedDocumentForAnalytics, setSelectedDocumentForAnalytics] = useState<string | null>(null);
   const [documentTags, setDocumentTags] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -542,8 +544,16 @@ export const RAGPage: React.FC = () => {
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500">{doc.chunks} chunks</span>
                           <button
+                            onClick={() => setSelectedDocumentForAnalytics(selectedDocumentForAnalytics === doc.document_id ? null : doc.document_id)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="View Analytics"
+                          >
+                            <BarChart3 size={14} />
+                          </button>
+                          <button
                             onClick={() => deleteDocument(doc.document_id)}
                             className="text-red-500 hover:text-red-700"
+                            title="Delete Document"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -551,6 +561,16 @@ export const RAGPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Document Analytics */}
+              {selectedDocumentForAnalytics && (
+                <div className="mt-4">
+                  <DocumentAnalytics
+                    collectionName={selectedCollection}
+                    documentId={selectedDocumentForAnalytics}
+                  />
                 </div>
               )}
             </div>
