@@ -107,6 +107,7 @@ class DocumentUploadResponse(BaseModel):
     tags: List[str]
     message: str
     timestamp: str
+    analytics: Optional[dict] = None
 
 
 class RAGQuestionRequest(BaseModel):
