@@ -174,20 +174,59 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None) -> Dict:
+                          top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None,
+                          collection_names: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
         
         try:
-            # Get collection
-            collection = self.chroma_client.get_collection(name=collection_name)
+            # Determine which collections to query
+            collections_to_query = collection_names if collection_names else [collection_name]
             
-            # Query for relevant documents (we'll filter by tags after query)
-            results = collection.query(
-                query_texts=[question],
-                n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
-                include=["documents", "metadatas", "distances"]
-            )
+            # Query multiple collections and combine results
+            all_results = {
+                'documents': [],
+                'metadatas': [],
+                'distances': []
+            }
+            
+            for coll_name in collections_to_query:
+                try:
+                    collection = self.chroma_client.get_collection(name=coll_name)
+                    
+                    # Query for relevant documents (we'll filter by tags after query)
+                    results = collection.query(
+                        query_texts=[question],
+                        n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
+                        include=["documents", "metadatas", "distances"]
+                    )
+                    
+                    # Add collection name to metadata for tracking
+                    for metadata in results['metadatas'][0]:
+                        metadata['collection_name'] = coll_name
+                    
+                    # Combine results
+                    all_results['documents'].extend(results['documents'][0])
+                    all_results['metadatas'].extend(results['metadatas'][0])
+                    all_results['distances'].extend(results['distances'][0])
+                    
+                except Exception as e:
+                    logger.warning(f"Could not query collection {coll_name}: {str(e)}")
+                    continue
+            
+            # Sort combined results by distance (similarity)
+            combined_results = list(zip(all_results['documents'], all_results['metadatas'], all_results['distances']))
+            combined_results.sort(key=lambda x: x[2])  # Sort by distance
+            
+            # Take top results
+            top_results = combined_results[:top_k * 2 if filter_tags else top_k]
+            
+            # Unzip results
+            results = {
+                'documents': [[doc for doc, _, _ in top_results]],
+                'metadatas': [[metadata for _, metadata, _ in top_results]],
+                'distances': [[distance for _, _, distance in top_results]]
+            }
             
             # Filter by similarity threshold and tags
             relevant_chunks = []
@@ -278,20 +317,59 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None) -> AsyncGenerator[Dict, None]:
+                                 top_k: int = 5, similarity_threshold: float = 0.7, filter_tags: List[str] = None,
+                                 collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
         
         try:
-            # Get collection
-            collection = self.chroma_client.get_collection(name=collection_name)
+            # Determine which collections to query
+            collections_to_query = collection_names if collection_names else [collection_name]
             
-            # Query for relevant documents (we'll filter by tags after query)
-            results = collection.query(
-                query_texts=[question],
-                n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
-                include=["documents", "metadatas", "distances"]
-            )
+            # Query multiple collections and combine results
+            all_results = {
+                'documents': [],
+                'metadatas': [],
+                'distances': []
+            }
+            
+            for coll_name in collections_to_query:
+                try:
+                    collection = self.chroma_client.get_collection(name=coll_name)
+                    
+                    # Query for relevant documents (we'll filter by tags after query)
+                    results = collection.query(
+                        query_texts=[question],
+                        n_results=top_k * 2 if filter_tags else top_k,  # Get more results if filtering
+                        include=["documents", "metadatas", "distances"]
+                    )
+                    
+                    # Add collection name to metadata for tracking
+                    for metadata in results['metadatas'][0]:
+                        metadata['collection_name'] = coll_name
+                    
+                    # Combine results
+                    all_results['documents'].extend(results['documents'][0])
+                    all_results['metadatas'].extend(results['metadatas'][0])
+                    all_results['distances'].extend(results['distances'][0])
+                    
+                except Exception as e:
+                    logger.warning(f"Could not query collection {coll_name}: {str(e)}")
+                    continue
+            
+            # Sort combined results by distance (similarity)
+            combined_results = list(zip(all_results['documents'], all_results['metadatas'], all_results['distances']))
+            combined_results.sort(key=lambda x: x[2])  # Sort by distance
+            
+            # Take top results
+            top_results = combined_results[:top_k * 2 if filter_tags else top_k]
+            
+            # Unzip results
+            results = {
+                'documents': [[doc for doc, _, _ in top_results]],
+                'metadatas': [[metadata for _, metadata, _ in top_results]],
+                'distances': [[distance for _, _, distance in top_results]]
+            }
             
             # Filter by similarity threshold and tags
             relevant_chunks = []

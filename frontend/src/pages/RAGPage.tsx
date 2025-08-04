@@ -30,6 +30,7 @@ interface Source {
   similarity_score: number;
   chunk_index: number;
   tags: string[];
+  collection_name?: string;
 }
 
 export const RAGPage: React.FC = () => {
@@ -53,6 +54,9 @@ export const RAGPage: React.FC = () => {
   const [documentTags, setDocumentTags] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -74,6 +78,43 @@ export const RAGPage: React.FC = () => {
       setAvailableTags(Array.from(allTags));
     } catch (error) {
       console.error('Error loading collections:', error);
+    }
+  };
+
+  const createNewCollection = async () => {
+    if (!newCollectionName.trim()) {
+      setError('Please enter a collection name');
+      return;
+    }
+    
+    try {
+      // Create a new collection by uploading a dummy document
+      // This will create the collection structure
+      const dummyContent = new Blob(['Collection created'], { type: 'text/plain' });
+      const dummyFile = new File([dummyContent], 'collection_init.txt');
+      
+      const formData = new FormData();
+      formData.append('file', dummyFile);
+      formData.append('collection_name', newCollectionName.trim());
+      
+      await apiService.uploadRAGDocument(formData, []);
+      
+      // Delete the dummy document
+      const collections = await apiService.getRAGCollections();
+      const newCollection = collections.find(c => c.collection_name === newCollectionName.trim());
+      if (newCollection && newCollection.documents.length > 0) {
+        await apiService.deleteRAGDocument({
+          document_id: newCollection.documents[0].document_id,
+          collection_name: newCollectionName.trim()
+        });
+      }
+      
+      setNewCollectionName('');
+      setShowNewCollectionInput(false);
+      setSelectedCollection(newCollectionName.trim());
+      await loadCollections();
+    } catch (error) {
+      setError(`Failed to create collection: ${error}`);
     }
   };
 
@@ -119,7 +160,8 @@ export const RAGPage: React.FC = () => {
       await apiService.askRAGQuestionStream(
         {
           question: question,
-          collection_name: selectedCollection,
+          collection_name: selectedCollections[0] || 'default',
+          collection_names: selectedCollections,
           model_provider: selectedProvider,
           model_name: selectedModel,
           temperature: temperature,
@@ -311,19 +353,55 @@ export const RAGPage: React.FC = () => {
             {/* Collection Selector */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Collection
+                Collection for Upload
               </label>
-              <select
-                value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                {collections.map(collection => (
-                  <option key={collection.collection_name} value={collection.collection_name}>
-                    {collection.collection_name} ({collection.document_count} docs)
-                  </option>
-                ))}
-              </select>
+              <div className="flex space-x-2">
+                <select
+                  value={selectedCollection}
+                  onChange={(e) => setSelectedCollection(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  {collections.map(collection => (
+                    <option key={collection.collection_name} value={collection.collection_name}>
+                      {collection.collection_name} ({collection.document_count} docs)
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setShowNewCollectionInput(!showNewCollectionInput)}
+                  className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              
+              {/* New Collection Input */}
+              {showNewCollectionInput && (
+                <div className="mt-2 flex space-x-2">
+                  <input
+                    type="text"
+                    value={newCollectionName}
+                    onChange={(e) => setNewCollectionName(e.target.value)}
+                    placeholder="New collection name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                  <button
+                    onClick={createNewCollection}
+                    className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    Create
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowNewCollectionInput(false);
+                      setNewCollectionName('');
+                    }}
+                    className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Document Tags */}
@@ -442,6 +520,39 @@ export const RAGPage: React.FC = () => {
               <VoiceInput onTranscript={handleVoiceInput} />
             </div>
             
+            {/* Collection Selector for Questions */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Target Collections for Question
+              </label>
+              <div className="space-y-2">
+                {collections.map(collection => (
+                  <label key={collection.collection_name} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedCollections.includes(collection.collection_name)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollections([...selectedCollections, collection.collection_name]);
+                        } else {
+                          setSelectedCollections(selectedCollections.filter(c => c !== collection.collection_name));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm">
+                      {collection.collection_name} ({collection.document_count} docs)
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {selectedCollections.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">
+                  Please select at least one collection
+                </p>
+              )}
+            </div>
+            
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -488,7 +599,7 @@ export const RAGPage: React.FC = () => {
             <div className="mt-4 flex items-center space-x-2">
               <button
                 onClick={handleAskQuestion}
-                disabled={isAsking || !question.trim()}
+                disabled={isAsking || !question.trim() || selectedCollections.length === 0}
                 className="btn-primary flex items-center space-x-2"
               >
                 <Send size={16} />
@@ -519,6 +630,11 @@ export const RAGPage: React.FC = () => {
                         <span className="text-xs text-gray-500">
                           Similarity: {(source.similarity_score * 100).toFixed(1)}%
                         </span>
+                        {source.collection_name && (
+                          <span className="text-xs text-purple-500">
+                            Collection: {source.collection_name}
+                          </span>
+                        )}
                       </div>
                       <button
                         onClick={() => copySourceText(source)}
