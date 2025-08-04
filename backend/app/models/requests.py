@@ -163,16 +163,24 @@ class DeleteDocumentRequest(BaseModel):
 
 # Model Comparison Models
 class ModelComparisonRequest(BaseModel):
-    text: Optional[str] = Field(None, description="Text to summarize")
-    url: Optional[str] = Field(None, description="URL to summarize")
-    file_content: Optional[bytes] = Field(None, description="File content to summarize")
-    file_type: Optional[str] = Field(None, description="Type of file being processed")
+    system_prompt: str = Field("", description="System prompt for generation")
+    user_prompt: str = Field(..., description="User prompt for generation")
     models: List[dict] = Field(..., description="List of models to compare")
-    max_length: int = Field(150, ge=10, le=1000, description="Maximum length of summary")
-    temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
-    summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive")
-    target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
-    translate_summary: bool = Field(False, description="Whether to translate the summary")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Temperature for generation")
+    max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
+    target_language: str = Field("en", description="Target language for translation")
+    translate_response: bool = Field(False, description="Whether to translate the response")
+    output_format: str = Field("text", description="Output format for generation")
+
+class RAGModelComparisonRequest(BaseModel):
+    question: str = Field(..., description="Question to ask")
+    collection_names: List[str] = Field(..., description="List of collection names to search")
+    models: List[dict] = Field(..., description="List of models to compare")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Temperature for generation")
+    max_tokens: Optional[int] = Field(None, ge=1, le=4000, description="Maximum tokens to generate")
+    top_k: int = Field(5, ge=1, le=20, description="Number of top results to retrieve")
+    similarity_threshold: float = Field(-0.2, ge=-1.0, le=1.0, description="Similarity threshold for retrieval")
+    filter_tags: Optional[List[str]] = Field(None, description="Tags to filter documents by")
 
 
 class GenerationComparisonRequest(BaseModel):

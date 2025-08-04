@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings, Languages, History } from 'lucide-react';
+import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings, Languages, History, GitCompare } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
@@ -71,6 +71,11 @@ export const RAGPage: React.FC = () => {
   const [translateOutput, setTranslateOutput] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
+  const [isComparing, setIsComparing] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<any>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [availableModels, setAvailableModels] = useState<any>(null);
   
   // Performance metrics
   const [performanceMetrics, setPerformanceMetrics] = useState<{
@@ -102,24 +107,32 @@ export const RAGPage: React.FC = () => {
 
   useEffect(() => {
     loadCollections();
+    loadAvailableModels();
   }, []);
 
   const loadCollections = async () => {
     try {
       const response = await apiService.getRAGCollections();
-      const collectionsData = (response as any).collections || response; // Handle both structures
+      const collectionsData = (response as any).collections || response;
       setCollections(collectionsData);
       
-      // Extract all available tags from collections
+      // Extract available tags from all collections
       const allTags = new Set<string>();
       collectionsData.forEach((collection: Collection) => {
-        if (collection.available_tags) {
-          collection.available_tags.forEach(tag => allTags.add(tag));
-        }
+        collection.available_tags?.forEach(tag => allTags.add(tag));
       });
       setAvailableTags(Array.from(allTags));
     } catch (error) {
-      console.error('Error loading collections:', error);
+      setError(`Failed to load collections: ${error}`);
+    }
+  };
+
+  const loadAvailableModels = async () => {
+    try {
+      const models = await apiService.getAvailableModels();
+      setAvailableModels(models);
+    } catch (error) {
+      console.error('Failed to load available models:', error);
     }
   };
 
@@ -382,6 +395,46 @@ export const RAGPage: React.FC = () => {
     setShowHistory(false); // Hide history after loading
   };
 
+  const handleModelComparison = async () => {
+    if (!question.trim()) {
+      setError('Please enter a question');
+      return;
+    }
+    
+    if (selectedModels.length < 2) {
+      setError('Please select at least 2 models for comparison');
+      return;
+    }
+    
+    if (selectedCollections.length === 0) {
+      setError('Please select at least one collection');
+      return;
+    }
+    
+    setIsComparing(true);
+    setError(null);
+    setComparisonResults(null);
+    
+    try {
+      const result = await apiService.compareRAGModels({
+        question: question,
+        collection_names: selectedCollections,
+        models: selectedModels,
+        temperature: 0.7,
+        top_k: topK,
+        similarity_threshold: similarityThreshold,
+        filter_tags: filterTags.length > 0 ? filterTags : undefined
+      });
+      
+      setComparisonResults(result);
+      setShowComparison(true);
+    } catch (err) {
+      setError(`Model comparison failed: ${err}`);
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
   const currentCollection = collections.find(c => c.collection_name === selectedCollection);
 
   return (
@@ -496,6 +549,54 @@ export const RAGPage: React.FC = () => {
                     placeholder="Select target language..."
                     className="w-full"
                   />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Model Comparison Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <GitCompare className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model Comparison</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">
+                Select models to compare for RAG question answering performance
+              </p>
+              
+              {availableModels?.providers?.map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isComparing}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              {selectedModels.length > 0 && (
+                <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+                  <p className="text-xs text-purple-700">
+                    Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
               )}
             </div>
@@ -885,14 +986,27 @@ export const RAGPage: React.FC = () => {
             </div>
             
             <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={handleAskQuestion}
-                disabled={isAsking || !question.trim() || selectedCollections.length === 0}
-                className="btn-primary flex items-center space-x-2"
-              >
-                <Send size={16} />
-                <span>{isAsking ? 'Asking...' : 'Ask Question'}</span>
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleAskQuestion}
+                  disabled={isAsking || !question.trim() || selectedCollections.length === 0}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Send size={16} />
+                  <span>{isAsking ? 'Asking...' : 'Ask Question'}</span>
+                </button>
+                
+                {selectedModels.length >= 2 && (
+                  <button
+                    onClick={handleModelComparison}
+                    disabled={isComparing || !question.trim() || selectedCollections.length === 0}
+                    className="btn-secondary flex items-center space-x-2"
+                  >
+                    <GitCompare size={16} />
+                    <span>{isComparing ? 'Comparing...' : 'Compare Models'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="mt-2 text-xs text-gray-500 text-center">
@@ -1072,6 +1186,99 @@ export const RAGPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Model Comparison Results */}
+          {showComparison && comparisonResults && (
+            <div className="card">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <GitCompare className="text-purple-600" size={20} />
+                  <h2 className="text-lg font-semibold text-gray-900">Model Comparison Results</h2>
+                </div>
+                <button
+                  onClick={() => setShowComparison(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Question */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-2">Question</h4>
+                  <p className="text-blue-800">{comparisonResults.original_text}</p>
+                </div>
+
+                {/* Comparison Metrics */}
+                {comparisonResults.comparison_metrics && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Comparison Metrics</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Best Quality:</span>
+                        <p className="font-medium">{comparisonResults.comparison_metrics.best_quality_model}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Fastest:</span>
+                        <p className="font-medium">{comparisonResults.comparison_metrics.fastest_model}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Most Coherent:</span>
+                        <p className="font-medium">{comparisonResults.comparison_metrics.most_coherent_model}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Most Relevant:</span>
+                        <p className="font-medium">{comparisonResults.comparison_metrics.most_relevant_model}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Model Results */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Model Results</h4>
+                  {comparisonResults.results.map((result: any, index: number) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h5 className="font-medium text-gray-900">
+                            {result.model_provider}/{result.model_name}
+                          </h5>
+                          <div className="flex space-x-4 text-sm text-gray-600 mt-1">
+                            <span>Quality: {(result.quality_score * 100).toFixed(1)}%</span>
+                            <span>Coherence: {(result.coherence_score * 100).toFixed(1)}%</span>
+                            <span>Relevance: {(result.relevance_score * 100).toFixed(1)}%</span>
+                            {result.latency_ms && (
+                              <span>Time: {result.latency_ms.toFixed(0)}ms</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 rounded p-3">
+                        <p className="text-sm text-gray-700">{result.generated_text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recommendations */}
+                {comparisonResults.recommendations && comparisonResults.recommendations.length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h4 className="font-medium text-purple-900 mb-3">Recommendations</h4>
+                    <ul className="space-y-2">
+                      {comparisonResults.recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="text-sm text-purple-800 flex items-start space-x-2">
+                          <span className="text-purple-600 mt-1">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import datetime
 import uuid
 from typing import List, Dict, Optional
 from app.services.generation_service import GenerationService
+from app.services.rag_service import rag_service
 from app.services.input_processor import input_processor
 from app.services.analytics_service import analytics_service
 from app.models.requests import ModelComparisonResult, ModelComparisonResponse
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 class ModelComparisonService:
     def __init__(self):
         self.generation_service = GenerationService()
+        self.rag_service = rag_service
         
         # Download required NLTK data
         try:
@@ -308,6 +310,70 @@ class ModelComparisonService:
             logger.error(f"Error in generation model comparison: {str(e)}")
             raise Exception(f"Generation model comparison failed: {str(e)}")
     
+    async def compare_rag_models(self, question: str, collection_names: List[str], models: List[dict],
+                                temperature: float = 0.7, max_tokens: Optional[int] = None,
+                                top_k: int = 5, similarity_threshold: float = -0.2,
+                                filter_tags: List[str] = None) -> ModelComparisonResponse:
+        """Compare multiple models for RAG question answering."""
+        start_time = time.time()
+        comparison_id = str(uuid.uuid4())
+        
+        try:
+            # Generate answers with all models concurrently
+            tasks = []
+            for model_config in models:
+                task = self._generate_rag_answer_with_model(
+                    question, collection_names, model_config, temperature, max_tokens,
+                    top_k, similarity_threshold, filter_tags
+                )
+                tasks.append(task)
+            
+            # Wait for all generations to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process results and calculate metrics
+            comparison_results = []
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Error with model {models[i]}: {str(result)}")
+                    # Create error result
+                    comparison_results.append(ModelComparisonResult(
+                        model_provider=models[i].get("provider", "unknown"),
+                        model_name=models[i].get("model", "unknown"),
+                        generated_text=f"Error: {str(result)}",
+                        original_length=len(question.split()),
+                        generated_length=0,
+                        token_usage=None,
+                        latency_ms=None,
+                        quality_score=0.0,
+                        coherence_score=0.0,
+                        relevance_score=0.0,
+                        timestamp=datetime.datetime.utcnow().isoformat()
+                    ))
+                else:
+                    comparison_results.append(result)
+            
+            # Calculate comparison metrics
+            comparison_metrics = self._calculate_rag_comparison_metrics(comparison_results)
+            
+            # Generate recommendations
+            recommendations = self._generate_rag_recommendations(comparison_results, comparison_metrics)
+            
+            total_time = (time.time() - start_time) * 1000
+            
+            return ModelComparisonResponse(
+                comparison_id=comparison_id,
+                original_text=question,
+                results=comparison_results,
+                comparison_metrics=comparison_metrics,
+                recommendations=recommendations,
+                timestamp=datetime.datetime.utcnow().isoformat()
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in RAG model comparison: {str(e)}")
+            raise Exception(f"RAG model comparison failed: {str(e)}")
+
     async def _generate_summary_with_model(self, text: str, model_config: dict, 
                                          max_length: int, temperature: float, 
                                          summary_type: str) -> ModelComparisonResult:
@@ -418,7 +484,66 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error generating text with model {model_config}: {str(e)}")
             raise e
-    
+
+    async def _generate_rag_answer_with_model(self, question: str, collection_names: List[str], 
+                                            model_config: dict, temperature: float, 
+                                            max_tokens: Optional[int], top_k: int,
+                                            similarity_threshold: float, filter_tags: List[str]) -> ModelComparisonResult:
+        """Generate RAG answer with a specific model and calculate metrics."""
+        start_time = time.time()
+        
+        try:
+            # Generate answer using RAG service
+            full_content = ""
+            token_usage = None
+            latency_ms = 0
+            sources = []
+            confidence = None
+            
+            async for chunk in self.rag_service.ask_question_stream(
+                question=question,
+                collection_names=collection_names,
+                model_provider=model_config["provider"],
+                model_name=model_config["model"],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                top_k=top_k,
+                similarity_threshold=similarity_threshold,
+                filter_tags=filter_tags
+            ):
+                full_content += chunk.content
+                if chunk.token_usage:
+                    token_usage = chunk.token_usage
+                if chunk.latency_ms:
+                    latency_ms = chunk.latency_ms
+                if chunk.sources:
+                    sources = chunk.sources
+                if chunk.confidence:
+                    confidence = chunk.confidence
+            
+            # Calculate quality metrics
+            quality_metrics = self._calculate_rag_quality_metrics(question, full_content, sources, confidence)
+            
+            latency_ms = (time.time() - start_time) * 1000
+            
+            return ModelComparisonResult(
+                model_provider=model_config["provider"],
+                model_name=model_config["model"],
+                generated_text=full_content,
+                original_length=len(question.split()),
+                generated_length=len(full_content.split()),
+                token_usage=token_usage,
+                latency_ms=latency_ms,
+                quality_score=quality_metrics["overall_score"],
+                coherence_score=quality_metrics["coherence_score"],
+                relevance_score=quality_metrics["relevance_score"],
+                timestamp=datetime.datetime.utcnow().isoformat()
+            )
+            
+        except Exception as e:
+            logger.error(f"Error generating RAG answer with model {model_config}: {str(e)}")
+            raise e
+
     def _create_summary_prompt(self, summary_type: str, max_length: int) -> str:
         """Create appropriate system prompt based on summary type."""
         base_prompt = f"Create a concise summary of the following text in approximately {max_length} words."
@@ -489,7 +614,75 @@ class ModelComparisonService:
             "longest_output_model": f"{longest.model_provider}/{longest.model_name}",
             "total_models": len(results)
         }
-    
+
+    def _calculate_rag_quality_metrics(self, question: str, answer: str, sources: List[dict], 
+                                     confidence: dict) -> Dict[str, float]:
+        """Calculate quality metrics for RAG answers."""
+        # Calculate coherence score
+        coherence_score = self._calculate_coherence_score(answer)
+        
+        # Calculate relevance score based on question-answer similarity
+        relevance_score = self._calculate_relevance_score(question, answer)
+        
+        # Calculate source quality score
+        source_quality_score = 0.0
+        if sources:
+            avg_similarity = sum(s.get('similarity_score', 0.0) for s in sources) / len(sources)
+            source_diversity = len(set(s.get('document_id', '') for s in sources)) / len(sources)
+            source_quality_score = (avg_similarity + source_diversity) / 2
+        
+        # Calculate confidence score
+        confidence_score = 0.0
+        if confidence:
+            confidence_score = confidence.get('overall_confidence', 0.0)
+        
+        # Calculate overall score
+        overall_score = (
+            coherence_score * 0.3 +
+            relevance_score * 0.3 +
+            source_quality_score * 0.2 +
+            confidence_score * 0.2
+        )
+        
+        return {
+            "overall_score": overall_score,
+            "coherence_score": coherence_score,
+            "relevance_score": relevance_score,
+            "source_quality_score": source_quality_score,
+            "confidence_score": confidence_score
+        }
+
+    def _calculate_rag_comparison_metrics(self, results: List[ModelComparisonResult]) -> Dict:
+        """Calculate comparison metrics for RAG results."""
+        if not results:
+            return {}
+        
+        # Calculate averages
+        avg_quality = sum(r.quality_score for r in results) / len(results)
+        avg_coherence = sum(r.coherence_score for r in results) / len(results)
+        avg_relevance = sum(r.relevance_score for r in results) / len(results)
+        avg_latency = sum(r.latency_ms or 0 for r in results) / len(results)
+        avg_length = sum(r.generated_length for r in results) / len(results)
+        
+        # Find best performers
+        best_quality = max(results, key=lambda x: x.quality_score)
+        fastest = min(results, key=lambda x: x.latency_ms or float('inf'))
+        most_coherent = max(results, key=lambda x: x.coherence_score)
+        most_relevant = max(results, key=lambda x: x.relevance_score)
+        
+        return {
+            "average_quality": round(avg_quality, 3),
+            "average_coherence": round(avg_coherence, 3),
+            "average_relevance": round(avg_relevance, 3),
+            "average_latency_ms": round(avg_latency, 2),
+            "average_length": round(avg_length, 1),
+            "best_quality_model": f"{best_quality.model_provider}/{best_quality.model_name}",
+            "fastest_model": f"{fastest.model_provider}/{fastest.model_name}",
+            "most_coherent_model": f"{most_coherent.model_provider}/{most_coherent.model_name}",
+            "most_relevant_model": f"{most_relevant.model_provider}/{most_relevant.model_name}",
+            "total_models": len(results)
+        }
+
     def _generate_recommendations(self, results: List[ModelComparisonResult], 
                                 metrics: Dict) -> List[str]:
         """Generate recommendations based on comparison results."""
@@ -589,6 +782,41 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error generating generation recommendations: {str(e)}")
             return ["Unable to generate generation recommendations due to an error."]
+
+    def _generate_rag_recommendations(self, results: List[ModelComparisonResult], 
+                                    metrics: Dict) -> List[str]:
+        """Generate recommendations for RAG model comparison."""
+        if not results:
+            return ["No models were successfully compared."]
+        
+        recommendations = []
+        
+        # Quality recommendations
+        best_quality = max(results, key=lambda x: x.quality_score)
+        recommendations.append(f"Best overall quality: {best_quality.model_provider}/{best_quality.model_name} (Score: {best_quality.quality_score:.2f})")
+        
+        # Speed recommendations
+        fastest = min(results, key=lambda x: x.latency_ms or float('inf'))
+        if fastest.latency_ms:
+            recommendations.append(f"Fastest response: {fastest.model_provider}/{fastest.model_name} ({fastest.latency_ms:.0f}ms)")
+        
+        # Coherence recommendations
+        most_coherent = max(results, key=lambda x: x.coherence_score)
+        recommendations.append(f"Most coherent answer: {most_coherent.model_provider}/{most_coherent.model_name} (Score: {most_coherent.coherence_score:.2f})")
+        
+        # Relevance recommendations
+        most_relevant = max(results, key=lambda x: x.relevance_score)
+        recommendations.append(f"Most relevant answer: {most_relevant.model_provider}/{most_relevant.model_name} (Score: {most_relevant.relevance_score:.2f})")
+        
+        # Performance insights
+        if metrics.get("average_quality", 0) > 0.7:
+            recommendations.append("Overall model performance is excellent for this question.")
+        elif metrics.get("average_quality", 0) > 0.5:
+            recommendations.append("Overall model performance is good for this question.")
+        else:
+            recommendations.append("Consider refining the question or adding more relevant documents.")
+        
+        return recommendations
 
 
 # Global model comparison service instance
