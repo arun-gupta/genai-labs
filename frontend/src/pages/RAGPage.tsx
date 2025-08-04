@@ -76,6 +76,37 @@ export const RAGPage: React.FC = () => {
   const [comparisonResults, setComparisonResults] = useState<any>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
+
+  // Default model combinations for quick comparison
+  const defaultModelCombinations = [
+    {
+      name: "Local vs Cloud",
+      description: "Compare local Ollama model with cloud models",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+      ]
+    },
+    {
+      name: "Efficient Models",
+      description: "Compare lightweight models for speed",
+      models: [
+        { provider: "ollama", model: "phi3:3.8b" },
+        { provider: "ollama", model: "qwen2.5:3b" },
+        { provider: "openai", model: "gpt-3.5-turbo" }
+      ]
+    },
+    {
+      name: "High Performance",
+      description: "Compare high-quality models for accuracy",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+      ]
+    }
+  ];
   
   // Performance metrics
   const [performanceMetrics, setPerformanceMetrics] = useState<{
@@ -610,6 +641,24 @@ export const RAGPage: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              {/* Default Model Combinations */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
+                <div className="space-y-2">
+                  {defaultModelCombinations.map((combination, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedModels(combination.models)}
+                      disabled={isComparing}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-sm font-medium text-gray-900">{combination.name}</div>
+                      <div className="text-xs text-gray-600">{combination.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
               
               {/* Debug info */}
               <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
