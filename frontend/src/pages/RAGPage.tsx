@@ -824,6 +824,7 @@ export const RAGPage: React.FC = () => {
 
         {/* Right Panel - Answer */}
         <div className="space-y-6">
+          {/* Response Section with Tabs */}
           <div className="card">
             {/* Tab Navigation */}
             <div className="flex space-x-2 mb-4">
@@ -839,29 +840,16 @@ export const RAGPage: React.FC = () => {
                 <span>Response</span>
               </button>
               <button
-                onClick={() => setActiveTab('sources')}
+                onClick={() => setActiveTab('analytics')}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'sources'
+                  activeTab === 'analytics'
                     ? 'bg-primary-100 text-primary-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <Search size={16} />
-                <span>Sources ({sources.length})</span>
+                <BarChart3 size={16} />
+                <span>Analytics</span>
               </button>
-              {confidence && (
-                <button
-                  onClick={() => setActiveTab('confidence')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'confidence'
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <Shield size={16} />
-                  <span>Confidence</span>
-                </button>
-              )}
             </div>
 
             {/* Tab Content */}
@@ -878,7 +866,7 @@ export const RAGPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Answer Display */}
+                {/* Error Display */}
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
                     <div className="flex items-center space-x-2 mb-2">
@@ -888,6 +876,8 @@ export const RAGPage: React.FC = () => {
                     <p>{error}</p>
                   </div>
                 )}
+
+                {/* Answer Display */}
                 <ResponseDisplay
                   content={answer}
                   isStreaming={isAsking}
@@ -903,64 +893,71 @@ export const RAGPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'sources' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Sources</h3>
-                {sources.length > 0 ? (
+            {activeTab === 'analytics' && (
+              <div className="space-y-6">
+                {/* Confidence Analysis */}
+                {confidence && (
                   <div className="space-y-4">
-                    {sources.map((source, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium">{source.file_name}</span>
-                            <span className="text-xs text-gray-500">
-                              Similarity: {(source.similarity_score * 100).toFixed(1)}%
-                            </span>
-                            {source.collection_name && (
-                              <span className="text-xs text-purple-500">
-                                Collection: {source.collection_name}
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => copySourceText(source)}
-                            className="text-blue-500 hover:text-blue-700"
-                          >
-                            {copiedSource === source.document_id ? (
-                              <Check size={16} />
-                            ) : (
-                              <Copy size={16} />
-                            )}
-                          </button>
-                        </div>
-                        {source.tags && source.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {source.tags.map(tag => (
-                              <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                          {source.chunk_text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 py-8">
-                    <Search className="mx-auto h-12 w-12 text-gray-300" />
-                    <p className="mt-2">No sources available</p>
+                    <h3 className="text-lg font-semibold mb-4">Confidence Analysis</h3>
+                    <ConfidenceDisplay confidence={confidence} />
                   </div>
                 )}
-              </div>
-            )}
 
-            {activeTab === 'confidence' && confidence && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Confidence Analysis</h3>
-                <ConfidenceDisplay confidence={confidence} />
+                {/* Sources Analysis */}
+                {sources.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold mb-4">Sources ({sources.length})</h3>
+                    <div className="space-y-4">
+                      {sources.map((source, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium">{source.file_name}</span>
+                              <span className="text-xs text-gray-500">
+                                Similarity: {(source.similarity_score * 100).toFixed(1)}%
+                              </span>
+                              {source.collection_name && (
+                                <span className="text-xs text-purple-500">
+                                  Collection: {source.collection_name}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => copySourceText(source)}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              {copiedSource === source.document_id ? (
+                                <Check size={16} />
+                              ) : (
+                                <Copy size={16} />
+                              )}
+                            </button>
+                          </div>
+                          {source.tags && source.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {source.tags.map(tag => (
+                                <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                            {source.chunk_text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!confidence && sources.length === 0 && (
+                  <div className="text-center text-gray-500 py-8">
+                    <BarChart3 className="mx-auto h-12 w-12 text-gray-300" />
+                    <p className="mt-2">No analytics available yet</p>
+                    <p className="text-sm">Ask a question to see confidence analysis and sources</p>
+                  </div>
+                )}
               </div>
             )}
 
