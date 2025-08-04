@@ -22,16 +22,28 @@ class ModelComparisonService:
         self.generation_service = GenerationService()
         self.rag_service = rag_service
         
-        # Download required NLTK data
+        # Download required NLTK data with better error handling
+        try:
+            import ssl
+            ssl._create_default_https_context = ssl._create_unverified_context
+        except:
+            pass
+        
         try:
             nltk.data.find('tokenizers/punkt')
         except LookupError:
-            nltk.download('punkt')
+            try:
+                nltk.download('punkt', quiet=True)
+            except Exception as e:
+                logger.warning(f"Could not download punkt: {e}")
         
         try:
             nltk.data.find('corpora/stopwords')
         except LookupError:
-            nltk.download('stopwords')
+            try:
+                nltk.download('stopwords', quiet=True)
+            except Exception as e:
+                logger.warning(f"Could not download stopwords: {e}")
     
     def _calculate_quality_metrics(self, original_text: str, summary: str) -> Dict[str, float]:
         """Calculate various quality metrics for the summary."""
@@ -86,7 +98,13 @@ class ModelComparisonService:
     def _calculate_coherence_score(self, summary: str) -> float:
         """Calculate coherence score based on sentence flow and transitions."""
         try:
-            sentences = sent_tokenize(summary)
+            # Try NLTK tokenization first, fallback to simple splitting
+            try:
+                sentences = sent_tokenize(summary)
+            except Exception as e:
+                logger.warning(f"NLTK sent_tokenize failed, using simple split: {e}")
+                sentences = [s.strip() for s in summary.split('.') if s.strip()]
+            
             if len(sentences) < 2:
                 return 1.0
             
@@ -111,8 +129,12 @@ class ModelComparisonService:
             
             # Check sentence length consistency
             sentence_lengths = [len(sent.split()) for sent in sentences]
-            length_variance = sum((length - sum(sentence_lengths)/len(sentence_lengths))**2 for length in sentence_lengths) / len(sentence_lengths)
-            consistency_score = max(0, 1 - (length_variance / 100))  # Normalize variance
+            if sentence_lengths:
+                avg_length = sum(sentence_lengths) / len(sentence_lengths)
+                length_variance = sum((length - avg_length)**2 for length in sentence_lengths) / len(sentence_lengths)
+                consistency_score = max(0, 1 - (length_variance / 100))  # Normalize variance
+            else:
+                consistency_score = 0.5
             
             # Combined coherence score
             coherence_score = (transition_score * 0.6) + (consistency_score * 0.4)
@@ -125,14 +147,26 @@ class ModelComparisonService:
     def _calculate_relevance_score(self, original_text: str, summary: str) -> float:
         """Calculate relevance score based on keyword overlap."""
         try:
-            # Extract keywords from original text (simple approach)
-            original_words = set(word.lower() for word in word_tokenize(original_text) 
-                               if word.isalnum() and len(word) > 3)
-            summary_words = set(word.lower() for word in word_tokenize(summary) 
-                              if word.isalnum() and len(word) > 3)
+            # Try NLTK tokenization first, fallback to simple splitting
+            try:
+                original_words = set(word.lower() for word in word_tokenize(original_text) 
+                                   if word.isalnum() and len(word) > 3)
+                summary_words = set(word.lower() for word in word_tokenize(summary) 
+                                  if word.isalnum() and len(word) > 3)
+            except Exception as e:
+                logger.warning(f"NLTK word_tokenize failed, using simple split: {e}")
+                original_words = set(word.lower() for word in original_text.split() 
+                                   if word.isalnum() and len(word) > 3)
+                summary_words = set(word.lower() for word in summary.split() 
+                                  if word.isalnum() and len(word) > 3)
             
-            # Remove common stop words
-            stop_words = set(stopwords.words('english'))
+            # Remove common stop words (with fallback)
+            try:
+                stop_words = set(stopwords.words('english'))
+            except Exception as e:
+                logger.warning(f"Could not load stopwords, using empty set: {e}")
+                stop_words = set()
+            
             original_keywords = original_words - stop_words
             summary_keywords = summary_words - stop_words
             
