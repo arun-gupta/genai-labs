@@ -19,6 +19,7 @@ from langchain.schema import Document
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor
 from app.services.model_factory import ModelFactory
+from app.services.confidence_service import ConfidenceService
 from app.models.requests import DocumentSource, CollectionInfo
 import tempfile
 import magic
@@ -47,6 +48,7 @@ class RAGService:
         )
         
         self.model_factory = ModelFactory()
+        self.confidence_service = ConfidenceService()
         
         # Supported file types
         self.supported_types = {
@@ -366,6 +368,11 @@ Question: {question}"""
             
             latency_ms = (time.time() - start_time) * 1000
             
+            # Calculate confidence score
+            confidence_data = self.confidence_service.calculate_overall_confidence(
+                response.content, question, sources
+            )
+            
             return {
                 "answer": response.content,
                 "question": question,
@@ -374,7 +381,8 @@ Question: {question}"""
                 "model_name": model_name,
                 "token_usage": response.token_usage,
                 "latency_ms": latency_ms,
-                "timestamp": datetime.datetime.utcnow().isoformat()
+                "timestamp": datetime.datetime.utcnow().isoformat(),
+                "confidence": confidence_data
             }
             
         except Exception as e:
@@ -544,11 +552,18 @@ Question: {question}"""
                 # For Ollama, generate the full response and yield it as a single chunk
                 full_prompt = f"{system_prompt}\n\nQuestion: {question}"
                 response_content = await model.ainvoke(full_prompt)
+                
+                # Calculate confidence score
+                confidence_data = self.confidence_service.calculate_overall_confidence(
+                    response_content, question, sources
+                )
+                
                 yield {
                     "content": response_content,
                     "is_complete": True,
                     "sources": sources,
-                    "latency_ms": (time.time() - start_time) * 1000
+                    "latency_ms": (time.time() - start_time) * 1000,
+                    "confidence": confidence_data
                 }
             else:
                 # For other models, use streaming
@@ -561,11 +576,18 @@ Question: {question}"""
                 # For now, just generate the full response
                 response_result = await model.agenerate([messages])
                 response_content = response_result.generations[0][0].text
+                
+                # Calculate confidence score
+                confidence_data = self.confidence_service.calculate_overall_confidence(
+                    response_content, question, sources
+                )
+                
                 yield {
                     "content": response_content,
                     "is_complete": True,
                     "sources": sources,
-                    "latency_ms": (time.time() - start_time) * 1000
+                    "latency_ms": (time.time() - start_time) * 1000,
+                    "confidence": confidence_data
                 }
                 
         except Exception as e:

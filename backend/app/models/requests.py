@@ -132,6 +132,7 @@ class RAGQuestionResponse(BaseModel):
     token_usage: Optional[dict] = None
     latency_ms: Optional[float] = None
     timestamp: str
+    confidence: Optional[dict] = None
 
 
 class DocumentSource(BaseModel):
