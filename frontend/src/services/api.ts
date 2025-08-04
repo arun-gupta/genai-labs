@@ -414,6 +414,14 @@ class ApiService {
     });
   }
 
+  async getQuestionSuggestions(collectionName: string): Promise<{suggestions: any[]}> {
+    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}`);
+  }
+
+  async getDocumentQuestionSuggestions(collectionName: string, documentId: string): Promise<{suggestions: any[]}> {
+    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}/document/${documentId}`);
+  }
+
   // Model Comparison Methods
   async compareSummarizationModels(request: {
     text?: string;

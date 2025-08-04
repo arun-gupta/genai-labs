@@ -14,6 +14,7 @@ from app.services.prompt_template_service import prompt_template_service
 from app.services.export_service import export_service
 from app.services.rag_service import rag_service
 from app.services.model_comparison_service import model_comparison_service
+from app.services.question_suggestion_service import question_suggestion_service
 from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse, GenerationComparisonRequest
 import json
 import time
@@ -677,6 +678,23 @@ async def delete_rag_collection(collection_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/rag/suggestions/{collection_name}")
+async def get_question_suggestions(collection_name: str):
+    """Get question suggestions for a collection."""
+    try:
+        suggestions = question_suggestion_service.generate_suggestions_for_collection(collection_name)
+        return {"suggestions": suggestions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/rag/suggestions/{collection_name}/document/{document_id}")
+async def get_document_question_suggestions(collection_name: str, document_id: str):
+    """Get question suggestions for a specific document."""
+    try:
+        suggestions = question_suggestion_service.generate_suggestions_for_document(document_id, collection_name)
+        return {"suggestions": suggestions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Model Comparison Endpoints
 @router.post("/summarize/compare", response_model=ModelComparisonResponse)
