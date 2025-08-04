@@ -15,6 +15,7 @@ from app.services.export_service import export_service
 from app.services.rag_service import rag_service
 from app.services.model_comparison_service import model_comparison_service
 from app.services.question_suggestion_service import question_suggestion_service
+from app.services.document_analytics_service import document_analytics_service
 from app.models.requests import ModelProvider, RAGQuestionRequest, RAGQuestionResponse, DocumentUploadRequest, DocumentUploadResponse, CollectionInfo, DeleteDocumentRequest, ModelComparisonRequest, ModelComparisonResponse, GenerationComparisonRequest
 import json
 import time
@@ -693,6 +694,30 @@ async def get_document_question_suggestions(collection_name: str, document_id: s
     try:
         suggestions = question_suggestion_service.generate_suggestions_for_document(document_id, collection_name)
         return {"suggestions": suggestions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/rag/analytics/{collection_name}/document/{document_id}")
+async def get_document_analytics(collection_name: str, document_id: str):
+    """Get analytics for a specific document."""
+    try:
+        # Get the document content from ChromaDB
+        collection = rag_service.chroma_client.get_collection(name=collection_name)
+        results = collection.get(where={"document_id": document_id})
+        
+        if not results['documents']:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Combine all chunks for the document
+        document_text = " ".join(results['documents'])
+        
+        # Get file name from metadata
+        file_name = results['metadatas'][0].get('file_name', 'Unknown') if results['metadatas'] else 'Unknown'
+        
+        # Analyze the document
+        analytics = document_analytics_service.analyze_document_content(document_text, file_name)
+        
+        return {"analytics": analytics}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

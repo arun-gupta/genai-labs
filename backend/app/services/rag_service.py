@@ -20,6 +20,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor
 from app.services.model_factory import ModelFactory
 from app.services.confidence_service import ConfidenceService
+from app.services.document_analytics_service import document_analytics_service
 from app.models.requests import DocumentSource, CollectionInfo
 import tempfile
 import magic
@@ -158,6 +159,9 @@ class RAGService:
             
             latency_ms = (time.time() - start_time) * 1000
             
+            # Analyze document
+            document_analytics = document_analytics_service.analyze_document_content(text_content, file_name)
+            
             return {
                 "document_id": document_id,
                 "file_name": file_name,
@@ -166,7 +170,8 @@ class RAGService:
                 "tags": tags or [],
                 "message": f"Successfully processed {len(documents)} chunks from {file_name}",
                 "latency_ms": latency_ms,
-                "timestamp": datetime.datetime.utcnow().isoformat()
+                "timestamp": datetime.datetime.utcnow().isoformat(),
+                "analytics": document_analytics
             }
             
         except Exception as e:

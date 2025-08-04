@@ -422,6 +422,10 @@ class ApiService {
     return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}/document/${documentId}`);
   }
 
+  async getDocumentAnalytics(collectionName: string, documentId: string): Promise<{analytics: any}> {
+    return this.request<{analytics: any}>(`/rag/analytics/${collectionName}/document/${documentId}`);
+  }
+
   // Model Comparison Methods
   async compareSummarizationModels(request: {
     text?: string;
