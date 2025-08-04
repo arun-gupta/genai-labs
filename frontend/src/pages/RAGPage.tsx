@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3 } from 'lucide-react';
+import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
@@ -53,7 +53,6 @@ export const RAGPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [topK, setTopK] = useState(5);
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(-0.2);
-  const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<any>(null);
   const [selectedDocumentForAnalytics, setSelectedDocumentForAnalytics] = useState<string | null>(null);
@@ -64,6 +63,7 @@ export const RAGPage: React.FC = () => {
   const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
   const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('response'); // 'response', 'sources', 'confidence'
   
   // Predefined sample tags for easy selection
   const sampleTags = [
@@ -811,15 +811,6 @@ export const RAGPage: React.FC = () => {
                 <Send size={16} />
                 <span>{isAsking ? 'Asking...' : 'Ask Question'}</span>
               </button>
-              
-              {answer && (
-                <button
-                  onClick={() => setShowSources(!showSources)}
-                  className="btn-secondary"
-                >
-                  {showSources ? 'Hide' : 'Show'} Sources ({sources.length})
-                </button>
-              )}
             </div>
           </div>
 
@@ -829,85 +820,151 @@ export const RAGPage: React.FC = () => {
             onSuggestionClick={handleSuggestionClick}
             className="mt-4"
           />
-
-          {/* Sources */}
-          {showSources && sources.length > 0 && (
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Sources</h3>
-              <div className="space-y-4">
-                {sources.map((source, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">{source.file_name}</span>
-                        <span className="text-xs text-gray-500">
-                          Similarity: {(source.similarity_score * 100).toFixed(1)}%
-                        </span>
-                        {source.collection_name && (
-                          <span className="text-xs text-purple-500">
-                            Collection: {source.collection_name}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => copySourceText(source)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        {copiedSource === source.document_id ? (
-                          <Check size={16} />
-                        ) : (
-                          <Copy size={16} />
-                        )}
-                      </button>
-                    </div>
-                    {source.tags && source.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {source.tags.map(tag => (
-                          <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                      {source.chunk_text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right Panel - Answer */}
         <div className="space-y-6">
           <div className="card">
-            <div className="flex items-center space-x-2 mb-4">
-              <FileText className="text-green-500" size={20} />
-              <h2 className="text-lg font-semibold">Answer</h2>
-              {answer && <VoiceOutput text={answer} />}
+            {/* Tab Navigation */}
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={() => setActiveTab('response')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'response'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <FileText size={16} />
+                <span>Response</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('sources')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'sources'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Search size={16} />
+                <span>Sources ({sources.length})</span>
+              </button>
+              {confidence && (
+                <button
+                  onClick={() => setActiveTab('confidence')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'confidence'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Shield size={16} />
+                  <span>Confidence</span>
+                </button>
+              )}
             </div>
-            
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-700 text-sm">{error}</p>
+
+            {/* Tab Content */}
+            {activeTab === 'response' && (
+              <div className="space-y-6">
+                {/* Question Display */}
+                {question && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Search className="w-4 h-4 text-blue-500" />
+                      <h4 className="font-medium text-blue-900">Question</h4>
+                    </div>
+                    <p className="text-blue-800">{question}</p>
+                  </div>
+                )}
+
+                {/* Answer Display */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <XCircle className="w-4 h-4 text-red-500" />
+                      <h4 className="font-medium">Error</h4>
+                    </div>
+                    <p>{error}</p>
+                  </div>
+                )}
+                <ResponseDisplay
+                  content={answer}
+                  isStreaming={isAsking}
+                  tokenUsage={undefined}
+                  latencyMs={undefined}
+                  modelName={selectedModel}
+                  modelProvider={selectedProvider}
+                />
+                
+                {answer && (
+                  <ExportOptions content={getExportContent()} />
+                )}
               </div>
             )}
-            
-            {answer ? (
+
+            {activeTab === 'sources' && (
               <div className="space-y-4">
-                <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap">{answer}</p>
-                </div>
-                
-                {/* Confidence Display */}
-                {confidence && (
-                  <ConfidenceDisplay confidence={confidence} />
+                <h3 className="text-lg font-semibold mb-4">Sources</h3>
+                {sources.length > 0 ? (
+                  <div className="space-y-4">
+                    {sources.map((source, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium">{source.file_name}</span>
+                            <span className="text-xs text-gray-500">
+                              Similarity: {(source.similarity_score * 100).toFixed(1)}%
+                            </span>
+                            {source.collection_name && (
+                              <span className="text-xs text-purple-500">
+                                Collection: {source.collection_name}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => copySourceText(source)}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            {copiedSource === source.document_id ? (
+                              <Check size={16} />
+                            ) : (
+                              <Copy size={16} />
+                            )}
+                          </button>
+                        </div>
+                        {source.tags && source.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {source.tags.map(tag => (
+                              <span key={tag} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                          {source.chunk_text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <Search className="mx-auto h-12 w-12 text-gray-300" />
+                    <p className="mt-2">No sources available</p>
+                  </div>
                 )}
-                
-                <ExportOptions content={getExportContent()} />
               </div>
-            ) : (
+            )}
+
+            {activeTab === 'confidence' && confidence && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-4">Confidence Analysis</h3>
+                <ConfidenceDisplay confidence={confidence} />
+              </div>
+            )}
+
+            {!answer && activeTab === 'response' && (
               <div className="text-center text-gray-500 py-8">
                 <FileText className="mx-auto h-12 w-12 text-gray-300" />
                 <p className="mt-2">Ask a question to get started</p>
