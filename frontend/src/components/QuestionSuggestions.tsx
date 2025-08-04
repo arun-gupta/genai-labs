@@ -15,13 +15,15 @@ interface QuestionSuggestionsProps {
   documentId?: string;
   onSuggestionClick: (question: string) => void;
   className?: string;
+  refreshKey?: number;
 }
 
 export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
   collectionNames,
   documentId,
   onSuggestionClick,
-  className = ""
+  className = "",
+  refreshKey
 }) => {
   const [suggestions, setSuggestions] = useState<QuestionSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +34,7 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
     if (collectionNames.length > 0) {
       loadSuggestions();
     }
-  }, [collectionNames, documentId]);
+  }, [collectionNames, documentId, refreshKey]);
 
   const loadSuggestions = async () => {
     if (collectionNames.length === 0) return;
