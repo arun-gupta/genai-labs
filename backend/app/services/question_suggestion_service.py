@@ -42,7 +42,7 @@ class QuestionSuggestionService:
         companies = re.findall(company_pattern, text)
         topics.extend(companies)
         
-        # Look for service-related terms
+        # Look for service-related terms that have substantial content
         service_terms = [
             'property management', 'leasing', 'maintenance', 'rental', 
             'tenant', 'landlord', 'property', 'management', 'services',
@@ -51,38 +51,53 @@ class QuestionSuggestionService:
         
         for term in service_terms:
             if term.lower() in text.lower():
-                topics.append(term.title())
+                # Count how many times this term appears to gauge importance
+                count = text.lower().count(term.lower())
+                if count >= 2:  # Only include terms that appear multiple times
+                    topics.append(term.title())
         
         # Look for section headers (lines with colons or numbered items)
-        # Improved pattern to avoid very long matches
-        header_pattern = r'^\d+\.\s*([^:\n]{3,50}):?$|^([A-Z][^:\n]{3,50}):$'
+        # Improved pattern to avoid very long matches and focus on meaningful headers
+        header_pattern = r'^\d+\.\s*([^:\n]{3,30}):?$|^([A-Z][^:\n]{3,30}):$'
         headers = re.findall(header_pattern, text, re.MULTILINE)
         for header in headers:
             if header[0]:  # numbered items
                 clean_header = header[0].strip()
-                if len(clean_header) <= 50:  # Limit length
+                # Filter out headers that are too generic or don't make good questions
+                if (len(clean_header) <= 30 and 
+                    clean_header.lower() not in ['parties', 'agreement', 'terms', 'conditions', 'section'] and
+                    not clean_header.isupper()):  # Avoid all-caps headers
                     topics.append(clean_header)
             elif header[1]:  # colon headers
                 clean_header = header[1].strip()
-                if len(clean_header) <= 50:  # Limit length
+                # Filter out headers that are too generic or don't make good questions
+                if (len(clean_header) <= 30 and 
+                    clean_header.lower() not in ['parties', 'agreement', 'terms', 'conditions', 'section'] and
+                    not clean_header.isupper()):  # Avoid all-caps headers
                     topics.append(clean_header)
         
-        # Look for common business terms (capitalized phrases)
+        # Look for common business terms (capitalized phrases) that appear multiple times
         business_terms_pattern = r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b'
         business_terms = re.findall(business_terms_pattern, text)
         
-        # Filter business terms to avoid very long ones
+        # Filter business terms to avoid very long ones and count frequency
+        term_freq = {}
         for term in business_terms:
             if 3 <= len(term) <= 50 and term not in topics:
                 # Avoid terms that are just common words
                 if not term.lower() in ['the', 'and', 'for', 'with', 'this', 'that', 'will', 'shall', 'have', 'been', 'from', 'they', 'their']:
-                    topics.append(term)
+                    term_freq[term] = term_freq.get(term, 0) + 1
+        
+        # Only include terms that appear at least twice
+        for term, freq in term_freq.items():
+            if freq >= 2:
+                topics.append(term)
         
         # Remove duplicates and limit to top topics
         unique_topics = list(set(topics))
         # Sort by length (prefer shorter, cleaner topics)
         unique_topics.sort(key=len)
-        return unique_topics[:10]  # Limit to top 10 topics
+        return unique_topics[:8]  # Limit to top 8 topics instead of 10
     
     def generate_suggestions_for_collection(self, collection_name: str = "default") -> List[Dict[str, Any]]:
         """Generate question suggestions for a specific collection."""
@@ -122,9 +137,12 @@ class QuestionSuggestionService:
             suggestions = []
             
             # Topic-based suggestions (limit to 8 to make room for actions)
+            seen_topics = set()
             for topic in top_topics[:8]:
-                for template in self.common_question_templates[:2]:  # Use first 2 templates
-                    question = template.format(topic=topic)
+                if topic not in seen_topics:  # Avoid duplicates
+                    seen_topics.add(topic)
+                    # Use only one template per topic to avoid duplicates
+                    question = self.common_question_templates[0].format(topic=topic)
                     suggestions.append({
                         "question": question,
                         "type": "topic",
@@ -138,7 +156,25 @@ class QuestionSuggestionService:
                     "question": f"How do I {action}?",
                     "type": "action",
                     "action": action,
-                    "confidence": 0.3  # Lower confidence for generic actions
+                    "confidence": 0.2  # Lower confidence for generic actions
+                })
+            
+            # Add document-specific action suggestions
+            document_actions = [
+                "contact Real Property Management",
+                "request property maintenance", 
+                "pay rent or security deposit",
+                "renew or terminate lease",
+                "report property issues",
+                "schedule property inspection"
+            ]
+            
+            for action in document_actions:
+                suggestions.append({
+                    "question": f"How do I {action}?",
+                    "type": "action",
+                    "action": action,
+                    "confidence": 0.3  # Slightly higher confidence for document-specific actions
                 })
             
             # Collection-specific suggestions

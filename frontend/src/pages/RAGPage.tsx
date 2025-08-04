@@ -50,7 +50,7 @@ export const RAGPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [topK, setTopK] = useState(5);
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.1);
+  const [similarityThreshold, setSimilarityThreshold] = useState<number>(-0.2);
   const [showSources, setShowSources] = useState(false);
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [documentTags, setDocumentTags] = useState<string[]>([]);
@@ -349,9 +349,9 @@ export const RAGPage: React.FC = () => {
                 </label>
                 <input
                   type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
+                  min="-1"
+                  max="0"
+                  step="0.01"
                   value={similarityThreshold}
                   onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
                   className="w-full"
