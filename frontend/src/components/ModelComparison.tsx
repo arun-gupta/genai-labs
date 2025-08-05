@@ -364,13 +364,13 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {result.coherence_score ? `${(result.coherence_score * 100).toFixed(0)}%` : 'N/A'}
+                          {result.coherence_score ? `${result.coherence_score.toFixed(0)}%` : 'N/A'}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
                           className="bg-green-500 h-3 rounded-full transition-all duration-300" 
-                          style={{ width: `${result.coherence_score ? (result.coherence_score * 100) : 0}%` }}
+                          style={{ width: `${result.coherence_score || 0}%` }}
                         ></div>
                       </div>
                     </div>
@@ -386,13 +386,13 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {result.relevance_score ? `${(result.relevance_score * 100).toFixed(0)}%` : 'N/A'}
+                          {result.relevance_score ? `${result.relevance_score.toFixed(0)}%` : 'N/A'}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
                           className="bg-purple-500 h-3 rounded-full transition-all duration-300" 
-                          style={{ width: `${result.relevance_score ? (result.relevance_score * 100) : 0}%` }}
+                          style={{ width: `${result.relevance_score || 0}%` }}
                         ></div>
                       </div>
                     </div>
