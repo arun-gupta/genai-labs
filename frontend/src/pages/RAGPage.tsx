@@ -9,6 +9,7 @@ import { QuestionSuggestions } from '../components/QuestionSuggestions';
 import { ConfidenceDisplay } from '../components/ConfidenceDisplay';
 import { DocumentAnalytics } from '../components/DocumentAnalytics';
 import { PerformanceMetrics } from '../components/PerformanceMetrics';
+import { ModelComparison } from '../components/ModelComparison';
 import { apiService } from '../services/api';
 import { StreamChunk } from '../types/api';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -1355,220 +1356,29 @@ export const RAGPage: React.FC = () => {
 
             {activeTab === 'comparison' && (
               <div className="space-y-6">
-                {isComparing ? (
-                  <div className="card">
-                    <div className="flex items-center space-x-2 mb-6">
-                      <BarChart3 className="text-blue-600" size={20} />
-                      <h3 className="text-lg font-semibold text-gray-900">Model Comparison in Progress</h3>
-                    </div>
-                    
-                    {/* Progress Overview */}
-                    <div className="mb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                        <span className="text-sm text-gray-500">
-                          {selectedModels.length > 0 ? `${selectedModels.length} models selected` : 'Processing...'}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '60%' }}></div>
-                      </div>
-                    </div>
-
-                    {/* Comparison Steps */}
-                    <div className="space-y-4 mb-6">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Initializing RAG comparison</p>
-                          <p className="text-xs text-gray-500">Setting up document retrieval and model evaluation</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Retrieving relevant documents</p>
-                          <p className="text-xs text-gray-500">Searching through document collections for context</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">Generating responses</p>
-                          <p className="text-xs text-gray-500">
-                            {selectedModels.length > 0 
-                              ? `Processing ${selectedModels.length} models with document context` 
-                              : 'Processing models...'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-400">Analyzing quality metrics</p>
-                          <p className="text-xs text-gray-400">Evaluating relevance, coherence, and source accuracy</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-400">Generating recommendations</p>
-                          <p className="text-xs text-gray-400">Creating insights and suggestions</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Model Status */}
-                    {selectedModels.length > 0 && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-gray-900 mb-3">Model Processing Status</h4>
-                        <div className="space-y-2">
-                          {selectedModels.map((model, index) => (
-                            <div key={index} className="flex items-center space-x-3">
-                              <div className="flex-shrink-0">
-                                <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <div className="animate-spin rounded-full h-2 w-2 border-b border-blue-600"></div>
-                                </div>
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm text-gray-700">{`${model.provider}/${model.model}`}</p>
-                              </div>
-                              <div className="flex-shrink-0">
-                                <span className="text-xs text-gray-500">Processing...</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Estimated Time */}
-                    <div className="mt-6 p-3 bg-blue-50 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm text-blue-700">
-                          Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 20-40}s` : '40-80s'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Time varies based on document complexity and model performance
-                      </p>
-                    </div>
-                  </div>
-                ) : showComparison && comparisonResults ? (
-                  <>
-                    {/* Question */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">Question</h4>
-                      <p className="text-blue-800">{comparisonResults.original_text}</p>
-                    </div>
-
-                    {/* Comparison Metrics */}
-                    {comparisonResults.comparison_metrics && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Comparison Metrics</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-600">Best Quality:</span>
-                            <p className="font-medium">{comparisonResults.comparison_metrics.best_quality_model}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Fastest:</span>
-                            <p className="font-medium">{comparisonResults.comparison_metrics.fastest_model}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Most Coherent:</span>
-                            <p className="font-medium">{comparisonResults.comparison_metrics.most_coherent_model}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Most Relevant:</span>
-                            <p className="font-medium">{comparisonResults.comparison_metrics.most_relevant_model}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Model Results */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Model Results</h4>
-                      {comparisonResults.results.map((result: any, index: number) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h5 className="font-medium text-gray-900">
-                                {result.model_provider}/{result.model_name}
-                              </h5>
-                              <div className="flex space-x-4 text-sm text-gray-600 mt-1">
-                                <span>Quality: {(result.quality_score * 100).toFixed(1)}%</span>
-                                <span>Coherence: {(result.coherence_score * 100).toFixed(1)}%</span>
-                                <span>Relevance: {(result.relevance_score * 100).toFixed(1)}%</span>
-                                {result.latency_ms && (
-                                  <span>Time: {result.latency_ms.toFixed(0)}ms</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="bg-gray-50 rounded p-3">
-                            <p className="text-sm text-gray-700">{result.generated_text}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Recommendations */}
-                    {comparisonResults.recommendations && comparisonResults.recommendations.length > 0 && (
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <h4 className="font-medium text-purple-900 mb-3">Recommendations</h4>
-                        <ul className="space-y-2">
-                          {comparisonResults.recommendations.map((rec: string, index: number) => (
-                            <li key={index} className="text-sm text-purple-800 flex items-start space-x-2">
-                              <span className="text-purple-600 mt-1">•</span>
-                              <span>{rec}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
+                {comparisonResults ? (
+                  <ModelComparison
+                    results={comparisonResults.results}
+                    metrics={comparisonResults.comparison_metrics}
+                    recommendations={comparisonResults.recommendations}
+                    isComparing={isComparing}
+                    comparisonType="rag"
+                    selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
+                  />
                 ) : (
                   <div className="text-center py-12">
                     <GitCompare className="mx-auto text-gray-400 mb-4" size={48} />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
                     <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                      Compare how different AI models answer questions from your documents to find the best one for your needs.
+                      Compare how different AI models answer questions using your uploaded documents.
                     </p>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
                       <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
                       <ol className="text-sm text-blue-800 space-y-1 text-left">
-                        <li>1. Upload documents or use existing collections</li>
-                        <li>2. Ask a question about your documents</li>
-                        <li>3. Select 2 or more models in the Model Comparison section</li>
-                        <li>4. Click "Compare Models" to see results</li>
-                        <li>5. View quality scores, source relevance, and recommendations</li>
+                        <li>1. Upload documents and ask a question above</li>
+                        <li>2. Select 2 or more models in the Model Comparison section</li>
+                        <li>3. Click "Compare Models" to see results</li>
+                        <li>4. View quality scores, relevance, and recommendations</li>
                       </ol>
                     </div>
                   </div>
