@@ -66,7 +66,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Business Meeting',
       description: 'A professional business meeting scene',
-      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiIHJ4PSIxMCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjIwIiBmaWxsPSIjMzc0MTUxIi8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjEwMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPGNpcmNsZSBjeD0iMzAwIiBjeT0iMTAwIiByPSIyMCIgZmlsbD0iIzM3NDE1MSIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMzc0MTUxIiByeD0iNSIvPgo8dGV4dCB4PSIyMDAiIHk9IjI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5CdXNpbmVzcyBNZWV0aW5nPC90ZXh0Pgo8L3N2Zz4K',
+      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
       analysisPrompts: [
         'Describe the people and setting in this business meeting',
         'What type of business activity is taking place?',
@@ -81,7 +81,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Nature Scene',
       description: 'A beautiful natural landscape',
-      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjODdDRUY2Ii8+CjxyZWN0IHg9IjAiIHk9IjIwMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiM0Q0FGNTAiLz4KPGNpcmNsZSBjeD0iMzAwIiBjeT0iODAiIHI9IjQwIiBmaWxsPSIjRkZDRTA3Ii8+CjxwYXRoIGQ9Ik0wIDIwMCBMNDAwIDIwMCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjMiLz4KPHBhdGggZD0iTTEwMCAyMDAgTDEwMCAxNTAiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxwYXRoIGQ9Ik0yMDAgMjAwIEwyMDAgMTMwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMyIvPgo8cGF0aCBkPSJNMzAwIDIwMCBMMzAwIDE0MCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjMiLz4KPHRleHQgeD0iMjAwIiB5PSIyODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzM3NDE1MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TmF0dXJlIExhbmRzY2FwZTwvdGV4dD4KPC9zdmc+Cg==',
+      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
       analysisPrompts: [
         'Describe the natural elements and landscape features',
         'What type of environment is shown in this scene?',
@@ -96,7 +96,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Technology',
       description: 'Modern technology and digital devices',
-      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjMTAxMTAxMCIvPgo8cmVjdCB4PSI1MCIgeT0iMTAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFBMVExMSIgcng9IjEwIi8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjE1MCIgcj0iMTUiIGZpbGw9IiMwMEZGRjAiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTUwIiByPSIxNSIgZmlsbD0iIzAwRkZGMCIvPgo8Y2lyY2xlIGN4PSIzMDAiIGN5PSIxNTAiIHI9IjE1IiBmaWxsPSIjMDBGRkYwIi8+CjxyZWN0IHg9IjgwIiB5PSIxODAiIHdpZHRoPSIyNDAiIGhlaWdodD0iMTAiIGZpbGw9IiMwMEZGRjAiIHJ4PSI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjgwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMwMEZGRjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlRlY2hub2xvZ3k8L3RleHQ+Cjwvc3ZnPgo=',
+      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
       analysisPrompts: [
         'Describe the technology and digital elements shown',
         'What type of devices or systems are displayed?',
@@ -338,7 +338,7 @@ export const VisionPage: React.FC = () => {
 
   // Handle sample image selection
   const handleSampleImageSelect = (sampleImage: any) => {
-    // Convert base64 SVG to a File object
+    // Convert base64 PNG to a File object
     const base64Data = sampleImage.url.split(',')[1];
     const byteCharacters = atob(base64Data);
     const byteNumbers = new Array(byteCharacters.length);
@@ -346,7 +346,7 @@ export const VisionPage: React.FC = () => {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    const file = new File([byteArray], `${sampleImage.name.toLowerCase().replace(' ', '-')}.svg`, { type: 'image/svg+xml' });
+    const file = new File([byteArray], `${sampleImage.name.toLowerCase().replace(' ', '-')}.png`, { type: 'image/png' });
     
     setUploadedImage(file);
     setImagePreview(sampleImage.url);
@@ -524,7 +524,7 @@ export const VisionPage: React.FC = () => {
                     Sample Analysis Prompts
                   </label>
                   <div className="space-y-2">
-                    {sampleImages.find(img => img.name === uploadedImage.name?.replace('.svg', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))?.analysisPrompts?.map((prompt, index) => (
+                    {sampleImages.find(img => img.name === uploadedImage.name?.replace('.png', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))?.analysisPrompts?.map((prompt, index) => (
                       <button
                         key={index}
                         onClick={() => setCustomPrompt(prompt)}
