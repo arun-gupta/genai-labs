@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown, BarChart3, GitCompare } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
@@ -109,8 +109,11 @@ export const GeneratePage: React.FC = () => {
   }, []);
 
   // Get all available Ollama models for the "Compare All Local Models" preset
-  const getAllLocalModels = () => {
-    if (!availableModels) return [];
+  const getAllLocalModels = useMemo(() => {
+    if (!availableModels || !Array.isArray(availableModels)) {
+      console.log('availableModels is not an array:', availableModels);
+      return [];
+    }
     
     return availableModels
       .filter((model: any) => model.provider === 'ollama' && model.is_available)
@@ -118,7 +121,7 @@ export const GeneratePage: React.FC = () => {
         provider: model.provider,
         model: model.name
       }));
-  };
+  }, [availableModels]);
 
   // Language detection effect
   useEffect(() => {
@@ -589,19 +592,19 @@ export const GeneratePage: React.FC = () => {
                       key={index}
                       onClick={() => {
                         if (combination.name === "Compare All Local Models") {
-                          setSelectedModels(getAllLocalModels());
+                          setSelectedModels(getAllLocalModels);
                         } else {
                           setSelectedModels(combination.models);
                         }
                       }}
-                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels().length === 0)}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                     >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
-                        {combination.name === "Compare All Local Models" && getAllLocalModels().length > 0 && (
+                        {combination.name === "Compare All Local Models" && getAllLocalModels.length > 0 && (
                           <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {getAllLocalModels().length} models
+                            {getAllLocalModels.length} models
                           </span>
                         )}
                       </div>

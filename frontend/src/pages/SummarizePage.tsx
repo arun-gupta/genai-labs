@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, BarChart3 as CompareIcon } from 'lucide-react';
 import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
@@ -40,17 +40,23 @@ export const SummarizePage: React.FC = () => {
     );
 
     // Get all available Ollama models for the "Compare All Local Models" preset
-    const getAllLocalModels = () => {
-      if (!availableModels?.providers) return [];
+    const getAllLocalModels = useMemo(() => {
+      if (!availableModels?.providers) {
+        console.log('availableModels.providers is not available:', availableModels);
+        return [];
+      }
       
       const ollamaProvider = availableModels.providers.find((provider: any) => provider.id === 'ollama');
-      if (!ollamaProvider?.models) return [];
+      if (!ollamaProvider?.models) {
+        console.log('ollamaProvider.models is not available:', ollamaProvider);
+        return [];
+      }
       
       return ollamaProvider.models.map((model: string) => ({
         provider: 'ollama',
         model: model
       }));
-    };
+    }, [availableModels]);
     
     const baseCombinations = [
       {
@@ -100,7 +106,7 @@ export const SummarizePage: React.FC = () => {
     return baseCombinations.map(combination => ({
       ...combination,
       models: combination.name === "Compare All Local Models" 
-        ? getAllLocalModels() 
+        ? getAllLocalModels 
         : combination.models.filter(model => 
             availableModelsList.some(available => 
               available.provider === model.provider && available.model === model.model
