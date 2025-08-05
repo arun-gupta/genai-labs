@@ -53,6 +53,10 @@ export const VisionPage: React.FC = () => {
   
   // Gallery State
   const [generatedImages, setGeneratedImages] = useState<ImageGenerationResult[]>([]);
+  
+  // Drag state
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [showPasteNotification, setShowPasteNotification] = useState(false);
 
   // Load available models
   useEffect(() => {
@@ -68,6 +72,49 @@ export const VisionPage: React.FC = () => {
     loadAvailableModels();
   }, []);
 
+  // Global paste event listener
+  useEffect(() => {
+    const handleGlobalPaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            // Validate file size (20MB limit)
+            if (file.size > 20 * 1024 * 1024) {
+              alert('Image file is too large. Please use an image smaller than 20MB.');
+              return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+              alert('Please paste a valid image file.');
+              return;
+            }
+            
+            setUploadedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              setImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+            setShowPasteNotification(true);
+            setTimeout(() => setShowPasteNotification(false), 3000);
+            break;
+          }
+        }
+      }
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => {
+      document.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, []);
+
   // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -79,6 +126,78 @@ export const VisionPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle clipboard paste
+  const handlePaste = (event: React.ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          // Validate file size (20MB limit)
+          if (file.size > 20 * 1024 * 1024) {
+            alert('Image file is too large. Please use an image smaller than 20MB.');
+            return;
+          }
+          
+          // Validate file type
+          if (!file.type.startsWith('image/')) {
+            alert('Please paste a valid image file.');
+            return;
+          }
+          
+          setUploadedImage(file);
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setImagePreview(e.target?.result as string);
+          };
+          reader.readAsDataURL(file);
+          setShowPasteNotification(true);
+          setTimeout(() => setShowPasteNotification(false), 3000);
+          break;
+        }
+      }
+    }
+  };
+
+  // Handle drag and drop
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        // Validate file size (20MB limit)
+        if (file.size > 20 * 1024 * 1024) {
+          alert('Image file is too large. Please use an image smaller than 20MB.');
+          return;
+        }
+        
+        setUploadedImage(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please drop a valid image file.');
+      }
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(false);
   };
 
   // Handle image analysis
@@ -158,6 +277,16 @@ export const VisionPage: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Vision AI</h1>
           <p className="text-gray-600">Analyze images and generate new ones using AI vision models</p>
+          <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+            <span className="flex items-center space-x-1">
+              <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">Ctrl+V</span>
+              <span>Paste image from clipboard</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">Drag & Drop</span>
+              <span>Upload image files</span>
+            </span>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -197,6 +326,14 @@ export const VisionPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Paste Notification */}
+        {showPasteNotification && (
+          <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2">
+            <span>✓</span>
+            <span>Image pasted successfully!</span>
+          </div>
+        )}
+
         {/* Image Analysis Tab */}
         {activeTab === 'analysis' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -209,7 +346,20 @@ export const VisionPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Upload Image
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                    isDragOver 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-blue-400'
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onPaste={handlePaste}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Upload image by clicking, dragging, or pasting"
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -225,13 +375,32 @@ export const VisionPage: React.FC = () => {
                           alt="Preview"
                           className="max-w-full h-64 object-contain mx-auto rounded"
                         />
-                        <p className="text-sm text-gray-500">Click to change image</p>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-500">Click to change image</p>
+                          <p className="text-xs text-gray-400">Or drag & drop, or paste (Ctrl+V)</p>
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="text-sm text-gray-600">Click to upload an image</p>
-                        <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 20MB</p>
+                      <div className="space-y-3">
+                        {isDragOver ? (
+                          <>
+                            <Upload className="mx-auto h-12 w-12 text-blue-500" />
+                            <p className="text-sm text-blue-600 font-medium">Drop image here</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">Click to upload an image</p>
+                              <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 20MB</p>
+                              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
+                                <span>• Drag & drop</span>
+                                <span>• Paste (Ctrl+V)</span>
+                                <span>• Click to browse</span>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </label>
