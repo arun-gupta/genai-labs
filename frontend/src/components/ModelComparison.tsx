@@ -39,7 +39,7 @@ interface ModelComparisonProps {
   metrics: ComparisonMetrics;
   recommendations: string[];
   isComparing: boolean;
-  comparisonType: 'summarization' | 'generation';
+  comparisonType: 'summarization' | 'generation' | 'rag';
   selectedModels?: string[]; // Add selected models for progress tracking
 }
 
@@ -67,6 +67,119 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
   if (isComparing) {
     console.log('Showing progress indicators because isComparing is true');
+    
+    // Different progress steps based on comparison type
+    const getProgressSteps = () => {
+      if (comparisonType === 'rag') {
+        return [
+          {
+            title: "Initializing RAG comparison",
+            description: "Setting up document retrieval and model evaluation",
+            status: "completed",
+            icon: <CheckCircle className="w-5 h-5 text-green-600" />
+          },
+          {
+            title: "Retrieving relevant documents",
+            description: "Searching through document collections for context",
+            status: "active",
+            icon: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          },
+          {
+            title: "Generating responses",
+            description: `Processing ${selectedModels.length > 0 ? selectedModels.length : ''} models with document context`,
+            status: "active",
+            icon: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          },
+          {
+            title: "Analyzing quality metrics",
+            description: "Evaluating relevance, coherence, and source accuracy",
+            status: "pending",
+            icon: <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+          },
+          {
+            title: "Generating recommendations",
+            description: "Creating insights and suggestions",
+            status: "pending",
+            icon: <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+          }
+        ];
+      } else {
+        // Generate/Summarize comparison steps
+        return [
+          {
+            title: "Initializing comparison",
+            description: "Setting up model evaluation framework and preparing prompts",
+            status: "completed",
+            icon: <CheckCircle className="w-5 h-5 text-green-600" />
+          },
+          {
+            title: "Generating responses",
+            description: `Processing ${selectedModels.length > 0 ? selectedModels.length : ''} models in parallel`,
+            status: "active",
+            icon: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          },
+          {
+            title: "Analyzing quality metrics",
+            description: "Evaluating coherence, relevance, and performance indicators",
+            status: "active",
+            icon: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
+          },
+          {
+            title: "Calculating performance scores",
+            description: "Computing speed, efficiency, and quality rankings",
+            status: "active",
+            icon: <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+          },
+          {
+            title: "Generating recommendations",
+            description: "Creating insights and suggestions for optimal model selection",
+            status: "pending",
+            icon: <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+          }
+        ];
+      }
+    };
+
+    const progressSteps = getProgressSteps();
+    const getStepStyle = (status: string) => {
+      switch (status) {
+        case "completed":
+          return "bg-green-100";
+        case "active":
+          return "bg-blue-100";
+        case "pending":
+          return "bg-gray-100";
+        default:
+          return "bg-gray-100";
+      }
+    };
+
+    const getTextStyle = (status: string) => {
+      switch (status) {
+        case "completed":
+          return "text-gray-900";
+        case "active":
+          return "text-gray-900";
+        case "pending":
+          return "text-gray-400";
+        default:
+          return "text-gray-400";
+      }
+    };
+
+    const getDescriptionStyle = (status: string) => {
+      switch (status) {
+        case "completed":
+          return "text-gray-500";
+        case "active":
+          return "text-gray-500";
+        case "pending":
+          return "text-gray-400";
+        default:
+          return "text-gray-400";
+      }
+    };
+
     return (
       <div className="card">
         <div className="flex items-center space-x-2 mb-6">
@@ -83,76 +196,31 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '75%' }}></div>
+            <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: comparisonType === 'rag' ? '60%' : '75%' }}></div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Analyzing model performance and generating comprehensive metrics...</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {comparisonType === 'rag' 
+              ? 'Analyzing model performance with document context...'
+              : 'Analyzing model performance and generating comprehensive metrics...'
+            }
+          </p>
         </div>
 
         {/* Comparison Steps */}
         <div className="space-y-4 mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+          {progressSteps.map((step, index) => (
+            <div key={index} className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <div className={`w-8 h-8 ${getStepStyle(step.status)} rounded-full flex items-center justify-center`}>
+                  {step.icon}
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${getTextStyle(step.status)}`}>{step.title}</p>
+                <p className={`text-xs ${getDescriptionStyle(step.status)}`}>{step.description}</p>
               </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Initializing comparison</p>
-              <p className="text-xs text-gray-500">Setting up model evaluation framework and preparing prompts</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Generating responses</p>
-              <p className="text-xs text-gray-500">
-                {selectedModels.length > 0 
-                  ? `Processing ${selectedModels.length} models in parallel` 
-                  : 'Processing models...'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Analyzing quality metrics</p>
-              <p className="text-xs text-gray-500">Evaluating coherence, relevance, and performance indicators</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Calculating performance scores</p>
-              <p className="text-xs text-gray-500">Computing speed, efficiency, and quality rankings</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-              </div>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-400">Generating recommendations</p>
-              <p className="text-xs text-gray-400">Creating insights and suggestions for optimal model selection</p>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Model Status */}
@@ -169,7 +237,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-700">{model}</p>
-                    <p className="text-xs text-gray-500">Processing and analyzing response quality</p>
+                    <p className="text-xs text-gray-500">
+                      {comparisonType === 'rag' 
+                        ? 'Processing with document context...'
+                        : 'Processing and analyzing response quality'
+                      }
+                    </p>
                   </div>
                 </div>
               ))}
@@ -182,9 +255,15 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-700">
-              Estimated completion time: {selectedModels.length > 0 ? `${Math.max(2, selectedModels.length * 1.5)}s` : '2-5s'}
+              {comparisonType === 'rag' 
+                ? `Estimated time: ${Math.max(15, selectedModels.length * 5)}s`
+                : `Estimated completion time: ${selectedModels.length > 0 ? `${Math.max(2, selectedModels.length * 1.5)}s` : '2-5s'}`
+              }
             </span>
           </div>
+          {comparisonType === 'rag' && (
+            <p className="text-xs text-blue-600 mt-1">Time varies based on document complexity and model performance.</p>
+          )}
         </div>
       </div>
     );
