@@ -143,6 +143,9 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
     return null;
   };
 
+  // Debug info
+  console.log('ModelComparison render:', { isComparing, results: results?.length, selectedModels: selectedModels?.length });
+
   if (isComparing) {
     return (
       <div className="card">

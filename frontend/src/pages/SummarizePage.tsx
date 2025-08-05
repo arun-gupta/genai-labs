@@ -340,6 +340,7 @@ export const SummarizePage: React.FC = () => {
   const handleModelComparison = async () => {
     if (!validateInput()) return;
     
+    console.log('Starting model comparison...');
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
@@ -360,13 +361,17 @@ export const SummarizePage: React.FC = () => {
         request.file_content = selectedFile;
       }
       
+      console.log('Comparison request:', request);
       const result = await apiService.compareSummarizationModels(request);
+      console.log('Comparison result:', result);
       setComparisonResults(result);
       setShowComparison(true);
       setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
+      console.error('Comparison error:', err);
       setError(`Model comparison failed: ${err}`);
     } finally {
+      console.log('Comparison finished, setting isComparing to false');
       setIsComparing(false);
     }
   };
