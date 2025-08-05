@@ -80,6 +80,11 @@ export const RAGPage: React.FC = () => {
   // Default model combinations for quick comparison
   const defaultModelCombinations = [
     {
+      name: "Compare All Local Models",
+      description: "Compare all available Ollama models",
+      models: [] // Will be populated dynamically
+    },
+    {
       name: "Local vs Cloud",
       description: "Compare local Ollama model with cloud models",
       models: [
@@ -172,12 +177,22 @@ export const RAGPage: React.FC = () => {
       console.log('Loading available models...');
       const models = await apiService.getAvailableModels();
       console.log('Available models loaded:', models);
-      console.log('Models providers:', models?.providers);
-      console.log('Models providers length:', models?.providers?.length);
       setAvailableModels(models);
     } catch (error) {
       console.error('Failed to load available models:', error);
     }
+  };
+
+  // Get all available Ollama models for the "Compare All Local Models" preset
+  const getAllLocalModels = () => {
+    if (!availableModels) return [];
+    
+    return availableModels
+      .filter((model: any) => model.provider === 'ollama' && model.is_available)
+      .map((model: any) => ({
+        provider: model.provider,
+        model: model.name
+      }));
   };
 
   const createNewCollection = async () => {
@@ -666,11 +681,24 @@ export const RAGPage: React.FC = () => {
                   {defaultModelCombinations.map((combination, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedModels(combination.models)}
-                      disabled={isComparing}
+                      onClick={() => {
+                        if (combination.name === "Compare All Local Models") {
+                          setSelectedModels(getAllLocalModels());
+                        } else {
+                          setSelectedModels(combination.models);
+                        }
+                      }}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels().length === 0)}
                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                     >
-                      <div className="text-sm font-medium text-gray-900">{combination.name}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {combination.name}
+                        {combination.name === "Compare All Local Models" && getAllLocalModels().length > 0 && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {getAllLocalModels().length} models
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-600">{combination.description}</div>
                     </button>
                   ))}
