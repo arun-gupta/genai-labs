@@ -77,6 +77,15 @@ export const GeneratePage: React.FC = () => {
         { provider: "openai", model: "gpt-4" },
         { provider: "anthropic", model: "claude-3-sonnet-20240229" }
       ]
+    },
+    {
+      name: "Advanced Reasoning",
+      description: "Compare models with advanced reasoning capabilities",
+      models: [
+        { provider: "ollama", model: "gpt-oss:20b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+      ]
     }
   ];
 

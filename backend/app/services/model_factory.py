@@ -87,15 +87,27 @@ class ModelFactory:
         else:
             model = model_name or settings.ollama_model
             
-        # Remove temperature, streaming, and max_tokens from kwargs to avoid duplicates
-        model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
-        
-        return OllamaLLM(
-            model=model,
-            base_url=settings.ollama_base_url,
-            temperature=kwargs.get('temperature', 0.7),
-            **model_kwargs
-        )
+        # Handle GPT-OSS model name mapping
+        if model == "gpt-oss:20b":
+            # GPT-OSS models require specific configuration for harmony format
+            model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
+            
+            return OllamaLLM(
+                model=model,
+                base_url=settings.ollama_base_url,
+                temperature=kwargs.get('temperature', 0.7),
+                **model_kwargs
+            )
+        else:
+            # Standard Ollama models
+            model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
+            
+            return OllamaLLM(
+                model=model,
+                base_url=settings.ollama_base_url,
+                temperature=kwargs.get('temperature', 0.7),
+                **model_kwargs
+            )
 
 
 # Global model factory instance
