@@ -58,6 +58,34 @@ cd genai-labs
 ./quickstart.sh  # Start the app (skips dependency installation)
 ```
 
+### 🐍 Virtual Environment Management
+
+**All Python dependencies are automatically installed in virtual environments** to ensure isolation and consistency.
+
+#### Available Scripts:
+- **`./setup.sh`** - Complete setup with virtual environment creation
+- **`./quickstart.sh`** - Start the app (uses virtual environment)
+- **`./dev-setup.sh`** - Development setup with virtual environment
+- **`./activate_venv.sh`** - Manually activate the virtual environment
+- **`./verify_env.sh`** - Verify virtual environment and dependencies
+
+#### Manual Virtual Environment Usage:
+```bash
+# Activate virtual environment
+cd backend
+source venv/bin/activate
+
+# Start backend server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Deactivate when done
+deactivate
+```
+
+#### Virtual Environment Location:
+- **Backend**: `backend/venv/`
+- **Frontend**: Uses npm packages (no virtual environment needed)
+
 
 
 ## 🔧 Configuration
