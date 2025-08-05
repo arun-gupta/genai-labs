@@ -851,16 +851,26 @@ async def compare_rag_models(
 
 # Image Analysis Endpoints
 @router.post("/vision/analyze", response_model=ImageAnalysisResponse)
-async def analyze_image(request: ImageAnalysisRequest):
+async def analyze_image(
+    image: UploadFile = File(...),
+    analysis_type: str = Form("describe"),
+    model_provider: str = Form(...),
+    model_name: Optional[str] = Form(None),
+    custom_prompt: Optional[str] = Form(None),
+    temperature: float = Form(0.3)
+):
     """Analyze image content using vision models."""
     try:
+        # Read image bytes
+        image_bytes = await image.read()
+        
         result = await image_analysis_service.analyze_image(
-            image_bytes=request.image,
-            analysis_type=request.analysis_type,
-            model_provider=request.model_provider.value,
-            model_name=request.model_name,
-            custom_prompt=request.custom_prompt,
-            temperature=request.temperature
+            image_bytes=image_bytes,
+            analysis_type=analysis_type,
+            model_provider=model_provider,
+            model_name=model_name,
+            custom_prompt=custom_prompt,
+            temperature=temperature
         )
         
         return ImageAnalysisResponse(**result)
@@ -871,15 +881,27 @@ async def analyze_image(request: ImageAnalysisRequest):
 
 
 @router.post("/vision/compare", response_model=ImageComparisonResponse)
-async def compare_images(request: ImageComparisonRequest):
+async def compare_images(
+    images: list[UploadFile] = File(...),
+    comparison_type: str = Form("similarity"),
+    model_provider: str = Form(...),
+    model_name: Optional[str] = Form(None),
+    temperature: float = Form(0.3)
+):
     """Compare multiple images using vision models."""
     try:
+        # Read image bytes from all uploaded files
+        image_bytes_list = []
+        for img in images:
+            image_bytes = await img.read()
+            image_bytes_list.append(image_bytes)
+        
         result = await image_analysis_service.compare_images(
-            images=request.images,
-            comparison_type=request.comparison_type,
-            model_provider=request.model_provider.value,
-            model_name=request.model_name,
-            temperature=request.temperature
+            images=image_bytes_list,
+            comparison_type=comparison_type,
+            model_provider=model_provider,
+            model_name=model_name,
+            temperature=temperature
         )
         
         return ImageComparisonResponse(**result)
@@ -913,15 +935,24 @@ async def generate_image(request: ImageGenerationRequest):
 
 
 @router.post("/generate/image/variations", response_model=ImageGenerationResponse)
-async def generate_image_variations(request: ImageVariationRequest):
+async def generate_image_variations(
+    image: UploadFile = File(...),
+    model_provider: str = Form(...),
+    model_name: Optional[str] = Form(None),
+    size: str = Form("1024x1024"),
+    num_variations: int = Form(1)
+):
     """Generate variations of an existing image."""
     try:
+        # Read image bytes
+        image_bytes = await image.read()
+        
         result = await image_generation_service.generate_image_variations(
-            image_bytes=request.image,
-            model_provider=request.model_provider.value,
-            model_name=request.model_name,
-            size=request.size,
-            num_variations=request.num_variations
+            image_bytes=image_bytes,
+            model_provider=model_provider,
+            model_name=model_name,
+            size=size,
+            num_variations=num_variations
         )
         
         return ImageGenerationResponse(**result)
@@ -932,16 +963,31 @@ async def generate_image_variations(request: ImageVariationRequest):
 
 
 @router.post("/generate/image/edit", response_model=ImageGenerationResponse)
-async def edit_image(request: ImageEditRequest):
+async def edit_image(
+    image: UploadFile = File(...),
+    mask: Optional[UploadFile] = File(None),
+    prompt: str = Form(...),
+    model_provider: str = Form(...),
+    model_name: Optional[str] = Form(None),
+    size: str = Form("1024x1024")
+):
     """Edit an existing image using inpainting/outpainting."""
     try:
+        # Read image bytes
+        image_bytes = await image.read()
+        
+        # Read mask bytes if provided
+        mask_bytes = None
+        if mask:
+            mask_bytes = await mask.read()
+        
         result = await image_generation_service.edit_image(
-            image_bytes=request.image,
-            mask_bytes=request.mask,
-            prompt=request.prompt,
-            model_provider=request.model_provider.value,
-            model_name=request.model_name,
-            size=request.size
+            image_bytes=image_bytes,
+            mask_bytes=mask_bytes,
+            prompt=prompt,
+            model_provider=model_provider,
+            model_name=model_name,
+            size=size
         )
         
         return ImageGenerationResponse(**result)
