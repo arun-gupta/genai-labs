@@ -185,15 +185,15 @@ export const RAGPage: React.FC = () => {
 
   // Get all available Ollama models for the "Compare All Local Models" preset
   const getAllLocalModels = useMemo(() => {
-    if (!availableModels || !Array.isArray(availableModels)) {
-      console.log('availableModels is not an array:', availableModels);
+    if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
+      console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
       return [];
     }
     
-    return availableModels
-      .filter((model: any) => model.provider === 'ollama' && model.is_available)
+    return availableModels.ollama_models.models
+      .filter((model: any) => model.is_available)
       .map((model: any) => ({
-        provider: model.provider,
+        provider: 'ollama',
         model: model.name
       }));
   }, [availableModels]);
