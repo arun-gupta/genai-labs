@@ -40,6 +40,7 @@ interface ModelComparisonProps {
   recommendations: string[];
   isComparing: boolean;
   comparisonType: 'summarization' | 'generation';
+  selectedModels?: string[]; // Add selected models for progress tracking
 }
 
 export const ModelComparison: React.FC<ModelComparisonProps> = ({
@@ -47,7 +48,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   metrics,
   recommendations,
   isComparing,
-  comparisonType
+  comparisonType,
+  selectedModels = []
 }) => {
   const [expandedSummaries, setExpandedSummaries] = useState<Set<number>>(new Set());
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(false);
@@ -144,12 +146,114 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   if (isComparing) {
     return (
       <div className="card">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Comparing models...</p>
-            <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
+        <div className="flex items-center space-x-2 mb-6">
+          <BarChart3 className="text-blue-600" size={20} />
+          <h3 className="text-lg font-semibold text-gray-900">Model Comparison in Progress</h3>
+        </div>
+        
+        {/* Progress Overview */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+            <span className="text-sm text-gray-500">
+              {selectedModels.length > 0 ? `${selectedModels.length} models selected` : 'Processing...'}
+            </span>
           </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '60%' }}></div>
+          </div>
+        </div>
+
+        {/* Comparison Steps */}
+        <div className="space-y-4 mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Initializing comparison</p>
+              <p className="text-xs text-gray-500">Setting up model evaluation framework</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Generating responses</p>
+              <p className="text-xs text-gray-500">
+                {selectedModels.length > 0 
+                  ? `Processing ${selectedModels.length} models in parallel` 
+                  : 'Processing models...'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-400">Analyzing quality metrics</p>
+              <p className="text-xs text-gray-400">Evaluating coherence, relevance, and performance</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-400">Generating recommendations</p>
+              <p className="text-xs text-gray-400">Creating insights and suggestions</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Model Status */}
+        {selectedModels.length > 0 && (
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Model Processing Status</h4>
+            <div className="space-y-2">
+              {selectedModels.map((model, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-2 w-2 border-b border-blue-600"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-700">{model}</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className="text-xs text-gray-500">Processing...</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Estimated Time */}
+        <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-700">
+              Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 15-30} seconds` : '30-60 seconds'}
+            </span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            Time varies based on model complexity and response length
+          </p>
         </div>
       </div>
     );

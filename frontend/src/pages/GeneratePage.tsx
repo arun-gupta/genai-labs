@@ -863,6 +863,7 @@ export const GeneratePage: React.FC = () => {
                     recommendations={comparisonResults.recommendations}
                     isComparing={isComparing}
                     comparisonType="generation"
+                    selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
                   />
                 ) : (
                   <div className="text-center py-12">
