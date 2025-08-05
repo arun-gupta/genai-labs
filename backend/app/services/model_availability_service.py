@@ -40,6 +40,17 @@ class ModelAvailabilityService:
         """Get comprehensive list of open-source models with metadata."""
         return [
             {
+                "name": "qwen3:8b",
+                "display_name": "Qwen 3 (8B)",
+                "description": "Alibaba's 8B parameter model with strong reasoning and multilingual capabilities",
+                "parameters": "8B",
+                "organization": "Alibaba",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull qwen3:8b",
+                "category": "High Performance",
+                "tags": ["reasoning", "multilingual", "alibaba", "high-performance"]
+            },
+            {
                 "name": "qwen2.5:3b",
                 "display_name": "Qwen 2.5 (3B)",
                 "description": "Alibaba's efficient 3B parameter model with strong reasoning capabilities",
