@@ -26,13 +26,26 @@ class ImageAnalysisService:
     def _validate_image(self, image_bytes: bytes) -> bool:
         """Validate image format and size."""
         try:
+            logger.info(f"Validating image: size={len(image_bytes)} bytes")
             image = Image.open(io.BytesIO(image_bytes))
+            logger.info(f"Image opened successfully: format={image.format}, size={image.size}, mode={image.mode}")
+            
             # Check if image is too large (max 20MB)
             if len(image_bytes) > 20 * 1024 * 1024:
+                logger.error(f"Image too large: {len(image_bytes)} bytes")
                 return False
+                
             # Check dimensions (max 4096x4096)
             if image.width > 4096 or image.height > 4096:
+                logger.error(f"Image dimensions too large: {image.width}x{image.height}")
                 return False
+                
+            # Check if image is too small
+            if image.width < 10 or image.height < 10:
+                logger.error(f"Image dimensions too small: {image.width}x{image.height}")
+                return False
+                
+            logger.info("Image validation passed")
             return True
         except Exception as e:
             logger.error(f"Image validation failed: {e}")
