@@ -532,25 +532,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
         </div>
       </div>
 
-      {/* Debug Information - Remove this after fixing */}
-      <div className="card bg-yellow-50 border border-yellow-200">
-        <h4 className="font-medium text-yellow-900 mb-2">Debug Info (Token Usage)</h4>
-        <div className="text-sm text-yellow-800 space-y-1">
-          {results.map((result, index) => (
-            <div key={index}>
-              <strong>{result.model_provider}/{result.model_name}:</strong>
-              <br />
-              Token Usage: {JSON.stringify(result.token_usage)}
-              <br />
-              Latency: {result.latency_ms}ms
-              <br />
-              Quality: {result.quality_score}
-              <br />
-              <hr className="my-1" />
-            </div>
-          ))}
-        </div>
-      </div>
+
 
       {/* Detailed Metrics Toggle */}
       <div className="card">
