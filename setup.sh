@@ -65,9 +65,25 @@ setup_backend() {
         echo -e "${GREEN}✅ Virtual environment already exists${NC}"
     fi
     
+    # Verify virtual environment is properly set up
+    if [ ! -f "venv/bin/activate" ]; then
+        echo -e "${RED}❌ Virtual environment is corrupted. Removing and recreating...${NC}"
+        rm -rf venv
+        python3 -m venv venv
+        echo -e "${GREEN}✅ Virtual environment recreated${NC}"
+    fi
+    
     # Activate virtual environment
     echo -e "${YELLOW}🔄 Activating virtual environment...${NC}"
     source venv/bin/activate
+    
+    # Verify we're in the virtual environment
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo -e "${RED}❌ Failed to activate virtual environment${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Virtual environment activated: $VIRTUAL_ENV${NC}"
     
     # Upgrade pip
     echo -e "${YELLOW}📦 Upgrading pip...${NC}"
@@ -79,7 +95,7 @@ setup_backend() {
     
     # Verify installation
     echo -e "${YELLOW}🔍 Verifying installation...${NC}"
-    python -c "import fastapi, langchain, openai, anthropic; print('✅ All key dependencies installed')"
+    python -c "import fastapi, langchain, openai, anthropic, textstat; print('✅ All key dependencies installed')"
     
     echo -e "${GREEN}✅ Backend setup complete!${NC}"
     cd ..
@@ -101,92 +117,73 @@ setup_frontend() {
     
     # Verify installation
     echo -e "${YELLOW}🔍 Verifying installation...${NC}"
-    npm list --depth=0 | grep -E "(react|vite|typescript)" || echo "✅ Key dependencies found"
+    npm list --depth=0 | grep -E "(react|vite|typescript)" > /dev/null && echo "✅ All key dependencies installed"
     
     echo -e "${GREEN}✅ Frontend setup complete!${NC}"
     cd ..
 }
 
 # Function to create environment files
-setup_env_files() {
+create_env_files() {
     echo -e "\n${BLUE}📝 Setting up environment files...${NC}"
     
-    # Backend environment
+    # Backend environment file
     if [ ! -f "backend/.env" ]; then
-        if [ -f "backend/env.example" ]; then
-            echo -e "${YELLOW}📝 Creating backend .env from example...${NC}"
-            cp backend/env.example backend/.env
-            echo -e "${YELLOW}⚠️  Please edit backend/.env and add your API keys${NC}"
-        else
-            echo -e "${YELLOW}📝 Creating basic backend .env...${NC}"
-            cat > backend/.env << EOF
-# API Keys (add your keys here)
-OPENAI_API_KEY=your_openai_api_key_here
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-
-# CORS Settings
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-
-# Ollama Settings
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=mistral:7b
-EOF
-            echo -e "${YELLOW}⚠️  Please edit backend/.env and add your API keys${NC}"
-        fi
+        echo -e "${YELLOW}📝 Creating backend environment file...${NC}"
+        cp backend/env.example backend/.env
+        echo -e "${GREEN}✅ Backend environment file created${NC}"
+        echo -e "${YELLOW}⚠️  Please edit backend/.env and add your API keys if needed${NC}"
     else
-        echo -e "${GREEN}✅ Backend .env already exists${NC}"
+        echo -e "${GREEN}✅ Backend environment file already exists${NC}"
     fi
     
-    # Frontend environment
+    # Frontend environment file
     if [ ! -f "frontend/.env" ]; then
-        if [ -f "frontend/env.example" ]; then
-            echo -e "${YELLOW}📝 Creating frontend .env from example...${NC}"
-            cp frontend/env.example frontend/.env
-        else
-            echo -e "${YELLOW}📝 Creating basic frontend .env...${NC}"
-            cat > frontend/.env << EOF
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-EOF
-        fi
+        echo -e "${YELLOW}📝 Creating frontend environment file...${NC}"
+        cp frontend/env.example frontend/.env
+        echo -e "${GREEN}✅ Frontend environment file created${NC}"
     else
-        echo -e "${GREEN}✅ Frontend .env already exists${NC}"
+        echo -e "${GREEN}✅ Frontend environment file already exists${NC}"
     fi
 }
 
-# Function to verify gitignore
-verify_gitignore() {
-    echo -e "\n${BLUE}🔍 Verifying .gitignore configuration...${NC}"
+# Function to verify setup
+verify_setup() {
+    echo -e "\n${BLUE}🔍 Verifying setup...${NC}"
     
-    if [ -f ".gitignore" ]; then
-        # Check for virtual environment exclusions
-        if grep -q "venv/" .gitignore && grep -q "node_modules/" .gitignore; then
-            echo -e "${GREEN}✅ .gitignore properly configured for virtual environments${NC}"
-        else
-            echo -e "${YELLOW}⚠️  .gitignore may need updates for virtual environments${NC}"
-        fi
-        
-        # Check for Python exclusions
-        if grep -q "__pycache__/" .gitignore; then
-            echo -e "${GREEN}✅ .gitignore includes Python cache exclusions${NC}"
-        else
-            echo -e "${YELLOW}⚠️  .gitignore missing Python cache exclusions${NC}"
-        fi
+    # Check backend virtual environment
+    if [ -d "backend/venv" ] && [ -f "backend/venv/bin/activate" ]; then
+        echo -e "${GREEN}✅ Backend virtual environment is properly configured${NC}"
     else
-        echo -e "${RED}❌ .gitignore not found${NC}"
+        echo -e "${RED}❌ Backend virtual environment is not properly configured${NC}"
+        return 1
     fi
+    
+    # Check frontend dependencies
+    if [ -d "frontend/node_modules" ]; then
+        echo -e "${GREEN}✅ Frontend dependencies are installed${NC}"
+    else
+        echo -e "${RED}❌ Frontend dependencies are not installed${NC}"
+        return 1
+    fi
+    
+    # Check environment files
+    if [ -f "backend/.env" ] && [ -f "frontend/.env" ]; then
+        echo -e "${GREEN}✅ Environment files are configured${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Some environment files may be missing${NC}"
+    fi
+    
+    return 0
 }
 
 # Main setup process
 main() {
-    echo -e "${BLUE}🔍 Checking prerequisites...${NC}"
-    
     # Check prerequisites
+    echo -e "${BLUE}🔍 Checking prerequisites...${NC}"
     check_python || exit 1
     check_node || exit 1
     check_npm || exit 1
-    
-    # Setup environment files
-    setup_env_files
     
     # Setup backend
     setup_backend
@@ -194,23 +191,27 @@ main() {
     # Setup frontend
     setup_frontend
     
-    # Verify gitignore
-    verify_gitignore
+    # Create environment files
+    create_env_files
     
-    echo -e "\n${GREEN}🎉 Setup complete!${NC}"
-    echo -e "${BLUE}=============================================${NC}"
-    echo -e "${GREEN}✅ Python virtual environment: backend/venv/${NC}"
-    echo -e "${GREEN}✅ Node.js dependencies: frontend/node_modules/${NC}"
-    echo -e "${GREEN}✅ Environment files created${NC}"
-    echo -e "${BLUE}=============================================${NC}"
-    echo -e "${YELLOW}Next steps:${NC}"
-    echo -e "1. Edit backend/.env and add your API keys"
-    echo -e "2. Run ./quickstart.sh to start the application"
-    echo -e "3. Visit http://localhost:3000 to use the app"
-    echo -e ""
-    echo -e "${BLUE}Quick Start:${NC}"
-    echo -e "For immediate use, just run: ./quickstart.sh"
+    # Verify setup
+    if verify_setup; then
+        echo -e "\n${GREEN}🎉 Setup completed successfully!${NC}"
+        echo -e "${BLUE}=============================================${NC}"
+        echo -e "${GREEN}🚀 To start the application:${NC}"
+        echo -e "${YELLOW}   ./quickstart.sh${NC}"
+        echo -e ""
+        echo -e "${GREEN}🔍 To verify your environment:${NC}"
+        echo -e "${YELLOW}   ./verify_env.sh${NC}"
+        echo -e ""
+        echo -e "${GREEN}📚 For more information:${NC}"
+        echo -e "${YELLOW}   cat README.md${NC}"
+        echo -e "${BLUE}=============================================${NC}"
+    else
+        echo -e "\n${RED}❌ Setup verification failed. Please check the errors above.${NC}"
+        exit 1
+    fi
 }
 
 # Run main function
-main "$@" 
+main 
