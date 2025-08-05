@@ -327,6 +327,10 @@ export const GeneratePage: React.FC = () => {
       });
       
       setComparisonResults(result);
+      
+      // Set isComparing to false immediately when we have results
+      setIsComparing(false);
+      return; // Exit early since we have results
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
