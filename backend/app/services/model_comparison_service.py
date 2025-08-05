@@ -54,10 +54,27 @@ class ModelComparisonService:
             summary_length = len(summary.split())
             compression_ratio = summary_length / original_length if original_length > 0 else 0
             
-            # Readability metrics
-            flesch_reading_ease = textstat.flesch_reading_ease(summary)
-            flesch_kincaid_grade = textstat.flesch_kincaid_grade(summary)
-            gunning_fog = textstat.gunning_fog(summary)
+            # Readability metrics with fallback
+            try:
+                flesch_reading_ease = textstat.flesch_reading_ease(summary)
+                flesch_kincaid_grade = textstat.flesch_kincaid_grade(summary)
+                gunning_fog = textstat.gunning_fog(summary)
+            except Exception as e:
+                logger.warning(f"Textstat failed, using fallback readability: {str(e)}")
+                # Fallback readability calculation
+                words = summary.split()
+                sentences = simple_sent_tokenize(summary)
+                syllables = self._estimate_syllables(summary)
+                
+                if words and sentences:
+                    avg_sentence_length = len(words) / len(sentences)
+                    avg_syllables_per_word = syllables / len(words) if words else 0
+                    flesch_reading_ease = max(0, min(100, 206.835 - (1.015 * avg_sentence_length) - (84.6 * avg_syllables_per_word)))
+                else:
+                    flesch_reading_ease = 50.0  # Default middle value
+                
+                flesch_kincaid_grade = max(0, min(20, (0.39 * avg_sentence_length) + (11.8 * avg_syllables_per_word) - 15.59)) if words and sentences else 10.0
+                gunning_fog = max(0, min(20, 0.4 * (avg_sentence_length + (100 * avg_syllables_per_word / len(words))))) if words and sentences else 10.0
             
             # Coherence score (based on sentence flow)
             coherence_score = self._calculate_coherence_score(summary)
@@ -69,6 +86,9 @@ class ModelComparisonService:
             quality_score = self._calculate_overall_quality_score(
                 compression_ratio, coherence_score, relevance_score, flesch_reading_ease
             )
+            
+            # Debug logging
+            logger.info(f"Quality metrics calculated - Quality: {quality_score:.3f}, Coherence: {coherence_score:.3f}, Relevance: {relevance_score:.3f}")
             
             return {
                 "quality_score": quality_score,
@@ -95,6 +115,31 @@ class ModelComparisonService:
                 "original_length": len(original_text.split()),
                 "summary_length": len(summary.split())
             }
+    
+    def _estimate_syllables(self, text: str) -> int:
+        """Estimate syllable count for readability calculations."""
+        try:
+            # Simple syllable estimation
+            text = text.lower()
+            count = 0
+            vowels = "aeiouy"
+            on_vowel = False
+            
+            for char in text:
+                is_vowel = char in vowels
+                if is_vowel and not on_vowel:
+                    count += 1
+                on_vowel = is_vowel
+            
+            # Handle edge cases
+            if text.endswith('e'):
+                count -= 1
+            if count == 0:
+                count = 1
+                
+            return count
+        except Exception:
+            return len(text.split())  # Fallback to word count
     
     def _calculate_coherence_score(self, summary: str) -> float:
         """Calculate coherence score based on sentence flow and transitions."""

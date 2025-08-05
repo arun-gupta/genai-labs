@@ -309,22 +309,32 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">Quality Scores</h4>
               <div className="space-y-3">
-                {results.map((result, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {result.quality_score ? `${result.quality_score.toFixed(0)}%` : 'N/A'}
-                      </span>
+                {results.map((result, index) => {
+                  // Debug logging
+                  console.log(`Model ${result.model_provider}/${result.model_name} quality data:`, {
+                    quality_score: result.quality_score,
+                    coherence_score: result.coherence_score,
+                    relevance_score: result.relevance_score,
+                    raw_result: result
+                  });
+                  
+                  return (
+                    <div key={index} className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {result.quality_score ? `${result.quality_score.toFixed(0)}%` : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-blue-500 h-3 rounded-full transition-all duration-300" 
+                          style={{ width: `${result.quality_score || 0}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-blue-500 h-3 rounded-full transition-all duration-300" 
-                        style={{ width: `${result.quality_score || 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
