@@ -181,7 +181,7 @@ class RAGService:
     async def ask_question(self, question: str, collection_name: str = "default", 
                           model_provider: str = "ollama", model_name: str = "mistral:7b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
-                          top_k: int = 5, similarity_threshold: float = -0.2, filter_tags: List[str] = None,
+                          top_k: int = 5, similarity_threshold: float = -0.5, filter_tags: List[str] = None,
                           collection_names: List[str] = None) -> Dict:
         """Ask a question about uploaded documents."""
         start_time = time.time()
@@ -281,9 +281,10 @@ class RAGService:
                         "tags": doc_tags
                     })
             
+            # If no relevant chunks found, try with an even lower threshold
             if not relevant_chunks:
-                # Try with a lower similarity threshold if no results found
-                lower_threshold = max(-0.5, similarity_threshold - 0.3)
+                # Try with a much lower similarity threshold
+                lower_threshold = max(-0.8, similarity_threshold - 0.5)
                 
                 # Re-filter with lower threshold
                 relevant_chunks = []
@@ -314,6 +315,42 @@ class RAGService:
                             "tags": doc_tags,
                             "collection_name": metadata.get("collection_name", collection_name)
                         })
+                
+                # If still no relevant chunks, include all available chunks for collection-level questions
+                if not relevant_chunks:
+                    # Check if this is a collection-level question
+                    collection_question_keywords = [
+                        "documents in", "collection", "what documents", "files in", 
+                        "uploaded documents", "stored documents", "available documents"
+                    ]
+                    
+                    is_collection_question = any(keyword in question.lower() for keyword in collection_question_keywords)
+                    
+                    if is_collection_question:
+                        logger.info("Collection-level question detected, including all available chunks")
+                        # Include all chunks for collection-level questions
+                        for i, (doc, metadata, distance) in enumerate(zip(
+                            results['documents'][0], 
+                            results['metadatas'][0], 
+                            results['distances'][0]
+                        )):
+                            doc_tags_str = metadata.get("tags", "")
+                            doc_tags = doc_tags_str.split(",") if doc_tags_str else []
+                            tag_match = True
+                            if filter_tags:
+                                tag_match = any(tag in doc_tags for tag in filter_tags)
+                            
+                            if tag_match:
+                                relevant_chunks.append(doc)
+                                sources.append({
+                                    "document_id": metadata.get("document_id", ""),
+                                    "file_name": metadata.get("file_name", ""),
+                                    "chunk_text": doc,
+                                    "similarity_score": 1 - distance,
+                                    "chunk_index": metadata.get("chunk_index", i),
+                                    "tags": doc_tags,
+                                    "collection_name": metadata.get("collection_name", collection_name)
+                                })
                 
                 if not relevant_chunks:
                     return {
@@ -397,7 +434,7 @@ Question: {question}"""
     async def ask_question_stream(self, question: str, collection_name: str = "default",
                                  model_provider: str = "ollama", model_name: str = "mistral:7b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
-                                 top_k: int = 5, similarity_threshold: float = -0.2, filter_tags: List[str] = None,
+                                 top_k: int = 5, similarity_threshold: float = -0.5, filter_tags: List[str] = None,
                                  collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:
         """Ask a question with streaming response."""
         start_time = time.time()
@@ -489,8 +526,8 @@ Question: {question}"""
                     })
             
             if not relevant_chunks:
-                # Try with a lower similarity threshold if no results found
-                lower_threshold = max(-0.5, similarity_threshold - 0.3)
+                # Try with a much lower similarity threshold
+                lower_threshold = max(-0.8, similarity_threshold - 0.5)
                 
                 # Re-filter with lower threshold
                 relevant_chunks = []
@@ -521,6 +558,42 @@ Question: {question}"""
                             "tags": doc_tags,
                             "collection_name": metadata.get("collection_name", collection_name)
                         })
+                
+                # If still no relevant chunks, include all available chunks for collection-level questions
+                if not relevant_chunks:
+                    # Check if this is a collection-level question
+                    collection_question_keywords = [
+                        "documents in", "collection", "what documents", "files in", 
+                        "uploaded documents", "stored documents", "available documents"
+                    ]
+                    
+                    is_collection_question = any(keyword in question.lower() for keyword in collection_question_keywords)
+                    
+                    if is_collection_question:
+                        logger.info("Collection-level question detected, including all available chunks")
+                        # Include all chunks for collection-level questions
+                        for i, (doc, metadata, distance) in enumerate(zip(
+                            results['documents'][0], 
+                            results['metadatas'][0], 
+                            results['distances'][0]
+                        )):
+                            doc_tags_str = metadata.get("tags", "")
+                            doc_tags = doc_tags_str.split(",") if doc_tags_str else []
+                            tag_match = True
+                            if filter_tags:
+                                tag_match = any(tag in doc_tags for tag in filter_tags)
+                            
+                            if tag_match:
+                                relevant_chunks.append(doc)
+                                sources.append({
+                                    "document_id": metadata.get("document_id", ""),
+                                    "file_name": metadata.get("file_name", ""),
+                                    "chunk_text": doc,
+                                    "similarity_score": 1 - distance,
+                                    "chunk_index": metadata.get("chunk_index", i),
+                                    "tags": doc_tags,
+                                    "collection_name": metadata.get("collection_name", collection_name)
+                                })
                 
                 if not relevant_chunks:
                     yield {
