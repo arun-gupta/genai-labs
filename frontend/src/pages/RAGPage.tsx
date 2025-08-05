@@ -473,6 +473,8 @@ export const RAGPage: React.FC = () => {
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
+    setShowComparison(true);
+    setActiveTab('comparison'); // Switch to comparison tab immediately
     
     try {
       const result = await apiService.compareRAGModels({
@@ -486,8 +488,6 @@ export const RAGPage: React.FC = () => {
       });
       
       setComparisonResults(result);
-      setShowComparison(true);
-      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {

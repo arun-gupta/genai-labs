@@ -344,6 +344,8 @@ export const SummarizePage: React.FC = () => {
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
+    setShowComparison(true);
+    setActiveTab('comparison'); // Switch to comparison tab immediately
     
     try {
       const request: any = {
@@ -365,8 +367,6 @@ export const SummarizePage: React.FC = () => {
       const result = await apiService.compareSummarizationModels(request);
       console.log('Comparison result:', result);
       setComparisonResults(result);
-      setShowComparison(true);
-      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       console.error('Comparison error:', err);
       setError(`Model comparison failed: ${err}`);
