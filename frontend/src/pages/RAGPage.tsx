@@ -476,6 +476,9 @@ export const RAGPage: React.FC = () => {
     setShowComparison(true);
     setActiveTab('comparison'); // Switch to comparison tab immediately
     
+    const startTime = Date.now();
+    const minDisplayTime = 2000; // Minimum 2 seconds to show progress indicators
+    
     try {
       const result = await apiService.compareRAGModels({
         question: question,
@@ -491,7 +494,13 @@ export const RAGPage: React.FC = () => {
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
-      setIsComparing(false);
+      // Ensure progress indicators are shown for at least minDisplayTime
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      
+      setTimeout(() => {
+        setIsComparing(false);
+      }, remainingTime);
     }
   };
 
