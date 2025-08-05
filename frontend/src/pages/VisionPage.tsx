@@ -61,6 +61,66 @@ export const VisionPage: React.FC = () => {
   // Results tab state
   const [resultsTab, setResultsTab] = useState<'response' | 'analytics' | 'comparison'>('response');
 
+  // Sample data
+  const sampleImages = [
+    {
+      name: 'Business Meeting',
+      description: 'A professional business meeting scene',
+      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI1MCIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiIHJ4PSIxMCIvPgo8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjIwIiBmaWxsPSIjMzc0MTUxIi8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjEwMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPGNpcmNsZSBjeD0iMzAwIiBjeT0iMTAwIiByPSIyMCIgZmlsbD0iIzM3NDE1MSIvPgo8cmVjdCB4PSI4MCIgeT0iMTMwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjMzc0MTUxIiByeD0iNSIvPgo8dGV4dCB4PSIyMDAiIHk9IjI4MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjMzc0MTUxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5CdXNpbmVzcyBNZWV0aW5nPC90ZXh0Pgo8L3N2Zz4K',
+      analysisPrompts: [
+        'Describe the people and setting in this business meeting',
+        'What type of business activity is taking place?',
+        'Analyze the professional environment and atmosphere'
+      ],
+      generationPrompts: [
+        'A professional business meeting with diverse team members',
+        'Modern office conference room with people collaborating',
+        'Corporate boardroom with executives in suits'
+      ]
+    },
+    {
+      name: 'Nature Scene',
+      description: 'A beautiful natural landscape',
+      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjODdDRUY2Ii8+CjxyZWN0IHg9IjAiIHk9IjIwMCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiM0Q0FGNTAiLz4KPGNpcmNsZSBjeD0iMzAwIiBjeT0iODAiIHI9IjQwIiBmaWxsPSIjRkZDRTA3Ii8+CjxwYXRoIGQ9Ik0wIDIwMCBMNDAwIDIwMCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjMiLz4KPHBhdGggZD0iTTEwMCAyMDAgTDEwMCAxNTAiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIzIi8+CjxwYXRoIGQ9Ik0yMDAgMjAwIEwyMDAgMTMwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMyIvPgo8cGF0aCBkPSJNMzAwIDIwMCBMMzAwIDE0MCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjMiLz4KPHRleHQgeD0iMjAwIiB5PSIyODAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzM3NDE1MSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+TmF0dXJlIExhbmRzY2FwZTwvdGV4dD4KPC9zdmc+Cg==',
+      analysisPrompts: [
+        'Describe the natural elements and landscape features',
+        'What type of environment is shown in this scene?',
+        'Analyze the colors and mood of this natural setting'
+      ],
+      generationPrompts: [
+        'Serene mountain landscape with trees and a lake',
+        'Peaceful forest scene with sunlight filtering through trees',
+        'Beautiful sunset over rolling hills and meadows'
+      ]
+    },
+    {
+      name: 'Technology',
+      description: 'Modern technology and digital devices',
+      url: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjMTAxMTAxMCIvPgo8cmVjdCB4PSI1MCIgeT0iMTAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFBMVExMSIgcng9IjEwIi8+CjxjaXJjbGUgY3g9IjEwMCIgY3k9IjE1MCIgcj0iMTUiIGZpbGw9IiMwMEZGRjAiLz4KPGNpcmNsZSBjeD0iMjAwIiBjeT0iMTUwIiByPSIxNSIgZmlsbD0iIzAwRkZGMCIvPgo8Y2lyY2xlIGN4PSIzMDAiIGN5PSIxNTAiIHI9IjE1IiBmaWxsPSIjMDBGRkYwIi8+CjxyZWN0IHg9IjgwIiB5PSIxODAiIHdpZHRoPSIyNDAiIGhlaWdodD0iMTAiIGZpbGw9IiMwMEZGRjAiIHJ4PSI1Ii8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjgwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMwMEZGRjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlRlY2hub2xvZ3k8L3RleHQ+Cjwvc3ZnPgo=',
+      analysisPrompts: [
+        'Describe the technology and digital elements shown',
+        'What type of devices or systems are displayed?',
+        'Analyze the futuristic or modern aspects of this scene'
+      ],
+      generationPrompts: [
+        'Futuristic technology interface with glowing screens',
+        'Modern workspace with multiple monitors and devices',
+        'Sci-fi computer terminal with holographic displays'
+      ]
+    }
+  ];
+
+  const samplePrompts = [
+    'A majestic dragon flying over a medieval castle at sunset',
+    'A cozy coffee shop interior with warm lighting and people working',
+    'A futuristic cityscape with flying cars and neon lights',
+    'A peaceful garden with blooming flowers and butterflies',
+    'A professional portrait of a confident business person',
+    'An underwater scene with colorful coral reefs and fish',
+    'A magical forest with glowing mushrooms and fairy lights',
+    'A modern minimalist kitchen with clean lines and natural light'
+  ];
+
   // Load available models
   useEffect(() => {
     const loadAvailableModels = async () => {
@@ -276,6 +336,27 @@ export const VisionPage: React.FC = () => {
     link.click();
   };
 
+  // Handle sample image selection
+  const handleSampleImageSelect = (sampleImage: any) => {
+    // Convert base64 SVG to a File object
+    const base64Data = sampleImage.url.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const file = new File([byteArray], `${sampleImage.name.toLowerCase().replace(' ', '-')}.svg`, { type: 'image/svg+xml' });
+    
+    setUploadedImage(file);
+    setImagePreview(sampleImage.url);
+  };
+
+  // Handle sample prompt selection
+  const handleSamplePromptSelect = (prompt: string) => {
+    setGenerationPrompt(prompt);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -346,6 +427,30 @@ export const VisionPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Image Analysis</h2>
               
+              {/* Sample Images */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sample Images
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {sampleImages.map((sampleImage, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSampleImageSelect(sampleImage)}
+                      className="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
+                    >
+                      <img
+                        src={sampleImage.url}
+                        alt={sampleImage.name}
+                        className="w-full h-20 object-cover rounded mb-2"
+                      />
+                      <p className="text-xs font-medium text-gray-900">{sampleImage.name}</p>
+                      <p className="text-xs text-gray-500">{sampleImage.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Image Upload */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -411,6 +516,30 @@ export const VisionPage: React.FC = () => {
                   </label>
                 </div>
               </div>
+
+              {/* Sample Prompts for Selected Image */}
+              {uploadedImage && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sample Analysis Prompts
+                  </label>
+                  <div className="space-y-2">
+                    {sampleImages.find(img => img.name === uploadedImage.name?.replace('.svg', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))?.analysisPrompts?.map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCustomPrompt(prompt)}
+                        className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                      >
+                        <p className="text-sm text-gray-900">{prompt}</p>
+                      </button>
+                    )) || (
+                      <div className="text-sm text-gray-500 italic">
+                        No sample prompts available for this image
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Analysis Type */}
               <div className="mb-6">
@@ -621,6 +750,24 @@ export const VisionPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Image Generation</h2>
               
+              {/* Sample Prompts */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sample Prompts
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {samplePrompts.map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSamplePromptSelect(prompt)}
+                      className="text-left p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                    >
+                      <p className="text-sm text-gray-900 line-clamp-2">{prompt}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Prompt Input */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
