@@ -436,10 +436,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
       </div>
 
       {/* Visual Comparison Charts */}
-      <div className="card">
-        <div className="flex items-center space-x-2 mb-4">
-          <BarChart3 className="text-blue-600" size={20} />
-          <h3 className="text-lg font-semibold text-gray-900">Visual Comparison</h3>
+      <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
+        <div className="flex items-center space-x-2 mb-6">
+          <BarChart3 className="text-blue-600" size={24} />
+          <h3 className="text-xl font-bold text-gray-900">📊 Visual Comparison Charts</h3>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -529,6 +529,26 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Debug Information - Remove this after fixing */}
+      <div className="card bg-yellow-50 border border-yellow-200">
+        <h4 className="font-medium text-yellow-900 mb-2">Debug Info (Token Usage)</h4>
+        <div className="text-sm text-yellow-800 space-y-1">
+          {results.map((result, index) => (
+            <div key={index}>
+              <strong>{result.model_provider}/{result.model_name}:</strong>
+              <br />
+              Token Usage: {JSON.stringify(result.token_usage)}
+              <br />
+              Latency: {result.latency_ms}ms
+              <br />
+              Quality: {result.quality_score}
+              <br />
+              <hr className="my-1" />
+            </div>
+          ))}
         </div>
       </div>
 
