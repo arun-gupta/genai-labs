@@ -325,7 +325,7 @@ export const GeneratePage: React.FC = () => {
     setActiveTab('comparison'); // Switch to comparison tab immediately
     
     const startTime = Date.now();
-    const minDisplayTime = 2000; // Minimum 2 seconds to show progress indicators
+    const minDisplayTime = 3000; // Minimum 3 seconds to show progress indicators
     
     try {
       const result = await apiService.compareGenerationModels({
@@ -341,12 +341,6 @@ export const GeneratePage: React.FC = () => {
       
       setComparisonResults(result);
       
-      // Set isComparing to false immediately when we have results
-      setIsComparing(false);
-      return; // Exit early since we have results
-    } catch (err) {
-      setError(`Model comparison failed: ${err}`);
-    } finally {
       // Ensure progress indicators are shown for at least minDisplayTime
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
@@ -354,6 +348,10 @@ export const GeneratePage: React.FC = () => {
       setTimeout(() => {
         setIsComparing(false);
       }, remainingTime);
+      
+    } catch (err) {
+      setError(`Model comparison failed: ${err}`);
+      setIsComparing(false);
     }
   };
 

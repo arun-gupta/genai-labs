@@ -83,9 +83,9 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '60%' }}></div>
+            <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '75%' }}></div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Analyzing model performance and generating metrics...</p>
+          <p className="text-xs text-gray-500 mt-1">Analyzing model performance and generating comprehensive metrics...</p>
         </div>
 
         {/* Comparison Steps */}
@@ -98,7 +98,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Initializing comparison</p>
-              <p className="text-xs text-gray-500">Setting up model evaluation framework</p>
+              <p className="text-xs text-gray-500">Setting up model evaluation framework and preparing prompts</p>
             </div>
           </div>
 
@@ -126,7 +126,19 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">Analyzing quality metrics</p>
-              <p className="text-xs text-gray-500">Evaluating coherence, relevance, and performance</p>
+              <p className="text-xs text-gray-500">Evaluating coherence, relevance, and performance indicators</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Calculating performance scores</p>
+              <p className="text-xs text-gray-500">Computing speed, efficiency, and quality rankings</p>
             </div>
           </div>
 
@@ -138,7 +150,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-400">Generating recommendations</p>
-              <p className="text-xs text-gray-400">Creating insights and suggestions</p>
+              <p className="text-xs text-gray-400">Creating insights and suggestions for optimal model selection</p>
             </div>
           </div>
         </div>
@@ -157,9 +169,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-700">{model}</p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className="text-xs text-gray-500">Processing...</span>
+                    <p className="text-xs text-gray-500">Processing and analyzing response quality</p>
                   </div>
                 </div>
               ))}
@@ -168,12 +178,13 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
         )}
 
         {/* Estimated Time */}
-        <div className="mt-4 text-center">
-          <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            <span>Estimated time: 30-60s</span>
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-700">
+              Estimated completion time: {selectedModels.length > 0 ? `${Math.max(2, selectedModels.length * 1.5)}s` : '2-5s'}
+            </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">This ensures you can see the progress indicators</p>
         </div>
       </div>
     );
