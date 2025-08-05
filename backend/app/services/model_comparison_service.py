@@ -91,9 +91,9 @@ class ModelComparisonService:
             logger.info(f"Quality metrics calculated - Quality: {quality_score:.3f}, Coherence: {coherence_score:.3f}, Relevance: {relevance_score:.3f}")
             
             return {
-                "quality_score": quality_score,
-                "coherence_score": coherence_score,
-                "relevance_score": relevance_score,
+                "quality_score": quality_score * 100,  # Convert to percentage
+                "coherence_score": coherence_score * 100,  # Convert to percentage
+                "relevance_score": relevance_score * 100,  # Convert to percentage
                 "compression_ratio": compression_ratio,
                 "flesch_reading_ease": flesch_reading_ease,
                 "flesch_kincaid_grade": flesch_kincaid_grade,
@@ -105,9 +105,9 @@ class ModelComparisonService:
         except Exception as e:
             logger.error(f"Error calculating quality metrics: {str(e)}")
             return {
-                "quality_score": 0.0,
-                "coherence_score": 0.0,
-                "relevance_score": 0.0,
+                "quality_score": 0.0,  # Already 0, no need to multiply
+                "coherence_score": 0.0,  # Already 0, no need to multiply
+                "relevance_score": 0.0,  # Already 0, no need to multiply
                 "compression_ratio": 0.0,
                 "flesch_reading_ease": 0.0,
                 "flesch_kincaid_grade": 0.0,
