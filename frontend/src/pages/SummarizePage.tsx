@@ -367,11 +367,33 @@ export const SummarizePage: React.FC = () => {
       }
       
       console.log('Comparison request:', request);
+      console.log('About to call apiService.compareSummarizationModels...');
+      
       const result = await apiService.compareSummarizationModels(request);
-      console.log('Comparison result:', result);
-      setComparisonResults(result);
+      
+      console.log('API call completed successfully!');
+      console.log('Raw API result:', result);
+      console.log('Result type:', typeof result);
+      console.log('Result keys:', Object.keys(result || {}));
+      console.log('Results array:', result?.results);
+      console.log('Results length:', result?.results?.length);
+      
+      if (result && result.results && result.results.length > 0) {
+        console.log('Setting comparison results...');
+        setComparisonResults(result);
+        console.log('Comparison results set successfully!');
+      } else {
+        console.error('API returned invalid result structure:', result);
+        setError('Invalid response from comparison API');
+      }
+      
     } catch (err) {
       console.error('Comparison error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       setError(`Model comparison failed: ${err}`);
     } finally {
       // Ensure progress indicators are shown for at least minDisplayTime
@@ -379,9 +401,18 @@ export const SummarizePage: React.FC = () => {
       const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
       
       console.log(`Comparison finished after ${elapsedTime}ms, waiting ${remainingTime}ms more`);
+      console.log('Current state before delay:', {
+        isComparing: true,
+        hasComparisonResults: !!comparisonResults,
+        error: null
+      });
       
       setTimeout(() => {
         console.log('Setting isComparing to false');
+        console.log('Final state before setting isComparing to false:', {
+          hasComparisonResults: !!comparisonResults,
+          comparisonResults: comparisonResults
+        });
         setIsComparing(false);
       }, remainingTime);
     }
@@ -413,6 +444,22 @@ export const SummarizePage: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [text, inputType]);
+
+  // Debug comparison results changes
+  useEffect(() => {
+    console.log('comparisonResults state changed:', {
+      hasResults: !!comparisonResults,
+      resultsLength: comparisonResults?.results?.length,
+      results: comparisonResults?.results,
+      metrics: comparisonResults?.comparison_metrics,
+      recommendations: comparisonResults?.recommendations
+    });
+  }, [comparisonResults]);
+
+  // Debug isComparing changes
+  useEffect(() => {
+    console.log('isComparing state changed:', isComparing);
+  }, [isComparing]);
 
   const getInputContent = () => {
     if (inputType === 'text') return text;
@@ -1020,8 +1067,16 @@ An Open Source AI is an AI system made available under terms and in a way that g
 
             {activeTab === 'comparison' && (
               <div className="space-y-6">
-                {comparisonResults ? (
-                  (() => {
+                {(() => {
+                  console.log('Rendering comparison tab with:', {
+                    activeTab,
+                    hasComparisonResults: !!comparisonResults,
+                    isComparing,
+                    comparisonResults: comparisonResults,
+                    selectedModels: selectedModels
+                  });
+                  
+                  if (comparisonResults) {
                     console.log('Comparison tab - comparisonResults:', comparisonResults);
                     console.log('Comparison tab - isComparing:', isComparing);
                     console.log('Comparison tab - results length:', comparisonResults.results?.length);
@@ -1037,25 +1092,28 @@ An Open Source AI is an AI system made available under terms and in a way that g
                         selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
                       />
                     );
-                  })()
-                ) : (
-                  <div className="text-center py-12">
-                    <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
-                    <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                      Compare how different AI models summarize the same content to find the best one for your needs.
-                    </p>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-                      <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
-                      <ol className="text-sm text-blue-800 space-y-1 text-left">
-                        <li>1. Enter your text, URL, or upload a file above</li>
-                        <li>2. Select 2 or more models in the Model Comparison section</li>
-                        <li>3. Click "Compare Models" to see results</li>
-                        <li>4. View quality scores, compression ratios, and recommendations</li>
-                      </ol>
-                    </div>
-                  </div>
-                )}
+                  } else {
+                    console.log('No comparison results, showing empty state');
+                    return (
+                      <div className="text-center py-12">
+                        <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
+                        <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                          Compare how different AI models summarize the same content to find the best one for your needs.
+                        </p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                          <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
+                          <ol className="text-sm text-blue-800 space-y-1 text-left">
+                            <li>1. Enter your text, URL, or upload a file above</li>
+                            <li>2. Select 2 or more models in the Model Comparison section</li>
+                            <li>3. Click "Compare Models" to see results</li>
+                            <li>4. View quality scores, compression ratios, and recommendations</li>
+                          </ol>
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             )}
           </div>
