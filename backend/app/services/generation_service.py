@@ -125,6 +125,18 @@ class GenerationService:
                         # Use the model's __call__ method for Ollama
                         response = await model.ainvoke(prompt_text)
                         candidate_handler.content = response
+                        
+                        # Estimate token usage for Ollama (since it doesn't provide exact counts)
+                        # Rough estimation: 1 token ≈ 4 characters for English text
+                        prompt_tokens = len(prompt_text) // 4
+                        completion_tokens = len(response) // 4
+                        total_tokens = prompt_tokens + completion_tokens
+                        
+                        candidate_handler.token_usage = TokenUsage(
+                            prompt_tokens=prompt_tokens,
+                            completion_tokens=completion_tokens,
+                            total_tokens=total_tokens
+                        )
                     except Exception as ollama_error:
                         raise Exception(f"Ollama model error: {str(ollama_error)}")
                 else:
@@ -240,6 +252,18 @@ class GenerationService:
                     # Use the model's __call__ method for Ollama
                     response = await model.ainvoke(prompt_text)
                     callback_handler.content = response
+                    
+                    # Estimate token usage for Ollama (since it doesn't provide exact counts)
+                    # Rough estimation: 1 token ≈ 4 characters for English text
+                    prompt_tokens = len(prompt_text) // 4
+                    completion_tokens = len(response) // 4
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    callback_handler.token_usage = TokenUsage(
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens
+                    )
                 except Exception as ollama_error:
                     raise Exception(f"Ollama model error: {str(ollama_error)}")
             else:
