@@ -76,6 +76,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: '60%' }}></div>
           </div>
+          <p className="text-xs text-gray-500 mt-1">Analyzing model performance and generating metrics...</p>
         </div>
 
         {/* Comparison Steps */}
@@ -110,13 +111,13 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-400">Analyzing quality metrics</p>
-              <p className="text-xs text-gray-400">Evaluating coherence, relevance, and performance</p>
+              <p className="text-sm font-medium text-gray-900">Analyzing quality metrics</p>
+              <p className="text-xs text-gray-500">Evaluating coherence, relevance, and performance</p>
             </div>
           </div>
 
@@ -163,6 +164,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <Clock className="w-4 h-4" />
             <span>Estimated time: 30-60s</span>
           </div>
+          <p className="text-xs text-gray-400 mt-1">This ensures you can see the progress indicators</p>
         </div>
       </div>
     );

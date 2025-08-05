@@ -347,6 +347,9 @@ export const SummarizePage: React.FC = () => {
     setShowComparison(true);
     setActiveTab('comparison'); // Switch to comparison tab immediately
     
+    const startTime = Date.now();
+    const minDisplayTime = 2000; // Minimum 2 seconds to show progress indicators
+    
     try {
       const request: any = {
         models: selectedModels,
@@ -371,8 +374,16 @@ export const SummarizePage: React.FC = () => {
       console.error('Comparison error:', err);
       setError(`Model comparison failed: ${err}`);
     } finally {
-      console.log('Comparison finished, setting isComparing to false');
-      setIsComparing(false);
+      // Ensure progress indicators are shown for at least minDisplayTime
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      
+      console.log(`Comparison finished after ${elapsedTime}ms, waiting ${remainingTime}ms more`);
+      
+      setTimeout(() => {
+        console.log('Setting isComparing to false');
+        setIsComparing(false);
+      }, remainingTime);
     }
   };
 
