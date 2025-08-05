@@ -331,6 +331,103 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
         </div>
       </div>
 
+      {/* Visual Comparison Charts */}
+      <div className="card">
+        <div className="flex items-center space-x-2 mb-4">
+          <BarChart3 className="text-blue-600" size={20} />
+          <h3 className="text-lg font-semibold text-gray-900">Visual Comparison</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quality Metrics Chart */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Quality Metrics Comparison</h4>
+            <div className="space-y-3">
+              {results.map((result, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      {result.model_provider}/{result.model_name}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {result.quality_score ? `${(result.quality_score * 100).toFixed(1)}%` : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300" 
+                      style={{ width: `${result.quality_score ? (result.quality_score * 100) : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Performance Metrics Chart */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Performance Metrics</h4>
+            <div className="space-y-4">
+              {/* Latency Comparison */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Response Time</span>
+                  <span className="text-xs text-gray-500">Lower is better</span>
+                </div>
+                <div className="space-y-2">
+                  {results.map((result, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-24 text-xs text-gray-600 truncate">
+                        {result.model_provider}/{result.model_name}
+                      </div>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${result.latency_ms ? Math.min((result.latency_ms / 5000) * 100, 100) : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="w-16 text-xs text-gray-600">
+                        {result.latency_ms ? `${result.latency_ms.toFixed(0)}ms` : 'N/A'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Token Usage Comparison */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Token Usage</span>
+                  <span className="text-xs text-gray-500">Total tokens</span>
+                </div>
+                <div className="space-y-2">
+                  {results.map((result, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-24 text-xs text-gray-600 truncate">
+                        {result.model_provider}/{result.model_name}
+                      </div>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${result.token_usage?.total_tokens ? Math.min((result.token_usage.total_tokens / 2000) * 100, 100) : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="w-16 text-xs text-gray-600">
+                        {result.token_usage?.total_tokens || 'N/A'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Detailed Metrics Toggle */}
       <div className="card">
         <button
@@ -342,7 +439,72 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
         </button>
         
         {showDetailedMetrics && (
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-6">
+            {/* Summary Chart */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-4">Metrics Overview</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {results.map((result, index) => (
+                  <div key={index} className="bg-white rounded-lg p-3 border">
+                    <div className="text-sm font-medium text-gray-900 mb-2">
+                      {result.model_provider}/{result.model_name}
+                    </div>
+                    <div className="space-y-2">
+                      {result.quality_score !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Quality</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-blue-500 h-1.5 rounded-full" 
+                                style={{ width: `${(result.quality_score * 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-medium text-gray-700">
+                              {(result.quality_score * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {result.coherence_score !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Coherence</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-green-500 h-1.5 rounded-full" 
+                                style={{ width: `${(result.coherence_score * 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-medium text-gray-700">
+                              {(result.coherence_score * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {result.relevance_score !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-600">Relevance</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-12 bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-purple-500 h-1.5 rounded-full" 
+                                style={{ width: `${(result.relevance_score * 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-medium text-gray-700">
+                              {(result.relevance_score * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Individual Model Details */}
             {results.map((result, index) => (
               <div key={index} className="border-t pt-4">
                 <h4 className="font-medium text-gray-900 mb-3">
