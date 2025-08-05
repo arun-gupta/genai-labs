@@ -14,20 +14,27 @@ class ModelAvailabilityService:
         self.cache_timestamp = 0
         self.cache_duration = 30  # Cache for 30 seconds
         
-    async def get_available_models(self) -> List[str]:
-        """Get list of currently available models from Ollama."""
+    async def get_running_models(self) -> List[str]:
+        """Get list of currently running models from Ollama."""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.ollama_base_url}/api/tags") as response:
+                # First check which models are actually running
+                async with session.get(f"{self.ollama_base_url}/api/ps") as response:
                     if response.status == 200:
                         data = await response.json()
-                        return [model['name'] for model in data.get('models', [])]
+                        running_models = [model['name'] for model in data.get('models', [])]
+                        logger.info(f"Running models: {running_models}")
+                        return running_models
                     else:
-                        logger.warning(f"Failed to fetch models from Ollama: {response.status}")
+                        logger.warning(f"Failed to fetch running models from Ollama: {response.status}")
                         return []
         except Exception as e:
             logger.error(f"Error fetching available models: {e}")
             return []
+
+    async def get_available_models(self) -> List[str]:
+        """Backward compatibility method - returns running models."""
+        return await self.get_running_models()
     
     def get_open_source_models(self) -> List[Dict]:
         """Get comprehensive list of open-source models with metadata."""
@@ -177,25 +184,52 @@ class ModelAvailabilityService:
             }
         ]
     
+    async def get_installed_models(self) -> List[str]:
+        """Get list of installed models from Ollama."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.ollama_base_url}/api/tags") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        installed_models = [model['name'] for model in data.get('models', [])]
+                        logger.info(f"Installed models: {installed_models}")
+                        return installed_models
+                    else:
+                        logger.warning(f"Failed to fetch installed models from Ollama: {response.status}")
+                        return []
+        except Exception as e:
+            logger.error(f"Error fetching installed models: {e}")
+            return []
+
     async def get_models_with_availability(self) -> Dict:
         """Get models with their availability status."""
-        # Get currently available models
-        available_models = await self.get_available_models()
+        # Get currently running models
+        running_models = await self.get_running_models()
+        
+        # Get installed models
+        installed_models = await self.get_installed_models()
         
         # Get all open-source models
         all_models = self.get_open_source_models()
         
         # Mark availability status
         for model in all_models:
-            model["is_available"] = model["name"] in available_models
-            model["status"] = "Available" if model["is_available"] else "Download Required"
+            if model["name"] in running_models:
+                model["is_available"] = True
+                model["status"] = "Available"
+            elif model["name"] in installed_models:
+                model["is_available"] = False
+                model["status"] = "Installed (Not Running)"
+            else:
+                model["is_available"] = False
+                model["status"] = "Download Required"
         
         # Sort models alphabetically by display_name
         all_models.sort(key=lambda x: x["display_name"])
         
         return {
             "models": all_models,
-            "available_count": len(available_models),
+            "available_count": len(running_models),
             "total_count": len(all_models),
             "categories": sorted(list(set(model["category"] for model in all_models))),
             "organizations": sorted(list(set(model["organization"] for model in all_models)))
