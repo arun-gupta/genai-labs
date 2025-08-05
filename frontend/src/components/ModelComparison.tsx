@@ -229,7 +229,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
     return (
       <td className="px-4 py-4 text-center">
         <div className="text-sm font-medium text-gray-900">
-          {result.compression_ratio.toFixed(1)}%
+          {(result.compression_ratio * 100).toFixed(1)}%
         </div>
       </td>
     );
@@ -594,14 +594,15 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {result.compression_ratio ? `${result.compression_ratio.toFixed(1)}%` : 'N/A'}
+                          {result.compression_ratio ? 
+                            `${(result.compression_ratio * 100).toFixed(1)}% of original` : 'N/A'}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div 
                           className="bg-purple-500 h-3 rounded-full transition-all duration-300" 
                           style={{ 
-                            width: `${result.compression_ratio || 0}%` 
+                            width: `${result.compression_ratio ? (result.compression_ratio * 100) : 0}%` 
                           }}
                         ></div>
                       </div>
