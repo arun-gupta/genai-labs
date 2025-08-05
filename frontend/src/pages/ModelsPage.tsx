@@ -110,14 +110,16 @@ export const ModelsPage: React.FC = () => {
     const matchesOrganization = selectedOrganization === 'all' || model.organization === selectedOrganization;
     
     let matchesAvailability = true;
-    if (availabilityFilter === 'available') matchesAvailability = model.is_available;
-    else if (availabilityFilter === 'download') matchesAvailability = !model.is_available;
+    if (availabilityFilter === 'available') matchesAvailability = model.status === "Available";
+    else if (availabilityFilter === 'installed') matchesAvailability = model.status === "Installed (Not Running)";
+    else if (availabilityFilter === 'download') matchesAvailability = model.status === "Download Required";
     
     return matchesSearch && matchesCategory && matchesOrganization && matchesAvailability;
   }) || [];
 
-  const availableModels = filteredModels.filter(m => m.is_available);
-  const downloadRequiredModels = filteredModels.filter(m => !m.is_available);
+  const availableModels = filteredModels.filter(m => m.status === "Available");
+  const installedModels = filteredModels.filter(m => m.status === "Installed (Not Running)");
+  const downloadRequiredModels = filteredModels.filter(m => m.status === "Download Required");
 
   if (loading) {
     return (
@@ -146,7 +148,7 @@ export const ModelsPage: React.FC = () => {
     );
   }
 
-  const renderModelCard = (model: Model, isAvailable: boolean) => {
+  const renderModelCard = (model: Model, isAvailable: boolean, statusType?: string) => {
     const CategoryIcon = categoryIcons[model.category as keyof typeof categoryIcons] || Zap;
     const orgColor = organizationColors[model.organization as keyof typeof organizationColors] || 'bg-gray-100 text-gray-800';
     
@@ -214,9 +216,11 @@ export const ModelsPage: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-gray-500">License: {model.license}</span>
             <span className={`text-xs font-medium ${
-              isAvailable ? 'text-green-600' : 'text-blue-600'
+              isAvailable ? 'text-green-600' : 
+              statusType === 'installed' ? 'text-purple-600' : 'text-blue-600'
             }`}>
-              {isAvailable ? 'Ready to Use' : 'Download Required'}
+              {isAvailable ? 'Ready to Use' : 
+               statusType === 'installed' ? 'Installed (Not Running)' : 'Download Required'}
             </span>
           </div>
           
@@ -267,10 +271,14 @@ export const ModelsPage: React.FC = () => {
       {/* Legend */}
       <div className="bg-gray-50 rounded-lg p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Legend</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex items-center space-x-2">
             <CheckCircle className="w-5 h-5 text-green-500" />
             <span className="text-sm">Available - Ready to use</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Tag className="w-5 h-5 text-purple-500" />
+            <span className="text-sm">Installed (Not Running)</span>
           </div>
           <div className="flex items-center space-x-2">
             <Download className="w-5 h-5 text-blue-500" />
@@ -334,6 +342,7 @@ export const ModelsPage: React.FC = () => {
             >
               <option value="all">All Models</option>
               <option value="available">Available</option>
+              <option value="installed">Installed (Not Running)</option>
               <option value="download">Download Required</option>
             </select>
           </div>
@@ -356,6 +365,22 @@ export const ModelsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Installed Models Section */}
+      {installedModels.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <Tag className="w-6 h-6 text-purple-600" />
+            <h2 className="text-2xl font-bold text-purple-700">Installed (Not Running)</h2>
+            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-sm font-medium">
+              {installedModels.length} model{installedModels.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {installedModels.map((model) => renderModelCard(model, false, "installed"))}
+          </div>
+        </div>
+      )}
+
       {/* Download Required Models Section */}
       {downloadRequiredModels.length > 0 && (
         <div className="mb-8">
@@ -367,7 +392,7 @@ export const ModelsPage: React.FC = () => {
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {downloadRequiredModels.map((model) => renderModelCard(model, false))}
+            {downloadRequiredModels.map((model) => renderModelCard(model, false, "download"))}
           </div>
         </div>
       )}
