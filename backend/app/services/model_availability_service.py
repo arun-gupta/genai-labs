@@ -40,7 +40,7 @@ class ModelAvailabilityService:
                 "organization": "Alibaba",
                 "license": "Apache 2.0",
                 "download_command": "ollama pull qwen2.5:3b",
-                "category": "Efficient Reasoning",
+                "category": "Reasoning & Analysis",
                 "tags": ["reasoning", "efficient", "multilingual"]
             },
             {
@@ -51,7 +51,7 @@ class ModelAvailabilityService:
                 "organization": "Microsoft",
                 "license": "MIT",
                 "download_command": "ollama pull phi3:3.8b",
-                "category": "Reasoning",
+                "category": "Reasoning & Analysis",
                 "tags": ["reasoning", "compact", "microsoft"]
             },
             {
@@ -62,7 +62,7 @@ class ModelAvailabilityService:
                 "organization": "DeepSeek",
                 "license": "Apache 2.0",
                 "download_command": "ollama pull deepseek-coder:3b",
-                "category": "Coding",
+                "category": "Coding & Development",
                 "tags": ["coding", "programming", "specialized"]
             },
             {
@@ -128,7 +128,7 @@ class ModelAvailabilityService:
                 "organization": "Meta",
                 "license": "Meta License",
                 "download_command": "ollama pull codellama:3b",
-                "category": "Coding",
+                "category": "Coding & Development",
                 "tags": ["coding", "meta", "code-generation"]
             },
             {
@@ -172,8 +172,8 @@ class ModelAvailabilityService:
                 "organization": "OpenAI",
                 "license": "Apache 2.0",
                 "download_command": "ollama pull gpt-oss:20b",
-                "category": "Advanced Reasoning",
-                "tags": ["reasoning", "agentic", "openai", "open-weight", "function-calling"]
+                "category": "Reasoning & Analysis",
+                "tags": ["reasoning", "agentic", "openai", "open-weight", "function-calling", "advanced-reasoning"]
             }
         ]
     
