@@ -382,6 +382,11 @@ export const SummarizePage: React.FC = () => {
         console.log('Setting comparison results...');
         setComparisonResults(result);
         console.log('Comparison results set successfully!');
+        
+        // Set isComparing to false immediately when we have results
+        console.log('Setting isComparing to false immediately due to valid results');
+        setIsComparing(false);
+        return; // Exit early since we have results
       } else {
         console.error('API returned invalid result structure:', result);
         setError('Invalid response from comparison API');
@@ -396,25 +401,29 @@ export const SummarizePage: React.FC = () => {
       });
       setError(`Model comparison failed: ${err}`);
     } finally {
-      // Ensure progress indicators are shown for at least minDisplayTime
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
-      
-      console.log(`Comparison finished after ${elapsedTime}ms, waiting ${remainingTime}ms more`);
-      console.log('Current state before delay:', {
-        isComparing: true,
-        hasComparisonResults: !!comparisonResults,
-        error: null
-      });
-      
-      setTimeout(() => {
-        console.log('Setting isComparing to false');
-        console.log('Final state before setting isComparing to false:', {
+      // Only apply minimum display time if we don't have results yet
+      if (!comparisonResults) {
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+        
+        console.log(`Comparison finished after ${elapsedTime}ms, waiting ${remainingTime}ms more`);
+        console.log('Current state before delay:', {
+          isComparing: true,
           hasComparisonResults: !!comparisonResults,
-          comparisonResults: comparisonResults
+          error: null
         });
-        setIsComparing(false);
-      }, remainingTime);
+        
+        setTimeout(() => {
+          console.log('Setting isComparing to false after minimum display time');
+          console.log('Final state before setting isComparing to false:', {
+            hasComparisonResults: !!comparisonResults,
+            comparisonResults: comparisonResults
+          });
+          setIsComparing(false);
+        }, remainingTime);
+      } else {
+        console.log('Results already set, no need for minimum display time delay');
+      }
     }
   };
 
