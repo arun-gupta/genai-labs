@@ -57,6 +57,9 @@ export const VisionPage: React.FC = () => {
   // Drag state
   const [isDragOver, setIsDragOver] = useState(false);
   const [showPasteNotification, setShowPasteNotification] = useState(false);
+  
+  // Results tab state
+  const [resultsTab, setResultsTab] = useState<'response' | 'analytics' | 'comparison'>('response');
 
   // Load available models
   useEffect(() => {
@@ -220,6 +223,7 @@ export const VisionPage: React.FC = () => {
       });
       
       setAnalysisResult(result);
+      setResultsTab('response'); // Switch to response tab when results are available
     } catch (error) {
       console.error('Image analysis failed:', error);
       alert('Image analysis failed. Please try again.');
@@ -250,6 +254,7 @@ export const VisionPage: React.FC = () => {
       
       setGenerationResult(result);
       setGeneratedImages(prev => [result, ...prev]);
+      setResultsTab('response'); // Switch to response tab when results are available
     } catch (error) {
       console.error('Image generation failed:', error);
       alert('Image generation failed. Please try again.');
@@ -474,59 +479,131 @@ export const VisionPage: React.FC = () => {
               <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
               
               {analysisResult ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Analysis Summary</h3>
-                    <p className="text-gray-700">{analysisResult.raw_response}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Model:</span>
-                      <p className="font-medium">{analysisResult.model_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Provider:</span>
-                      <p className="font-medium">{analysisResult.model_provider}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Type:</span>
-                      <p className="font-medium capitalize">{analysisResult.analysis_type}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Latency:</span>
-                      <p className="font-medium">{analysisResult.latency_ms.toFixed(0)}ms</p>
-                    </div>
+                <>
+                  {/* Results Tabs */}
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+                    <button
+                      onClick={() => setResultsTab('response')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'response'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <FileText size={16} />
+                      <span>Response</span>
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('analytics')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'analytics'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <BarChart3 size={16} />
+                      <span>Analytics</span>
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('comparison')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'comparison'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Eye size={16} />
+                      <span>Comparison</span>
+                    </button>
                   </div>
 
-                  {analysisResult.analysis_type === 'extract' && analysisResult.analysis.extracted_text && (
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <h3 className="font-medium text-blue-900 mb-2">Extracted Text</h3>
-                      <div className="space-y-1">
-                        {analysisResult.analysis.extracted_text.map((text: string, index: number) => (
-                          <p key={index} className="text-blue-800">{text}</p>
-                        ))}
+                  {/* Response Tab */}
+                  {resultsTab === 'response' && (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="font-medium text-gray-900 mb-2">Analysis Summary</h3>
+                        <p className="text-gray-700">{analysisResult.raw_response}</p>
                       </div>
+                      
+                      {analysisResult.analysis_type === 'extract' && analysisResult.analysis.extracted_text && (
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <h3 className="font-medium text-blue-900 mb-2">Extracted Text</h3>
+                          <div className="space-y-1">
+                            {analysisResult.analysis.extracted_text.map((text: string, index: number) => (
+                              <p key={index} className="text-blue-800">{text}</p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {analysisResult.analysis_type === 'analyze' && (
+                        <div className="space-y-3">
+                          {analysisResult.analysis.objects && analysisResult.analysis.objects.length > 0 && (
+                            <div className="bg-green-50 rounded-lg p-3">
+                              <h4 className="font-medium text-green-900 mb-1">Objects</h4>
+                              <p className="text-green-800 text-sm">{analysisResult.analysis.objects.join(', ')}</p>
+                            </div>
+                          )}
+                          {analysisResult.analysis.actions && analysisResult.analysis.actions.length > 0 && (
+                            <div className="bg-purple-50 rounded-lg p-3">
+                              <h4 className="font-medium text-purple-900 mb-1">Actions</h4>
+                              <p className="text-purple-800 text-sm">{analysisResult.analysis.actions.join(', ')}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {analysisResult.analysis_type === 'analyze' && (
-                    <div className="space-y-3">
-                      {analysisResult.analysis.objects && analysisResult.analysis.objects.length > 0 && (
-                        <div className="bg-green-50 rounded-lg p-3">
-                          <h4 className="font-medium text-green-900 mb-1">Objects</h4>
-                          <p className="text-green-800 text-sm">{analysisResult.analysis.objects.join(', ')}</p>
+                  {/* Analytics Tab */}
+                  {resultsTab === 'analytics' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <span className="text-gray-500">Model:</span>
+                          <p className="font-medium">{analysisResult.model_name}</p>
                         </div>
-                      )}
-                      {analysisResult.analysis.actions && analysisResult.analysis.actions.length > 0 && (
-                        <div className="bg-purple-50 rounded-lg p-3">
-                          <h4 className="font-medium text-purple-900 mb-1">Actions</h4>
-                          <p className="text-purple-800 text-sm">{analysisResult.analysis.actions.join(', ')}</p>
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <span className="text-gray-500">Provider:</span>
+                          <p className="font-medium">{analysisResult.model_provider}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <span className="text-gray-500">Analysis Type:</span>
+                          <p className="font-medium capitalize">{analysisResult.analysis_type}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <span className="text-gray-500">Response Time:</span>
+                          <p className="font-medium">{analysisResult.latency_ms.toFixed(0)}ms</p>
+                        </div>
+                      </div>
+                      
+                      {analysisResult.analysis.description && (
+                        <div className="bg-blue-50 rounded-lg p-4">
+                          <h3 className="font-medium text-blue-900 mb-2">Content Analysis</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-blue-700">Word Count:</span>
+                              <p className="font-medium">{analysisResult.analysis.description.word_count}</p>
+                            </div>
+                            <div>
+                              <span className="text-blue-700">Sentence Count:</span>
+                              <p className="font-medium">{analysisResult.analysis.description.sentence_count}</p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
                   )}
-                </div>
+
+                  {/* Comparison Tab */}
+                  {resultsTab === 'comparison' && (
+                    <div className="text-center text-gray-500 py-8">
+                      <Eye className="mx-auto h-12 w-12 mb-4" />
+                      <p>Compare this image with others using the "Compare Images" feature</p>
+                      <p className="text-sm mt-2">Upload multiple images to enable comparison</p>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center text-gray-500 py-8">
                   <Eye className="mx-auto h-12 w-12 mb-4" />
@@ -655,53 +732,123 @@ export const VisionPage: React.FC = () => {
               <h2 className="text-xl font-semibold mb-4">Generated Images</h2>
               
               {generationResult ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    {generationResult.images.map((image, index) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <img
-                          src={`data:image/png;base64,${image.base64}`}
-                          alt={`Generated image ${index + 1}`}
-                          className="w-full h-64 object-cover rounded mb-3"
-                        />
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">
-                            {image.size} • {image.seed ? `Seed: ${image.seed}` : 'No seed'}
-                          </span>
-                          <button
-                            onClick={() => downloadImage(image.base64, `generated-image-${index + 1}.png`)}
-                            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
-                          >
-                            <Download size={14} />
-                            <span>Download</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                <>
+                  {/* Results Tabs */}
+                  <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-4">
+                    <button
+                      onClick={() => setResultsTab('response')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'response'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <FileText size={16} />
+                      <span>Response</span>
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('analytics')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'analytics'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <BarChart3 size={16} />
+                      <span>Analytics</span>
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('comparison')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        resultsTab === 'comparison'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <Eye size={16} />
+                      <span>Comparison</span>
+                    </button>
                   </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Generation Info</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Model:</span>
-                        <p className="font-medium">{generationResult.model}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Provider:</span>
-                        <p className="font-medium">{generationResult.provider}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Prompt:</span>
-                        <p className="font-medium truncate">{generationResult.prompt}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Images:</span>
-                        <p className="font-medium">{generationResult.images.length}</p>
+
+                  {/* Response Tab */}
+                  {resultsTab === 'response' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        {generationResult.images.map((image, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <img
+                              src={`data:image/png;base64,${image.base64}`}
+                              alt={`Generated image ${index + 1}`}
+                              className="w-full h-64 object-cover rounded mb-3"
+                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-500">
+                                {image.size} • {image.seed ? `Seed: ${image.seed}` : 'No seed'}
+                              </span>
+                              <button
+                                onClick={() => downloadImage(image.base64, `generated-image-${index + 1}.png`)}
+                                className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+                              >
+                                <Download size={14} />
+                                <span>Download</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+
+                  {/* Analytics Tab */}
+                  {resultsTab === 'analytics' && (
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h3 className="font-medium text-gray-900 mb-2">Generation Info</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Model:</span>
+                            <p className="font-medium">{generationResult.model}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Provider:</span>
+                            <p className="font-medium">{generationResult.provider}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Prompt:</span>
+                            <p className="font-medium truncate">{generationResult.prompt}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Images:</span>
+                            <p className="font-medium">{generationResult.images.length}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <h3 className="font-medium text-blue-900 mb-2">Generation Parameters</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-blue-700">Generation ID:</span>
+                            <p className="font-medium font-mono text-xs">{generationResult.generation_id}</p>
+                          </div>
+                          <div>
+                            <span className="text-blue-700">Timestamp:</span>
+                            <p className="font-medium">{new Date(generationResult.timestamp * 1000).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comparison Tab */}
+                  {resultsTab === 'comparison' && (
+                    <div className="text-center text-gray-500 py-8">
+                      <Eye className="mx-auto h-12 w-12 mb-4" />
+                      <p>Compare generated images with different models or prompts</p>
+                      <p className="text-sm mt-2">Generate multiple images to enable comparison</p>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center text-gray-500 py-8">
                   <Palette className="mx-auto h-12 w-12 mb-4" />
