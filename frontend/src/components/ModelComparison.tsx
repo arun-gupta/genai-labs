@@ -55,9 +55,18 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(true);
 
   // Debug info
-  console.log('ModelComparison render:', { isComparing, results: results?.length, selectedModels: selectedModels?.length });
+  console.log('ModelComparison render:', { 
+    isComparing, 
+    results: results?.length, 
+    selectedModels: selectedModels?.length,
+    hasResults: !!results,
+    resultsData: results,
+    metrics: metrics,
+    recommendations: recommendations
+  });
 
   if (isComparing) {
+    console.log('Showing progress indicators because isComparing is true');
     return (
       <div className="card">
         <div className="flex items-center space-x-2 mb-6">
@@ -171,6 +180,11 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   }
 
   if (!results || results.length === 0) {
+    console.log('Showing no results message because:', { 
+      hasResults: !!results, 
+      resultsLength: results?.length,
+      results: results 
+    });
     return (
       <div className="card">
         <div className="text-center py-12">

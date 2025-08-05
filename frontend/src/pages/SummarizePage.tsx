@@ -1021,14 +1021,23 @@ An Open Source AI is an AI system made available under terms and in a way that g
             {activeTab === 'comparison' && (
               <div className="space-y-6">
                 {comparisonResults ? (
-                  <ModelComparison
-                    results={comparisonResults.results}
-                    metrics={comparisonResults.comparison_metrics}
-                    recommendations={comparisonResults.recommendations}
-                    isComparing={isComparing}
-                    comparisonType="summarization"
-                    selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
-                  />
+                  (() => {
+                    console.log('Comparison tab - comparisonResults:', comparisonResults);
+                    console.log('Comparison tab - isComparing:', isComparing);
+                    console.log('Comparison tab - results length:', comparisonResults.results?.length);
+                    console.log('Comparison tab - first result:', comparisonResults.results?.[0]);
+                    
+                    return (
+                      <ModelComparison
+                        results={comparisonResults.results}
+                        metrics={comparisonResults.comparison_metrics}
+                        recommendations={comparisonResults.recommendations}
+                        isComparing={isComparing}
+                        comparisonType="summarization"
+                        selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
+                      />
+                    );
+                  })()
                 ) : (
                   <div className="text-center py-12">
                     <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
