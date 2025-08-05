@@ -41,21 +41,17 @@ export const SummarizePage: React.FC = () => {
 
     // Get all available Ollama models for the "Compare All Local Models" preset
     const getAllLocalModels = useMemo(() => {
-      if (!availableModels?.providers) {
-        console.log('availableModels.providers is not available:', availableModels);
+      if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
+        console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
         return [];
       }
       
-      const ollamaProvider = availableModels.providers.find((provider: any) => provider.id === 'ollama');
-      if (!ollamaProvider?.models) {
-        console.log('ollamaProvider.models is not available:', ollamaProvider);
-        return [];
-      }
-      
-      return ollamaProvider.models.map((model: string) => ({
-        provider: 'ollama',
-        model: model
-      }));
+      return availableModels.ollama_models.models
+        .filter((model: any) => model.is_available)
+        .map((model: any) => ({
+          provider: 'ollama',
+          model: model.name
+        }));
     }, [availableModels]);
     
     const baseCombinations = [
