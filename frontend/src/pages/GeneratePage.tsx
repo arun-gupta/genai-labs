@@ -308,6 +308,8 @@ export const GeneratePage: React.FC = () => {
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
+    setShowComparison(true);
+    setActiveTab('comparison'); // Switch to comparison tab immediately
     
     try {
       const result = await apiService.compareGenerationModels({
@@ -322,8 +324,6 @@ export const GeneratePage: React.FC = () => {
       });
       
       setComparisonResults(result);
-      setShowComparison(true);
-      setActiveTab('comparison'); // Automatically switch to comparison tab
     } catch (err) {
       setError(`Model comparison failed: ${err}`);
     } finally {
