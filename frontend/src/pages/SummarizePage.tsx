@@ -31,28 +31,27 @@ export const SummarizePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
-  // Function to get available model combinations
+  // Get all available Ollama models for the "Compare All Local Models" preset
+  const getAllLocalModels = useMemo(() => {
+    if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
+      console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
+      return [];
+    }
+    
+    return availableModels.ollama_models.models
+      .filter((model: any) => model.is_available)
+      .map((model: any) => ({
+        provider: 'ollama',
+        model: model.name
+      }));
+  }, [availableModels]);
+
   const getAvailableModelCombinations = () => {
     if (!availableModels?.providers) return [];
     
     const availableModelsList = availableModels.providers.flatMap((provider: any) =>
       provider.models?.map((model: string) => ({ provider: provider.id, model })) || []
     );
-
-    // Get all available Ollama models for the "Compare All Local Models" preset
-    const getAllLocalModels = useMemo(() => {
-      if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
-        console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
-        return [];
-      }
-      
-      return availableModels.ollama_models.models
-        .filter((model: any) => model.is_available)
-        .map((model: any) => ({
-          provider: 'ollama',
-          model: model.name
-        }));
-    }, [availableModels]);
     
     const baseCombinations = [
       {
@@ -113,6 +112,16 @@ export const SummarizePage: React.FC = () => {
 
   // Default model combinations for quick comparison
   const defaultModelCombinations = getAvailableModelCombinations();
+
+  // Get model count for any combination
+  const getModelCount = useMemo(() => {
+    return (combination: any) => {
+      if (combination.name === "Compare All Local Models") {
+        return getAllLocalModels.length;
+      }
+      return combination.models.length;
+    };
+  }, [getAllLocalModels]);
 
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -664,7 +673,14 @@ export const SummarizePage: React.FC = () => {
                         disabled={isComparing}
                         className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                       >
-                        <div className="text-sm font-medium text-gray-900">{combination.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {combination.name}
+                          {getModelCount(combination) > 0 && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              {getModelCount(combination)} models
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-600">{combination.description}</div>
                       </button>
                     ))

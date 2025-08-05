@@ -198,6 +198,16 @@ export const RAGPage: React.FC = () => {
       }));
   }, [availableModels]);
 
+  // Get model count for any combination
+  const getModelCount = useMemo(() => {
+    return (combination: any) => {
+      if (combination.name === "Compare All Local Models") {
+        return getAllLocalModels.length;
+      }
+      return combination.models.length;
+    };
+  }, [getAllLocalModels]);
+
   const createNewCollection = async () => {
     if (!newCollectionName.trim()) {
       setError('Please enter a collection name');
@@ -709,9 +719,9 @@ export const RAGPage: React.FC = () => {
                     >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
-                        {combination.name === "Compare All Local Models" && getAllLocalModels.length > 0 && (
+                        {getModelCount(combination) > 0 && (
                           <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {getAllLocalModels.length} models
+                            {getModelCount(combination)} models
                           </span>
                         )}
                       </div>
