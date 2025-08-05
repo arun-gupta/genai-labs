@@ -991,6 +991,7 @@ An Open Source AI is an AI system made available under terms and in a way that g
                     recommendations={comparisonResults.recommendations}
                     isComparing={isComparing}
                     comparisonType="summarization"
+                    selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
                   />
                 ) : (
                   <div className="text-center py-12">
