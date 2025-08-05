@@ -1417,7 +1417,7 @@ export const RAGPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Clock className="w-4 h-4 text-blue-600" />
                         <span className="text-sm text-blue-700">
-                          Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 20-40} seconds` : '40-80 seconds'}
+                          Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 20-40}s` : '40-80s'}
                         </span>
                       </div>
                       <p className="text-xs text-blue-600 mt-1">

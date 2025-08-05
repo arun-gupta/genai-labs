@@ -248,7 +248,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-700">
-              Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 15-30} seconds` : '30-60 seconds'}
+              Estimated time: {selectedModels.length > 0 ? `${selectedModels.length * 15-30}s` : '30-60s'}
             </span>
           </div>
           <p className="text-xs text-blue-600 mt-1">
@@ -418,7 +418,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   {/* Speed */}
                   <td className="px-4 py-4 text-center">
                     <div className="text-sm font-medium text-gray-900">
-                      {result.latency_ms ? (result.latency_ms / 1000).toFixed(1) : 'N/A'}
+                      {result.latency_ms ? `${(result.latency_ms / 1000).toFixed(1)}s` : 'N/A'}
                     </div>
                   </td>
                   
@@ -488,12 +488,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         <div 
                           className="bg-green-500 h-2 rounded-full transition-all duration-300" 
                           style={{ 
-                            width: `${result.latency_ms ? Math.min((result.latency_ms / 5000) * 100, 100) : 0}%` 
+                            width: `${result.latency_ms ? Math.min((result.latency_ms / 10000) * 100, 100) : 0}%` 
                           }}
                         ></div>
                       </div>
                       <div className="w-16 text-xs text-gray-600">
-                        {result.latency_ms ? `${result.latency_ms.toFixed(0)}ms` : 'N/A'}
+                        {result.latency_ms ? `${(result.latency_ms / 1000).toFixed(1)}s` : 'N/A'}
                       </div>
                     </div>
                   ))}
