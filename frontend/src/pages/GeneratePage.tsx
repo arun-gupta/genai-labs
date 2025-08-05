@@ -536,9 +536,17 @@ export const GeneratePage: React.FC = () => {
               
               {selectedModels.length > 0 && (
                 <div className="mt-3 p-2 bg-purple-50 rounded-lg">
-                  <p className="text-xs text-purple-700">
-                    Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-purple-700">
+                      Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                    </p>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      className="text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 px-2 py-1 rounded transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
               )}
 
