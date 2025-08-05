@@ -90,45 +90,47 @@ export const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
         </div>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div className="flex items-center space-x-2">
-          <Zap className="text-gray-400" size={16} />
-          <div>
-            <div className="text-gray-500">Model</div>
-            <div className="font-medium text-gray-900">
-              {modelName} ({modelProvider})
-            </div>
-          </div>
-        </div>
-
-        {latencyMs && (
-          <div className="flex items-center space-x-2">
-            <Clock className="text-gray-400" size={16} />
-            <div>
-              <div className="text-gray-500">Latency</div>
-              <div className="font-medium text-gray-900">
-                {formatLatency(latencyMs)}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {tokenUsage && (
+      {/* Metrics - Only show when there's content or streaming */}
+      {(content || isStreaming) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="flex items-center space-x-2">
             <Zap className="text-gray-400" size={16} />
             <div>
-              <div className="text-gray-500">Tokens</div>
+              <div className="text-gray-500">Model</div>
               <div className="font-medium text-gray-900">
-                {tokenUsage.total_tokens} total
-              </div>
-              <div className="text-xs text-gray-500">
-                {tokenUsage.prompt_tokens} prompt + {tokenUsage.completion_tokens} completion
+                {modelName} ({modelProvider})
               </div>
             </div>
           </div>
-        )}
-      </div>
+
+          {latencyMs && (
+            <div className="flex items-center space-x-2">
+              <Clock className="text-gray-400" size={16} />
+              <div>
+                <div className="text-gray-500">Latency</div>
+                <div className="font-medium text-gray-900">
+                  {formatLatency(latencyMs)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tokenUsage && (
+            <div className="flex items-center space-x-2">
+              <Zap className="text-gray-400" size={16} />
+              <div>
+                <div className="text-gray-500">Tokens</div>
+                <div className="font-medium text-gray-900">
+                  {tokenUsage.total_tokens} total
+                </div>
+                <div className="text-xs text-gray-500">
+                  {tokenUsage.prompt_tokens} prompt + {tokenUsage.completion_tokens} completion
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }; 
