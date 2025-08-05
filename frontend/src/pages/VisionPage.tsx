@@ -339,18 +339,30 @@ export const VisionPage: React.FC = () => {
   // Generate a simple colored image
   const generateSampleImage = (name: string, color: string) => {
     const canvas = document.createElement('canvas');
-    canvas.width = 200;
-    canvas.height = 150;
+    canvas.width = 400;
+    canvas.height = 300;
     const ctx = canvas.getContext('2d');
     if (ctx) {
+      // Fill background
       ctx.fillStyle = color;
-      ctx.fillRect(0, 0, 200, 150);
+      ctx.fillRect(0, 0, 400, 300);
+      
+      // Add some visual elements
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(50, 50, 300, 200);
+      
+      // Add text
       ctx.fillStyle = 'white';
-      ctx.font = '16px Arial';
+      ctx.font = 'bold 24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(name, 100, 75);
+      ctx.fillText(name, 200, 150);
+      
+      // Add a border
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 380, 280);
     }
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL('image/png', 1.0);
   };
 
   // Handle sample image selection

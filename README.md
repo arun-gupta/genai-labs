@@ -20,7 +20,7 @@ cd genai-labs
 - **Text Summarization** - Multi-format summarization with analytics  
 - **Q&A over Documents** - RAG-powered document question answering
 - **Model Comparison** - Side-by-side model performance analysis for generation and summarization
-- **Models Explorer** - Browse and manage 12+ open-source LLM models
+- **Models Explorer** - Browse and manage 20+ open-source LLM models including GPT-OSS-20B
 
 ### 🛠️ Platform Features
 - **Voice Features** - Speech-to-text and text-to-speech

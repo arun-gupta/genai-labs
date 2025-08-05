@@ -16,8 +16,9 @@ Advanced text generation with multiple writing styles and real-time streaming.
 - **Prompt Templates**: Pre-built templates with variable substitution
 - **Generation Analytics**: Comprehensive analysis of generated content
 - **Model Comparison**: Compare multiple models side-by-side with quality metrics
-- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance)
+- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance, Advanced Reasoning)
 - **Sample Prompts**: 8 diverse, clickable sample prompts for quick start
+- **GPT-OSS-20B Support**: OpenAI's open-weight model with advanced reasoning and agentic capabilities
 
 ### Text Summarization (`/summarize`)
 Multi-format summarization with comprehensive analytics and multiple input methods.
@@ -58,7 +59,7 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Document Analytics**: Comprehensive analysis of uploaded documents (topics, entities, readability, insights)
 - **Performance Metrics**: Response time, accuracy tracking, and processing statistics
 - **Model Comparison**: Compare multiple models for Q&A performance
-- **Quick Model Combinations**: Pre-built combinations for easy comparison setup
+- **Quick Model Combinations**: Pre-built combinations for easy comparison setup (Local vs Cloud, Efficient, High Performance, Advanced Reasoning)
 - **Filter by Tags**: Focus on specific document categories
 - **Export Options**: Export Q&A results in multiple formats
 
@@ -98,6 +99,28 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Quality Metrics**: Coherence, relevance, and overall quality scores
 - **Performance Metrics**: Response time, token usage, and processing speed
 - **Recommendations**: AI-powered suggestions for best model selection
+
+## 🤖 Supported Models
+
+### Cloud Models
+- **OpenAI**: GPT-3.5-turbo, GPT-4, GPT-4-turbo, GPT-4-vision-preview
+- **Anthropic**: Claude-3-haiku, Claude-3-sonnet, Claude-3-opus
+
+### Local Models (via Ollama)
+- **GPT-OSS-20B**: OpenAI's open-weight model with advanced reasoning and agentic capabilities
+- **Mistral**: High-performance 7B model with excellent reasoning
+- **Llama 2**: Meta's foundational models (3B, 7B, 13B variants)
+- **Code Llama**: Specialized coding models
+- **Phi-3**: Microsoft's compact reasoning model
+- **Qwen 2.5**: Alibaba's efficient multilingual model
+- **Gemma 2**: Google's lightweight models
+- **And many more**: 20+ open-source models available
+
+### Model Categories
+- **Efficient Models**: Lightweight models for speed (3B-7B parameters)
+- **High Performance**: Quality-focused models for accuracy
+- **Advanced Reasoning**: Models with enhanced reasoning capabilities
+- **Specialized**: Domain-specific models (coding, multilingual, etc.)
 - **Visual Comparison**: Easy-to-read comparison tables and charts
 
 ### Quick Combinations

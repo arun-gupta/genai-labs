@@ -163,6 +163,17 @@ class ModelAvailabilityService:
                 "download_command": "ollama pull llama2:3b",
                 "category": "General Purpose",
                 "tags": ["general", "meta", "foundational"]
+            },
+            {
+                "name": "gpt-oss:20b",
+                "display_name": "GPT-OSS-20B",
+                "description": "OpenAI's open-weight model with powerful reasoning and agentic capabilities",
+                "parameters": "20B",
+                "organization": "OpenAI",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull gpt-oss:20b",
+                "category": "Advanced Reasoning",
+                "tags": ["reasoning", "agentic", "openai", "open-weight", "function-calling"]
             }
         ]
     
