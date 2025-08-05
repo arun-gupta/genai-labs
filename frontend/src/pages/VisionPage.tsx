@@ -66,7 +66,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Business Meeting',
       description: 'A professional business meeting scene',
-      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      color: '#4F46E5', // Indigo
       analysisPrompts: [
         'Describe the people and setting in this business meeting',
         'What type of business activity is taking place?',
@@ -81,7 +81,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Nature Scene',
       description: 'A beautiful natural landscape',
-      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      color: '#059669', // Emerald
       analysisPrompts: [
         'Describe the natural elements and landscape features',
         'What type of environment is shown in this scene?',
@@ -96,7 +96,7 @@ export const VisionPage: React.FC = () => {
     {
       name: 'Technology',
       description: 'Modern technology and digital devices',
-      url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      color: '#DC2626', // Red
       analysisPrompts: [
         'Describe the technology and digital elements shown',
         'What type of devices or systems are displayed?',
@@ -336,10 +336,30 @@ export const VisionPage: React.FC = () => {
     link.click();
   };
 
+  // Generate a simple colored image
+  const generateSampleImage = (name: string, color: string) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 150;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 200, 150);
+      ctx.fillStyle = 'white';
+      ctx.font = '16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(name, 100, 75);
+    }
+    return canvas.toDataURL('image/png');
+  };
+
   // Handle sample image selection
   const handleSampleImageSelect = (sampleImage: any) => {
+    // Generate the image data
+    const imageDataUrl = generateSampleImage(sampleImage.name, sampleImage.color);
+    
     // Convert base64 PNG to a File object
-    const base64Data = sampleImage.url.split(',')[1];
+    const base64Data = imageDataUrl.split(',')[1];
     const byteCharacters = atob(base64Data);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -349,7 +369,7 @@ export const VisionPage: React.FC = () => {
     const file = new File([byteArray], `${sampleImage.name.toLowerCase().replace(' ', '-')}.png`, { type: 'image/png' });
     
     setUploadedImage(file);
-    setImagePreview(sampleImage.url);
+    setImagePreview(imageDataUrl);
   };
 
   // Handle sample prompt selection
@@ -439,11 +459,12 @@ export const VisionPage: React.FC = () => {
                       onClick={() => handleSampleImageSelect(sampleImage)}
                       className="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
                     >
-                      <img
-                        src={sampleImage.url}
-                        alt={sampleImage.name}
-                        className="w-full h-20 object-cover rounded mb-2"
-                      />
+                      <div 
+                        className="w-full h-20 rounded mb-2 flex items-center justify-center"
+                        style={{ backgroundColor: sampleImage.color }}
+                      >
+                        <span className="text-white font-medium text-sm">{sampleImage.name}</span>
+                      </div>
                       <p className="text-xs font-medium text-gray-900">{sampleImage.name}</p>
                       <p className="text-xs text-gray-500">{sampleImage.description}</p>
                     </button>
