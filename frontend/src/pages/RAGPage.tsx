@@ -107,8 +107,8 @@ export const RAGPage: React.FC = () => {
       ]
     },
     {
-      name: "Advanced Reasoning",
-      description: "Compare models with advanced reasoning capabilities",
+      name: "Reasoning & Analysis",
+      description: "Compare models with advanced reasoning and analysis capabilities",
       models: [
         { provider: "ollama", model: "gpt-oss:20b" },
         { provider: "openai", model: "gpt-4" },

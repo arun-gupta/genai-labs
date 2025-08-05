@@ -16,7 +16,7 @@ Advanced text generation with multiple writing styles and real-time streaming.
 - **Prompt Templates**: Pre-built templates with variable substitution
 - **Generation Analytics**: Comprehensive analysis of generated content
 - **Model Comparison**: Compare multiple models side-by-side with quality metrics
-- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance, Advanced Reasoning)
+- **Quick Model Combinations**: Pre-built combinations (Local vs Cloud, Efficient, High Performance, Reasoning & Analysis)
 - **Sample Prompts**: 8 diverse, clickable sample prompts for quick start
 - **GPT-OSS-20B Support**: OpenAI's open-weight model with advanced reasoning and agentic capabilities
 
@@ -59,7 +59,7 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Document Analytics**: Comprehensive analysis of uploaded documents (topics, entities, readability, insights)
 - **Performance Metrics**: Response time, accuracy tracking, and processing statistics
 - **Model Comparison**: Compare multiple models for Q&A performance
-- **Quick Model Combinations**: Pre-built combinations for easy comparison setup (Local vs Cloud, Efficient, High Performance, Advanced Reasoning)
+- **Quick Model Combinations**: Pre-built combinations for easy comparison setup (Local vs Cloud, Efficient, High Performance, Reasoning & Analysis)
 - **Filter by Tags**: Focus on specific document categories
 - **Export Options**: Export Q&A results in multiple formats
 
@@ -117,10 +117,12 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **And many more**: 20+ open-source models available
 
 ### Model Categories
+- **General Purpose**: Versatile models for broad applications
+- **Coding & Development**: Specialized models for programming tasks
+- **Reasoning & Analysis**: Models with enhanced reasoning and analytical capabilities
+- **Multilingual**: Models supporting multiple languages
 - **Efficient Models**: Lightweight models for speed (3B-7B parameters)
 - **High Performance**: Quality-focused models for accuracy
-- **Advanced Reasoning**: Models with enhanced reasoning capabilities
-- **Specialized**: Domain-specific models (coding, multilingual, etc.)
 - **Visual Comparison**: Easy-to-read comparison tables and charts
 
 ### Quick Combinations
