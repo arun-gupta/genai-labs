@@ -38,8 +38,26 @@ export const SummarizePage: React.FC = () => {
     const availableModelsList = availableModels.providers.flatMap((provider: any) =>
       provider.models?.map((model: string) => ({ provider: provider.id, model })) || []
     );
+
+    // Get all available Ollama models for the "Compare All Local Models" preset
+    const getAllLocalModels = () => {
+      if (!availableModels?.providers) return [];
+      
+      const ollamaProvider = availableModels.providers.find((provider: any) => provider.id === 'ollama');
+      if (!ollamaProvider?.models) return [];
+      
+      return ollamaProvider.models.map((model: string) => ({
+        provider: 'ollama',
+        model: model
+      }));
+    };
     
     const baseCombinations = [
+      {
+        name: "Compare All Local Models",
+        description: "Compare all available Ollama models",
+        models: [] // Will be populated dynamically
+      },
       {
         name: "Local vs Cloud",
         description: "Compare local Ollama model with cloud models",
@@ -81,11 +99,13 @@ export const SummarizePage: React.FC = () => {
     // Filter combinations to only include available models
     return baseCombinations.map(combination => ({
       ...combination,
-      models: combination.models.filter(model => 
-        availableModelsList.some(available => 
-          available.provider === model.provider && available.model === model.model
-        )
-      )
+      models: combination.name === "Compare All Local Models" 
+        ? getAllLocalModels() 
+        : combination.models.filter(model => 
+            availableModelsList.some(available => 
+              available.provider === model.provider && available.model === model.model
+            )
+          )
     })).filter(combination => combination.models.length >= 2); // Only show combinations with at least 2 models
   };
 
