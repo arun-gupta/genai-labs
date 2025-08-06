@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, GitCompare } from 'lucide-react';
 import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
@@ -540,7 +540,11 @@ export const SummarizePage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              ))}
+              )) || (
+                <div className="text-sm text-gray-500">
+                  Loading available models...
+                </div>
+              )}
               
               {selectedModels.length > 0 && (
                 <div className="mt-3 p-2 bg-purple-50 rounded-lg">
