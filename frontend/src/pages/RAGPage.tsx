@@ -653,37 +653,31 @@ export const RAGPage: React.FC = () => {
                 Select models to compare for RAG question answering performance
               </p>
               
-              {!availableModels ? (
-                <div className="text-sm text-gray-500">Loading models...</div>
-              ) : availableModels.providers && availableModels.providers.length > 0 ? (
-                availableModels.providers.map((provider: any) => (
-                  <div key={provider.id} className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
-                    <div className="space-y-1">
-                      {provider.models?.slice(0, 3).map((model: string) => (
-                        <label key={model} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
-                              } else {
-                                setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
-                              }
-                            }}
-                            disabled={isComparing}
-                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                          />
-                          <span className="text-sm text-gray-700">{model}</span>
-                        </label>
-                      ))}
-                    </div>
+              {availableModels?.providers?.map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isComparing}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <div className="text-sm text-gray-500">No models available</div>
-              )}
+                </div>
+              ))}
               
               {selectedModels.length > 0 && (
                 <div className="mt-3 p-2 bg-purple-50 rounded-lg">
@@ -730,14 +724,6 @@ export const RAGPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-              
-              {/* Debug info */}
-              <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                <p>Debug: availableModels exists: {availableModels ? 'Yes' : 'No'}</p>
-                <p>Debug: providers count: {availableModels?.providers?.length || 0}</p>
-                <p>Debug: selectedModels count: {selectedModels.length}</p>
-                <p>Debug: Compare button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
           </div>
@@ -1132,8 +1118,17 @@ export const RAGPage: React.FC = () => {
                   disabled={isAsking || !question.trim() || selectedCollections.length === 0}
                   className="btn-primary flex items-center space-x-2"
                 >
-                  <Send size={16} />
-                  <span>{isAsking ? 'Asking...' : 'Ask Question'}</span>
+                  {isAsking ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Asking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Ask Question</span>
+                    </>
+                  )}
                 </button>
                 
                 <button
@@ -1165,16 +1160,10 @@ export const RAGPage: React.FC = () => {
                   )}
                 </button>
               </div>
-              
-              {/* Debug info for button */}
-              <div className="text-xs text-gray-500">
-                <p>Selected models: {selectedModels.length}</p>
-                <p>Button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
-              </div>
             </div>
 
             <div className="mt-2 text-xs text-gray-500 text-center">
-              Press Cmd/Ctrl + Enter to ask question
+              Press Cmd/Ctrl + Enter to ask question • Select 2+ models to compare
             </div>
           </div>
 
