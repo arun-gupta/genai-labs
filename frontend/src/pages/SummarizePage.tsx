@@ -31,26 +31,22 @@ export const SummarizePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
-  // Get all available Ollama models for the "Compare All Local Models" preset
-  const getAllLocalModels = useMemo(() => {
-    if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
-      return [];
-    }
-    
-    return availableModels.ollama_models.models
-      .filter((model: any) => model.is_available)
-      .map((model: any) => ({
-        provider: 'ollama',
-        model: model.name
-      }));
-  }, [availableModels]);
-
   const getAvailableModelCombinations = useMemo(() => {
     if (!availableModels?.providers) return [];
     
     const availableModelsList = availableModels.providers.flatMap((provider: any) =>
       provider.models?.map((model: string) => ({ provider: provider.id, model })) || []
     );
+    
+    // Calculate getAllLocalModels inline to avoid circular dependency
+    const allLocalModels = availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
+      ? availableModels.ollama_models.models
+          .filter((model: any) => model.is_available)
+          .map((model: any) => ({
+            provider: 'ollama',
+            model: model.name
+          }))
+      : [];
     
     const baseCombinations = [
       {
@@ -100,14 +96,14 @@ export const SummarizePage: React.FC = () => {
     return baseCombinations.map(combination => ({
       ...combination,
       models: combination.name === "Compare All Local Models" 
-        ? getAllLocalModels 
+        ? allLocalModels 
         : combination.models.filter(model => 
             availableModelsList.some(available => 
               available.provider === model.provider && available.model === model.model
             )
           )
     })).filter(combination => combination.models.length >= 2); // Only show combinations with at least 2 models
-  }, [availableModels, getAllLocalModels]);
+  }, [availableModels]);
 
   // Default model combinations for quick comparison
   const defaultModelCombinations = getAvailableModelCombinations;
@@ -116,11 +112,14 @@ export const SummarizePage: React.FC = () => {
   const getModelCount = useMemo(() => {
     return (combination: any) => {
       if (combination.name === "Compare All Local Models") {
-        return getAllLocalModels.length;
+        // Calculate local models count inline to avoid circular dependency
+        return availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
+          ? availableModels.ollama_models.models.filter((model: any) => model.is_available).length
+          : 0;
       }
       return combination.models.length;
     };
-  }, [getAllLocalModels]);
+  }, [availableModels]);
 
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -651,12 +650,19 @@ export const SummarizePage: React.FC = () => {
                       key={index}
                       onClick={() => {
                         if (combination.name === "Compare All Local Models") {
-                          setSelectedModels(getAllLocalModels);
+                          setSelectedModels(availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
+                            ? availableModels.ollama_models.models
+                                .filter((model: any) => model.is_available)
+                                .map((model: any) => ({
+                                  provider: 'ollama',
+                                  model: model.name
+                                }))
+                            : []);
                         } else {
                           setSelectedModels(combination.models);
                         }
                       }}
-                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models) && availableModels.ollama_models.models.length === 0)}
                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                     >
                       <div className="text-sm font-medium text-gray-900">
