@@ -130,7 +130,7 @@ export const HomePage: React.FC = () => {
       {/* GitHub Link */}
       <div className="flex justify-end">
         <a
-          href="https://github.com/arungupta/genai-labs"
+          href="https://github.com/arun-gupta/genai-labs"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100"
