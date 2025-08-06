@@ -424,38 +424,45 @@ export const SummarizePage: React.FC = () => {
             />
           </div>
 
-                    {/* Summary Settings */}
+                    {/* Summary Type */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <FileText className="text-gray-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Summary Type</h2>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+              <select
+                value={summaryType}
+                onChange={(e) => setSummaryType(e.target.value)}
+                disabled={isSummarizing}
+                className="input-field"
+              >
+                {availableModels?.summary_types?.map((type: SummaryType) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                )) || (
+                  <>
+                    <option value="general">General Summary</option>
+                    <option value="bullet_points">Bullet Points</option>
+                    <option value="key_points">Key Points</option>
+                    <option value="extractive">Extractive</option>
+                  </>
+                )}
+              </select>
+            </div>
+          </div>
+
+          {/* Quick Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
               <Settings className="text-gray-600" size={20} />
-              <h2 className="text-lg font-semibold text-gray-900">Summary Settings</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Quick Settings</h2>
             </div>
             
             <div className="space-y-4">
-              {/* Summary Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Summary Type</label>
-                <select
-                  value={summaryType}
-                  onChange={(e) => setSummaryType(e.target.value)}
-                  disabled={isSummarizing}
-                  className="input-field"
-                >
-                  {availableModels?.summary_types?.map((type: SummaryType) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  )) || (
-                    <>
-                      <option value="general">General Summary</option>
-                      <option value="bullet_points">Bullet Points</option>
-                      <option value="key_points">Key Points</option>
-                      <option value="extractive">Extractive</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
               {/* Max Length */}
               <div>
                 <div className="flex justify-between items-center mb-2">
