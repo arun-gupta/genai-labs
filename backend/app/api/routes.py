@@ -520,6 +520,12 @@ async def get_available_models():
     return {
         "providers": [
             {
+                "id": "ollama",
+                "name": "Ollama (Local)",
+                "models": [model["name"] for model in ollama_models_data["models"] if model["is_available"]],
+                "requires_api_key": False
+            },
+            {
                 "id": "openai",
                 "name": "OpenAI",
                 "models": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
@@ -530,12 +536,6 @@ async def get_available_models():
                 "name": "Anthropic",
                 "models": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1"],
                 "requires_api_key": True
-            },
-            {
-                "id": "ollama",
-                "name": "Ollama (Local)",
-                "models": [model["name"] for model in ollama_models_data["models"] if model["is_available"]],
-                "requires_api_key": False
             }
         ],
         "ollama_models": ollama_models_data,
