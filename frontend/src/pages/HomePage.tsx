@@ -10,7 +10,7 @@ export const HomePage: React.FC = () => {
       icon: Zap,
       path: '/generate',
       color: 'bg-blue-500',
-      highlights: ['12+ Writing Styles', 'Real-time Streaming', 'Voice Input']
+      highlights: ['12+ Writing Styles', 'Model Comparison', 'Real-time Streaming']
     },
     {
       title: 'Text Summarization',
@@ -18,7 +18,7 @@ export const HomePage: React.FC = () => {
       icon: FileText,
       path: '/summarize',
       color: 'bg-green-500',
-      highlights: ['Model Comparison', 'Analytics', 'Multi-format Export']
+      highlights: ['Model Comparison', 'Analytics', 'Multi-language Support']
     },
     {
       title: 'Q&A over Documents',
@@ -26,7 +26,7 @@ export const HomePage: React.FC = () => {
       icon: Search,
       path: '/rag',
       color: 'bg-purple-500',
-      highlights: ['Document Upload', 'Source Citations', 'Collection Management']
+      highlights: ['Smart Suggestions', 'Source Citations', 'Collection Management']
     },
     {
       title: 'Vision AI',
@@ -46,8 +46,14 @@ export const HomePage: React.FC = () => {
       color: 'text-blue-600'
     },
     {
+      title: 'Model Comparison',
+      description: 'Side-by-side performance analysis and metrics',
+      icon: GitCompare,
+      color: 'text-purple-600'
+    },
+    {
       title: 'Model Explorer',
-      description: 'Browse and manage 12+ open-source LLM models',
+      description: 'Browse and manage 20+ open-source LLM models',
       icon: Brain,
       color: 'text-green-600'
     },
@@ -55,7 +61,7 @@ export const HomePage: React.FC = () => {
       title: 'Export Options',
       description: 'Export results in PDF, Word, Markdown, and HTML formats',
       icon: Download,
-      color: 'text-purple-600'
+      color: 'text-orange-600'
     },
     {
       title: 'Real-time Analytics',
@@ -84,36 +90,36 @@ export const HomePage: React.FC = () => {
     },
     {
       name: 'Ollama (Local)',
-      description: 'Local models for privacy and speed',
+      description: '20+ open-source models for privacy and speed',
       icon: Server,
       requiresKey: false,
-      models: ['Mistral 7B', 'Llama 2', 'Code Llama', 'Phi-2'],
-      features: ['Offline processing', 'Privacy-first', 'Custom models']
+      models: ['GPT-OSS-20B', 'Mistral 7B', 'Qwen3:8B', 'Llama 3.1'],
+      features: ['Offline processing', 'Privacy-first', 'Latest OSS models']
     },
   ];
 
   const modelCategories = [
     {
-      title: 'General Purpose',
-      models: ['Mistral 7B', 'Llama 2', 'GPT-4', 'Claude-3'],
+      title: 'High Performance',
+      models: ['GPT-OSS-20B', 'Qwen3:8B', 'Mistral 7B', 'GPT-4'],
       icon: Zap,
       color: 'text-blue-600'
     },
     {
       title: 'Coding & Development',
-      models: ['Code Llama', 'Phi-2', 'GPT-4', 'Claude-3'],
+      models: ['DeepSeek Coder', 'Code Llama', 'GPT-4', 'Claude-3'],
       icon: Code,
       color: 'text-green-600'
     },
     {
       title: 'Reasoning & Analysis',
-      models: ['GPT-4', 'Claude-3', 'Llama 2', 'Mistral 7B'],
+      models: ['GPT-OSS-20B', 'Qwen3:8B', 'Phi-3', 'Claude-3'],
       icon: Brain,
       color: 'text-purple-600'
     },
     {
       title: 'Multilingual',
-      models: ['Mistral 7B', 'Llama 2', 'GPT-4', 'Claude-3'],
+      models: ['Qwen3:8B', 'BLOOM', 'Mistral 7B', 'GPT-4'],
       icon: Globe,
       color: 'text-orange-600'
     }
@@ -145,7 +151,7 @@ export const HomePage: React.FC = () => {
         </div>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Experiment with different GenAI use cases using large language models. 
-          Support for both cloud-hosted and local models with real-time streaming responses.
+          Support for 20+ open-source models including GPT-OSS-20B, Mistral, and Qwen3, plus cloud models with real-time streaming responses.
         </p>
         <div className="flex items-center justify-center space-x-4">
           <Link
@@ -247,7 +253,7 @@ export const HomePage: React.FC = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Supported Models</h2>
           <p className="text-gray-600">
-            Choose from a variety of language models to suit your needs
+            Choose from 20+ open-source models including the latest GPT-OSS-20B, Mistral, and Qwen3, plus cloud models
           </p>
         </div>
         
@@ -304,6 +310,51 @@ export const HomePage: React.FC = () => {
           })}
         </div>
 
+        {/* Featured Models */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Featured Models</h3>
+            <p className="text-gray-600 text-sm">
+              Latest and most powerful open-source models
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="card text-center hover:shadow-md transition-shadow border-2 border-blue-200 bg-blue-50">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
+                  <Brain className="text-blue-600" size={24} />
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">GPT-OSS-20B</h4>
+              <p className="text-sm text-gray-600 mb-2">OpenAI's open-weight model</p>
+              <div className="text-xs text-blue-600 font-medium">20B Parameters • Advanced Reasoning</div>
+            </div>
+            
+            <div className="card text-center hover:shadow-md transition-shadow border-2 border-green-200 bg-green-50">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-100">
+                  <Zap className="text-green-600" size={24} />
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Mistral 7B</h4>
+              <p className="text-sm text-gray-600 mb-2">High-performance reasoning model</p>
+              <div className="text-xs text-green-600 font-medium">7B Parameters • Excellent Performance</div>
+            </div>
+            
+            <div className="card text-center hover:shadow-md transition-shadow border-2 border-orange-200 bg-orange-50">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-100">
+                  <Globe className="text-orange-600" size={24} />
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Qwen3:8B</h4>
+              <p className="text-sm text-gray-600 mb-2">Alibaba's multilingual model</p>
+              <div className="text-xs text-orange-600 font-medium">8B Parameters • Multilingual</div>
+            </div>
+          </div>
+        </div>
+
         {/* Model Categories */}
         <div className="space-y-6">
           <div className="text-center">
@@ -351,7 +402,7 @@ export const HomePage: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Ready to Get Started?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Configure your API keys in the backend environment file to use cloud models, 
-            or set up Ollama locally for private, offline AI processing.
+            or set up Ollama locally for private, offline AI processing with 20+ open-source models including GPT-OSS-20B, Mistral, and Qwen3.
           </p>
           <div className="flex items-center justify-center space-x-4 flex-wrap">
             <Link
