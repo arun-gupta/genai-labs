@@ -93,7 +93,7 @@ export const HomePage: React.FC = () => {
       description: '20+ open-source models for privacy and speed',
       icon: Server,
       requiresKey: false,
-      models: ['GPT-OSS-20B', 'Mistral 7B', 'Qwen3:8B', 'Llama 3.1'],
+      models: ['GPT-OSS-20B', 'Mistral-7B', 'Qwen3-8B', 'Llama-3.1'],
       features: ['Offline processing', 'Privacy-first', 'Latest OSS models']
     },
   ];
@@ -101,7 +101,7 @@ export const HomePage: React.FC = () => {
   const modelCategories = [
     {
       title: 'High Performance',
-      models: ['GPT-OSS-20B', 'Qwen3:8B', 'Mistral 7B', 'GPT-4'],
+      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Mistral-7B', 'GPT-4'],
       icon: Zap,
       color: 'text-blue-600'
     },
@@ -113,13 +113,13 @@ export const HomePage: React.FC = () => {
     },
     {
       title: 'Reasoning & Analysis',
-      models: ['GPT-OSS-20B', 'Qwen3:8B', 'Phi-3', 'Claude-3'],
+      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Phi-3', 'Claude-3'],
       icon: Brain,
       color: 'text-purple-600'
     },
     {
       title: 'Multilingual',
-      models: ['Qwen3:8B', 'BLOOM', 'Mistral 7B', 'GPT-4'],
+      models: ['Qwen3-8B', 'BLOOM', 'Mistral-7B', 'GPT-4'],
       icon: Globe,
       color: 'text-orange-600'
     }
@@ -151,7 +151,7 @@ export const HomePage: React.FC = () => {
         </div>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Experiment with different GenAI use cases using large language models. 
-          Support for 20+ open-source models including GPT-OSS-20B, Mistral, and Qwen3, plus cloud models with real-time streaming responses.
+          Support for 20+ open-source models including GPT-OSS-20B, Mistral-7B, and Qwen3-8B, plus cloud models with real-time streaming responses.
         </p>
         <div className="flex items-center justify-center space-x-4">
           <Link
@@ -253,7 +253,7 @@ export const HomePage: React.FC = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Supported Models</h2>
           <p className="text-gray-600">
-            Choose from 20+ open-source models including the latest GPT-OSS-20B, Mistral, and Qwen3, plus cloud models
+            Choose from 20+ open-source models including the latest GPT-OSS-20B, Mistral-7B, and Qwen3-8B, plus cloud models
           </p>
         </div>
         
@@ -337,7 +337,7 @@ export const HomePage: React.FC = () => {
                   <Zap className="text-green-600" size={24} />
                 </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Mistral 7B</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Mistral-7B</h4>
               <p className="text-sm text-gray-600 mb-2">High-performance reasoning model</p>
               <div className="text-xs text-green-600 font-medium">7B Parameters • Excellent Performance</div>
             </div>
@@ -348,7 +348,7 @@ export const HomePage: React.FC = () => {
                   <Globe className="text-orange-600" size={24} />
                 </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Qwen3:8B</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Qwen3-8B</h4>
               <p className="text-sm text-gray-600 mb-2">Alibaba's multilingual model</p>
               <div className="text-xs text-orange-600 font-medium">8B Parameters • Multilingual</div>
             </div>
