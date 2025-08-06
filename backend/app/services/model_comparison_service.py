@@ -49,6 +49,10 @@ class ModelComparisonService:
     def _calculate_quality_metrics(self, original_text: str, summary: str) -> Dict[str, float]:
         """Calculate various quality metrics for the summary."""
         try:
+            # Debug logging for GPT OSS issue
+            logger.info(f"Calculating quality metrics for summary length: {len(summary)}")
+            logger.info(f"Summary preview: {summary[:200]}...")
+            
             # Basic metrics
             original_length = len(original_text.split())
             summary_length = len(summary.split())
@@ -78,9 +82,11 @@ class ModelComparisonService:
             
             # Coherence score (based on sentence flow)
             coherence_score = self._calculate_coherence_score(summary)
+            logger.info(f"Raw coherence score: {coherence_score}")
             
             # Relevance score (based on keyword overlap)
             relevance_score = self._calculate_relevance_score(original_text, summary)
+            logger.info(f"Raw relevance score: {relevance_score}")
             
             # Overall quality score (weighted combination)
             quality_score = self._calculate_overall_quality_score(
@@ -89,6 +95,7 @@ class ModelComparisonService:
             
             # Debug logging
             logger.info(f"Quality metrics calculated - Quality: {quality_score:.3f}, Coherence: {coherence_score:.3f}, Relevance: {relevance_score:.3f}")
+            logger.info(f"Final coherence score (percentage): {coherence_score * 100}")
             
             return {
                 "quality_score": quality_score * 100,  # Convert to percentage
@@ -444,6 +451,9 @@ class ModelComparisonService:
         start_time = time.time()
         
         try:
+            # Debug logging for model tracking
+            logger.info(f"Generating summary with model: {model_config['provider']}/{model_config['model']}")
+            
             # Create system prompt based on summary type
             system_prompt = self._create_summary_prompt(summary_type, max_length)
             
@@ -475,6 +485,10 @@ class ModelComparisonService:
                     if hasattr(chunk, 'latency_ms'):
                         latency_ms = chunk.latency_ms
             
+            # Debug logging for generated content
+            logger.info(f"Generated content length: {len(full_content)}")
+            logger.info(f"Generated content preview: {full_content[:200]}...")
+            
             # Calculate quality metrics
             quality_metrics = self._calculate_quality_metrics(text, full_content)
             
@@ -482,6 +496,12 @@ class ModelComparisonService:
             original_length = len(text.split())
             summary_length = len(full_content.split())
             compression_ratio = summary_length / original_length if original_length > 0 else 0
+            
+            # Debug logging for final metrics
+            logger.info(f"Final metrics for {model_config['provider']}/{model_config['model']}:")
+            logger.info(f"  - Quality score: {quality_metrics['quality_score']}")
+            logger.info(f"  - Coherence score: {quality_metrics['coherence_score']}")
+            logger.info(f"  - Relevance score: {quality_metrics['relevance_score']}")
             
             return ModelComparisonResult(
                 model_provider=model_config["provider"],
