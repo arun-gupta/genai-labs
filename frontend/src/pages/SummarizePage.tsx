@@ -173,7 +173,7 @@ export const SummarizePage: React.FC = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      // handleSummarize(); // We'll add this function later
+      handleSummarize();
     }
   };
 
@@ -189,6 +189,213 @@ export const SummarizePage: React.FC = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const validateInput = () => {
+    if (inputType === 'text' && !text.trim()) {
+      return false;
+    }
+    if (inputType === 'url' && !url.trim()) {
+      return false;
+    }
+    if (inputType === 'file' && !selectedFile) {
+      return false;
+    }
+    return true;
+  };
+
+  const handleSummarize = async () => {
+    if (!validateInput()) return;
+
+    setIsSummarizing(true);
+    setSummary('');
+    setError(null);
+    setTokenUsage(null);
+    setLatencyMs(undefined);
+    setAnalytics(null);
+    
+    // Store original text for analytics
+    if (inputType === 'text') {
+      setOriginalText(text);
+    } else if (inputType === 'url') {
+      setOriginalText(`URL: ${url}`);
+    } else if (inputType === 'file' && selectedFile) {
+      setOriginalText(`File: ${selectedFile.name}`);
+    }
+
+    try {
+      if (inputType === 'file' && selectedFile) {
+        // Handle file upload
+        const response = await apiService.summarizeFile(
+          selectedFile,
+          selectedProvider,
+          selectedModel,
+          maxLength,
+          temperature,
+          summaryType
+        );
+        
+        setSummary(response.summary);
+        setTokenUsage(response.token_usage);
+        setLatencyMs(response.latency_ms);
+      } else {
+        // Handle text/URL with streaming
+        const request = {
+          text: inputType === 'text' ? text : undefined,
+          url: inputType === 'url' ? url : undefined,
+          model_provider: selectedProvider as any,
+          model_name: selectedModel,
+          max_length: maxLength,
+          temperature: temperature,
+          summary_type: summaryType as any,
+          stream: true,
+          target_language: targetLanguage,
+          translate_summary: translateOutput,
+          output_format: outputFormat as any,
+        };
+
+        await apiService.summarizeTextStream(
+          request,
+          (chunk: StreamChunk) => {
+            setSummary(prev => prev + chunk.content);
+            if (chunk.token_usage) {
+              setTokenUsage(chunk.token_usage);
+            }
+            if (chunk.latency_ms) {
+              setLatencyMs(chunk.latency_ms);
+            }
+          },
+          (error: string) => {
+            setError(error);
+          }
+        );
+      }
+
+      // Generate analytics
+      await generateAnalytics();
+
+      // Save to history
+      const historyItem: PromptHistory = {
+        id: Date.now().toString(),
+        timestamp: new Date().toISOString(),
+        type: 'summarize',
+        text: inputType === 'text' ? text : inputType === 'url' ? url : selectedFile?.name || '',
+        model_provider: selectedProvider,
+        model_name: selectedModel,
+        response: summary,
+        token_usage: tokenUsage,
+        latency_ms: latencyMs || 0,
+      };
+      storageUtils.addPromptToHistory(historyItem);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  const generateAnalytics = async () => {
+    if (!summary) return;
+    
+    setIsAnalyzing(true);
+    try {
+      // Get the actual original text for analytics
+      let originalTextForAnalytics = '';
+      if (inputType === 'text') {
+        originalTextForAnalytics = text;
+      } else if (inputType === 'url') {
+        // For URL, we'll use a placeholder since we don't have the scraped content
+        originalTextForAnalytics = `Content from URL: ${url}`;
+      } else if (inputType === 'file' && selectedFile) {
+        // For file, we'll use a placeholder since we don't have the extracted content
+        originalTextForAnalytics = `Content from file: ${selectedFile.name}`;
+      }
+      
+      if (originalTextForAnalytics && originalTextForAnalytics.length > 10) {
+        const analyticsResponse = await apiService.analyzeSummary({
+          original_text: originalTextForAnalytics,
+          summary_text: summary
+        });
+        setAnalytics(analyticsResponse.analytics);
+      } else {
+        // Show a message that analytics requires more content
+        console.log('Analytics requires more original content to be meaningful');
+      }
+    } catch (err) {
+      console.error('Error generating analytics:', err);
+      // Don't show error to user as analytics is not critical
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleModelComparison = async () => {
+    if (!validateInput()) return;
+    
+    setIsComparing(true);
+    setError(null);
+    setComparisonResults(null);
+    setShowComparison(true);
+    setActiveTab('comparison'); // Switch to comparison tab immediately
+    
+    const startTime = Date.now();
+    const minDisplayTime = 3000; // Minimum 3 seconds to show progress indicators
+    
+    try {
+      const request: any = {
+        models: selectedModels,
+        max_length: maxLength,
+        temperature: temperature,
+        summary_type: summaryType
+      };
+      
+      if (inputType === 'text') {
+        request.text = text;
+      } else if (inputType === 'url') {
+        request.url = url;
+      } else if (inputType === 'file' && selectedFile) {
+        request.file_content = selectedFile;
+      }
+      
+      const result = await apiService.compareSummarizationModels(request);
+      
+      if (result && result.results && result.results.length > 0) {
+        setComparisonResults(result);
+        
+        // Ensure progress indicators are shown for at least minDisplayTime
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+        
+        setTimeout(() => {
+          setIsComparing(false);
+        }, remainingTime);
+        
+      } else {
+        setError('Invalid response from comparison API');
+        setIsComparing(false);
+      }
+      
+    } catch (err) {
+      setError(`Model comparison failed: ${err}`);
+      setIsComparing(false);
+    }
+  };
+
+  const getExportContent = () => {
+    return {
+      system_prompt: `Summarize the following text as a ${summaryType} summary with maximum ${maxLength} words.`,
+      user_prompt: inputType === 'text' ? text : inputType === 'url' ? url : selectedFile?.name || '',
+      generated_content: summary,
+      metadata: {
+        model_provider: selectedProvider,
+        model_name: selectedModel,
+        timestamp: new Date().toISOString(),
+        token_usage: tokenUsage,
+        latency_ms: latencyMs,
+      },
+      analytics: analytics,
+    };
   };
 
   return (
@@ -648,21 +855,45 @@ An Open Source AI is an AI system made available under terms and in a way that g
             <div className="flex justify-between items-center mt-4">
               <div className="flex space-x-2">
                 <button
-                  disabled={isSummarizing}
+                  onClick={handleSummarize}
+                  disabled={isSummarizing || !validateInput()}
                   className="btn-primary flex items-center space-x-2"
                 >
-                  <Send size={16} />
-                  <span>Summarize</span>
+                  {isSummarizing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Summarizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Summarize</span>
+                    </>
+                  )}
                 </button>
                 
                 <button
-                  disabled={isComparing || selectedModels.length < 2}
+                  onClick={handleModelComparison}
+                  disabled={isComparing || !validateInput() || selectedModels.length < 2}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <GitCompare size={16} />
-                  <span>Compare Models</span>
+                  {isComparing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Comparing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <GitCompare size={16} />
+                      <span>Compare Models</span>
+                    </>
+                  )}
                 </button>
               </div>
+            </div>
+
+            <div className="mt-2 text-xs text-gray-500 text-center">
+              Press Cmd/Ctrl + Enter to summarize • Select 2+ models to compare
             </div>
           </div>
 
@@ -716,6 +947,13 @@ An Open Source AI is an AI system made available under terms and in a way that g
                   modelName={selectedModel}
                   modelProvider={selectedProvider}
                 />
+                
+                {summary && (
+                  <ExportOptions
+                    content={getExportContent()}
+                    className="w-full"
+                  />
+                )}
               </div>
             )}
 
