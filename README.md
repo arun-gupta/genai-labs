@@ -16,11 +16,12 @@ cd genai-labs
 ## ✨ Features
 
 ### 🤖 Core GenAI Capabilities
-- **Text Generation** - Advanced text creation with 12+ writing styles
-- **Text Summarization** - Multi-format summarization with analytics  
-- **Q&A over Documents** - RAG-powered document question answering
+- **Text Generation** - Advanced text creation with 12+ writing styles and model comparison
+- **Text Summarization** - 7 summary types including Executive, Technical, and News summaries with analytics  
+- **Q&A over Documents** - RAG-powered document question answering with intelligent suggestions
 - **Model Comparison** - Side-by-side model performance analysis for generation and summarization
-- **Models Explorer** - Browse and manage 20+ open-source LLM models including GPT-OSS-20B
+- **Models Explorer** - Browse and manage 20+ open-source LLM models including GPT-OSS-20B, Mistral, and Qwen3
+- **Vision AI** - Image analysis and generation (Work in Progress)
 
 ### 🛠️ Platform Features
 - **Voice Features** - Speech-to-text and text-to-speech
@@ -30,7 +31,19 @@ cd genai-labs
 
 ## 🆕 Recent Updates
 
-### Q&A System Enhancements (Latest)
+### Summary Types Enhancement (Latest)
+- **📊 Executive Summary** - High-level summaries for decision-makers with recommendations and actionable takeaways
+- **🔧 Technical Summary** - Technical details, specifications, and methodologies for technical content
+- **📰 News Summary** - News-style summaries following 5W1H format for journalistic content
+- **🎯 Enhanced Summary Types** - Now 7 total types: General, Bullet Points, Key Points, Extractive, Executive, Technical, News
+
+### Homepage & Model Updates
+- **🌟 Featured Models** - Highlight GPT-OSS-20B, Mistral 7B, and Qwen3:8B as key models
+- **📈 Model Categories** - Updated to reflect latest 20+ open-source models
+- **🎨 UI Consistency** - Unified design across Generate, Summarize, and RAG pages
+- **⚡ Quick Combinations** - Pre-built model combinations for easy comparison setup
+
+### Q&A System Enhancements
 - **✨ Intelligent Question Suggestions** - AI-powered suggestions based on document content analysis
 - **🏷️ Document Tagging System** - Add custom tags to organize and filter documents
 - **📁 Collection Management** - Create, manage, and delete document collections
@@ -125,13 +138,28 @@ VITE_API_BASE_URL=http://localhost:8000
 ### Text Summarization  
 1. Navigate to `/summarize`
 2. Input text, URL, or upload files
-3. Choose summary type and parameters
-4. Get summaries with detailed analytics
-5. Export results
+3. Choose from 7 summary types:
+   - **General Summary** - Standard summary of main points
+   - **Bullet Points** - Key points in bullet format
+   - **Key Points** - Extract main ideas and key points
+   - **Extractive** - Select important sentences from text
+   - **Executive Summary** - High-level summary for decision-makers
+   - **Technical Summary** - Technical details and specifications
+   - **News Summary** - News-style 5W1H format
+4. Configure length, creativity, and output format
+5. Get summaries with detailed analytics
+6. Export results in multiple formats
 
 ### Models Explorer
 1. Navigate to `/models`
-2. Browse 12+ open-source models
+2. Browse 20+ open-source models including:
+   - **GPT-OSS-20B** - OpenAI's open-weight model (20B parameters)
+   - **Mistral 7B** - High-performance reasoning model
+   - **Qwen3:8B** - Alibaba's multilingual model
+   - **Llama 3.1** - Meta's latest compact model
+   - **DeepSeek Coder** - Specialized coding model
+   - **Phi-3** - Microsoft's reasoning model
+   - And many more...
 3. Check availability status
 4. Copy download commands for Ollama
 
@@ -178,9 +206,11 @@ VITE_API_BASE_URL=http://localhost:8000
 4. Click "Compare Models" to see how different models answer the same question
 
 **Quick Combinations:**
+- **Compare All Local Models**: Compare all available Ollama models
 - **Local vs Cloud**: Compare local Ollama models with cloud models
 - **Efficient Models**: Compare lightweight models for speed
 - **High Performance**: Compare high-quality models for accuracy
+- **Reasoning & Analysis**: Compare models with advanced reasoning capabilities
 
 ## 🏗️ Tech Stack
 
@@ -193,7 +223,7 @@ VITE_API_BASE_URL=http://localhost:8000
 
 ## 🔮 Roadmap
 
-- **🖼️ Image Generation & Analysis** - Create and analyze images with AI (DALL-E, Midjourney integration)
+- **🖼️ Vision AI** - Image analysis and generation (currently in development)
 - **🤖 Chatbot Builder** - Build custom chatbots with knowledge base training
 - **📊 Data Analysis & Visualization** - Natural language to SQL, chart generation, report automation
 - **🔍 Advanced Content Analysis** - SEO optimization, readability scoring, sentiment analysis, plagiarism detection
