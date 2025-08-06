@@ -628,14 +628,14 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                             <span className="text-sm font-medium text-gray-900">{wordsPerSecond}</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3">
+                                                  <div className="w-full bg-gray-200 rounded-full h-3">
+                          {wordsPerSecond !== 'N/A' && wordsPerSecondValue > 0 && (
                             <div
                               className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${wordsPerSecond !== 'N/A' && wordsPerSecondValue > 0 ? wordsPerSecondPercentage : 0}%`
-                              }}
+                              style={{ width: `${wordsPerSecondPercentage}%` }}
                             ></div>
-                          </div>
+                          )}
+                        </div>
                         </div>
                       );
                     });
@@ -672,12 +672,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <span className="text-sm font-medium text-gray-900">{tokensPerSecond}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
-                            <div
-                              className="bg-teal-500 h-3 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${tokensPerSecond !== 'N/A' && tokensPerSecondValue > 0 ? tokensPerSecondPercentage : 0}%`
-                              }}
-                            ></div>
+                            {tokensPerSecond !== 'N/A' && tokensPerSecondValue > 0 && (
+                              <div
+                                className="bg-teal-500 h-3 rounded-full transition-all duration-300"
+                                style={{ width: `${tokensPerSecondPercentage}%` }}
+                              ></div>
+                            )}
                           </div>
                         </div>
                       );
@@ -699,6 +699,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   return results.map((result, index) => {
                     const tokenCount = result.token_usage?.total_tokens || 0;
                     const tokenPercentage = maxTokens > 0 && tokenCount > 0 ? (tokenCount / maxTokens) * 100 : 0;
+                    const shouldShowBar = tokenCount > 0 && maxTokens > 0;
                     
                     return (
                       <div key={index} className="space-y-1">
@@ -709,12 +710,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-orange-500 h-3 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${tokenCount > 0 && maxTokens > 0 ? tokenPercentage : 0}%`
-                            }}
-                          ></div>
+                          {shouldShowBar && (
+                            <div
+                              className="bg-orange-500 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${tokenPercentage}%` }}
+                            ></div>
+                          )}
                         </div>
                       </div>
                     );
@@ -742,6 +743,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       : 'N/A';
                     const costValue = costs[index];
                     const costPercentage = maxCost > 0 && costValue > 0 ? (costValue / maxCost) * 100 : 0;
+                    const shouldShowBar = estimatedCost !== 'N/A' && costValue > 0;
                     
                     return (
                       <div key={index} className="space-y-1">
@@ -750,12 +752,12 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           <span className="text-sm font-medium text-gray-900">${estimatedCost}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-red-500 h-3 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${estimatedCost !== 'N/A' && costValue > 0 ? costPercentage : 0}%`
-                            }}
-                          ></div>
+                          {shouldShowBar && (
+                            <div
+                              className="bg-red-500 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${costPercentage}%` }}
+                            ></div>
+                          )}
                         </div>
                       </div>
                     );
@@ -807,16 +809,18 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className={`h-3 rounded-full transition-all duration-300 ${
-                              rankIndex === 0 ? 'bg-yellow-500' :
-                              rankIndex === 1 ? 'bg-gray-500' :
-                              rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
-                            }`}
-                            style={{ 
-                              width: `${result.overallScore > 0 ? Math.min(result.overallScore, 100) : 0}%` 
-                            }}
-                          ></div>
+                          {result.overallScore > 0 && (
+                            <div
+                              className={`h-3 rounded-full transition-all duration-300 ${
+                                rankIndex === 0 ? 'bg-yellow-500' :
+                                rankIndex === 1 ? 'bg-gray-500' :
+                                rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
+                              }`}
+                              style={{ 
+                                width: `${Math.min(result.overallScore, 100)}%` 
+                              }}
+                            ></div>
+                          )}
                         </div>
                       </div>
                     );
