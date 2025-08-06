@@ -1202,26 +1202,13 @@ export const RAGPage: React.FC = () => {
 
           {/* Question Suggestions */}
           <div className="mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <Lightbulb className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm font-medium text-gray-700">Question Suggestions</span>
-              </div>
-              <button
-                onClick={handleRefreshSuggestions}
-                disabled={isRefreshingSuggestions}
-                className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Refresh question suggestions based on latest documents"
-              >
-                <RefreshCw className={`w-3 h-3 ${isRefreshingSuggestions ? 'animate-spin' : ''}`} />
-                <span>{isRefreshingSuggestions ? 'Refreshing...' : 'Refresh'}</span>
-              </button>
-            </div>
             <QuestionSuggestions
               key={suggestionsRefreshKey}
               collectionNames={selectedCollections}
               onSuggestionClick={handleSuggestionClick}
               refreshKey={suggestionsRefreshKey}
+              onRefresh={handleRefreshSuggestions}
+              isRefreshing={isRefreshingSuggestions}
             />
           </div>
 
