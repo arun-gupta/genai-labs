@@ -433,32 +433,49 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">Quality Scores</h4>
               <div className="space-y-3">
-                {results.map((result, index) => {
-                  // Debug logging
-                  console.log(`Model ${result.model_provider}/${result.model_name} quality data:`, {
-                    quality_score: result.quality_score,
-                    coherence_score: result.coherence_score,
-                    relevance_score: result.relevance_score,
-                    raw_result: result
-                  });
+                {(() => {
+                  // Calculate scaled quality scores for better visualization
+                  const qualityScores = results.map(result => result.quality_score || 0);
+                  const maxQuality = Math.max(...qualityScores);
+                  const minQuality = Math.min(...qualityScores);
+                  const qualityRange = maxQuality - minQuality;
+                  
+                  // Scale function: amplify small differences while maintaining relative proportions
+                  const scaleScore = (score: number) => {
+                    if (qualityRange === 0) return 50; // If all scores are the same, show 50%
+                    // Scale to 20-80% range for better visibility
+                    const normalized = (score - minQuality) / qualityRange;
+                    return 20 + (normalized * 60);
+                  };
+                  
+                  return results.map((result, index) => {
+                    // Debug logging
+                    console.log(`Model ${result.model_provider}/${result.model_name} quality data:`, {
+                      quality_score: result.quality_score,
+                      scaled_score: scaleScore(result.quality_score || 0),
+                      raw_result: result
+                    });
 
-                  return (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {result.quality_score !== null && result.quality_score !== undefined ? `${result.quality_score.toFixed(0)}%` : 'N/A'}
-                        </span>
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {result.quality_score !== null && result.quality_score !== undefined ? `${result.quality_score.toFixed(0)}%` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                            style={{ 
+                              width: `${result.quality_score !== null && result.quality_score !== undefined ? scaleScore(result.quality_score) : 0}%` 
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-blue-500 h-3 rounded-full transition-all duration-300"
-                          style={{ width: `${result.quality_score !== null && result.quality_score !== undefined ? result.quality_score : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
 
@@ -467,44 +484,80 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Coherence Scores</h4>
                 <div className="space-y-3">
-                  {results.map((result, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {result.coherence_score !== null && result.coherence_score !== undefined ? `${result.coherence_score.toFixed(0)}%` : 'N/A'}
-                        </span>
+                  {(() => {
+                    // Calculate scaled coherence scores for better visualization
+                    const coherenceScores = results.map(result => result.coherence_score || 0);
+                    const maxCoherence = Math.max(...coherenceScores);
+                    const minCoherence = Math.min(...coherenceScores);
+                    const coherenceRange = maxCoherence - minCoherence;
+                    
+                    // Scale function: amplify small differences while maintaining relative proportions
+                    const scaleCoherenceScore = (score: number) => {
+                      if (coherenceRange === 0) return 50; // If all scores are the same, show 50%
+                      // Scale to 20-80% range for better visibility
+                      const normalized = (score - minCoherence) / coherenceRange;
+                      return 20 + (normalized * 60);
+                    };
+                    
+                    return results.map((result, index) => (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {result.coherence_score !== null && result.coherence_score !== undefined ? `${result.coherence_score.toFixed(0)}%` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                            style={{ 
+                              width: `${result.coherence_score !== null && result.coherence_score !== undefined ? scaleCoherenceScore(result.coherence_score) : 0}%` 
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-green-500 h-3 rounded-full transition-all duration-300"
-                          style={{ width: `${result.coherence_score !== null && result.coherence_score !== undefined ? result.coherence_score : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
 
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Relevance Scores</h4>
                 <div className="space-y-3">
-                  {results.map((result, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {result.relevance_score !== null && result.relevance_score !== undefined ? `${result.relevance_score.toFixed(0)}%` : 'N/A'}
-                        </span>
+                  {(() => {
+                    // Calculate scaled relevance scores for better visualization
+                    const relevanceScores = results.map(result => result.relevance_score || 0);
+                    const maxRelevance = Math.max(...relevanceScores);
+                    const minRelevance = Math.min(...relevanceScores);
+                    const relevanceRange = maxRelevance - minRelevance;
+                    
+                    // Scale function: amplify small differences while maintaining relative proportions
+                    const scaleRelevanceScore = (score: number) => {
+                      if (relevanceRange === 0) return 50; // If all scores are the same, show 50%
+                      // Scale to 20-80% range for better visibility
+                      const normalized = (score - minRelevance) / relevanceRange;
+                      return 20 + (normalized * 60);
+                    };
+                    
+                    return results.map((result, index) => (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm text-gray-900">
+                            {result.relevance_score !== null && result.relevance_score !== undefined ? `${result.relevance_score.toFixed(0)}%` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                            style={{ 
+                              width: `${result.relevance_score !== null && result.relevance_score !== undefined ? scaleRelevanceScore(result.relevance_score) : 0}%` 
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-purple-500 h-3 rounded-full transition-all duration-300"
-                          style={{ width: `${result.relevance_score !== null && result.relevance_score !== undefined ? result.relevance_score : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
             </div>
