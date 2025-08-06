@@ -102,6 +102,8 @@ class QuestionSuggestionService:
     def generate_suggestions_for_collection(self, collection_name: str = "default") -> List[Dict[str, Any]]:
         """Generate question suggestions for a specific collection."""
         try:
+            logger.info(f"Generating suggestions for collection: {collection_name}")
+            
             # Get collection info
             collections = rag_service.get_collections()
             target_collection = None
@@ -112,19 +114,41 @@ class QuestionSuggestionService:
                     break
             
             if not target_collection or target_collection.document_count == 0:
+                logger.info(f"No documents found in collection: {collection_name}")
                 return []
             
-            # Get sample documents to analyze
+            logger.info(f"Found {target_collection.document_count} documents in collection: {collection_name}")
+            
+            # Get sample documents to analyze - get more documents to ensure we capture recent additions
             collection = rag_service.chroma_client.get_collection(name=collection_name)
-            sample_docs = collection.get(limit=min(10, target_collection.document_count))
+            # Get more documents to ensure we capture recent additions and have better coverage
+            # Try to get documents in reverse order to prioritize recent ones
+            try:
+                # First try to get all documents to ensure we have the latest ones
+                all_docs = collection.get(limit=target_collection.document_count)
+                # If we have more than 20 documents, take the last 20 (most recent)
+                if len(all_docs['documents']) > 20:
+                    sample_docs = {
+                        'documents': all_docs['documents'][-20:],
+                        'metadatas': all_docs['metadatas'][-20:] if 'metadatas' in all_docs else [],
+                        'ids': all_docs['ids'][-20:] if 'ids' in all_docs else []
+                    }
+                else:
+                    sample_docs = all_docs
+            except Exception as e:
+                logger.warning(f"Failed to get all documents, falling back to sample: {e}")
+                sample_docs = collection.get(limit=min(20, target_collection.document_count))
             
             # Extract topics from sample documents
             all_topics = []
             document_texts = []
-            for doc in sample_docs['documents']:
+            logger.info(f"Analyzing {len(sample_docs['documents'])} sample documents")
+            
+            for i, doc in enumerate(sample_docs['documents']):
                 topics = self.extract_topics_from_text(doc)
                 all_topics.extend(topics)
                 document_texts.append(doc)
+                logger.info(f"Document {i+1}: Found {len(topics)} topics")
             
             # Get unique topics and their frequency
             topic_freq = {}
@@ -134,6 +158,7 @@ class QuestionSuggestionService:
             # Sort by frequency
             sorted_topics = sorted(topic_freq.items(), key=lambda x: x[1], reverse=True)
             top_topics = [topic for topic, freq in sorted_topics[:5]]
+            logger.info(f"Top topics found: {top_topics}")
             
             # Analyze document content to determine document types and themes
             combined_text = " ".join(document_texts).lower()
@@ -225,6 +250,7 @@ class QuestionSuggestionService:
                 })
             
             # Limit to top suggestions and ensure variety
+            logger.info(f"Generated {len(suggestions)} suggestions for collection: {collection_name}")
             return suggestions[:15]  # Reduced limit for better quality
             
         except Exception as e:
