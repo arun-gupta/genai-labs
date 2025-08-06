@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, BarChart3 as CompareIcon } from 'lucide-react';
+import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, GitCompare } from 'lucide-react';
 import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
@@ -34,7 +34,6 @@ export const SummarizePage: React.FC = () => {
   // Get all available Ollama models for the "Compare All Local Models" preset
   const getAllLocalModels = useMemo(() => {
     if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
-      console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
       return [];
     }
     
@@ -146,14 +145,13 @@ export const SummarizePage: React.FC = () => {
 
   // Debug isComparing changes
   useEffect(() => {
-    console.log('SummarizePage: isComparing state changed:', isComparing);
+    // console.log('SummarizePage: isComparing state changed:', isComparing);
   }, [isComparing]);
 
   const loadAvailableModels = async () => {
     try {
       const models = await apiService.getAvailableModels();
       setAvailableModels(models);
-      console.log('Available models:', models); // Debug log
     } catch (err) {
       console.error('Error loading models:', err);
     }
@@ -356,8 +354,8 @@ export const SummarizePage: React.FC = () => {
   const handleModelComparison = async () => {
     if (!validateInput()) return;
     
-    console.log('SummarizePage: Starting model comparison...');
-    console.log('SummarizePage: Setting isComparing to true');
+    // console.log('SummarizePage: Starting model comparison...');
+    // console.log('SummarizePage: Setting isComparing to true');
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
@@ -383,47 +381,47 @@ export const SummarizePage: React.FC = () => {
         request.file_content = selectedFile;
       }
       
-      console.log('SummarizePage: Comparison request:', request);
-      console.log('SummarizePage: About to call apiService.compareSummarizationModels...');
+      // console.log('SummarizePage: Comparison request:', request);
+      // console.log('SummarizePage: About to call apiService.compareSummarizationModels...');
       
       const result = await apiService.compareSummarizationModels(request);
       
-      console.log('SummarizePage: API call completed successfully!');
-      console.log('SummarizePage: Raw API result:', result);
-      console.log('SummarizePage: Result type:', typeof result);
-      console.log('SummarizePage: Result keys:', Object.keys(result || {}));
-      console.log('SummarizePage: Results array:', result?.results);
-      console.log('SummarizePage: Results length:', result?.results?.length);
+      // console.log('SummarizePage: API call completed successfully!');
+      // console.log('SummarizePage: Raw API result:', result);
+      // console.log('SummarizePage: Result type:', typeof result);
+      // console.log('SummarizePage: Result keys:', Object.keys(result || {}));
+      // console.log('SummarizePage: Results array:', result?.results);
+      // console.log('SummarizePage: Results length:', result?.results?.length);
       
       if (result && result.results && result.results.length > 0) {
-        console.log('SummarizePage: Setting comparison results...');
+        // console.log('SummarizePage: Setting comparison results...');
         setComparisonResults(result);
-        console.log('SummarizePage: Comparison results set successfully!');
+        // console.log('SummarizePage: Comparison results set successfully!');
         
         // Ensure progress indicators are shown for at least minDisplayTime
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
         
-        console.log(`SummarizePage: Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
+        // console.log(`SummarizePage: Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
         
         setTimeout(() => {
-          console.log('SummarizePage: Setting isComparing to false after minimum display time');
+          // console.log('SummarizePage: Setting isComparing to false after minimum display time');
           setIsComparing(false);
         }, remainingTime);
         
       } else {
-        console.error('SummarizePage: API returned invalid result structure:', result);
+        // console.error('SummarizePage: API returned invalid result structure:', result);
         setError('Invalid response from comparison API');
         setIsComparing(false);
       }
       
     } catch (err) {
-      console.error('SummarizePage: Comparison error:', err);
-      console.error('SummarizePage: Error details:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      });
+      // console.error('SummarizePage: Comparison error:', err);
+      // console.error('SummarizePage: Error details:', {
+      //   message: err.message,
+      //   stack: err.stack,
+      //   name: err.name
+      // });
       setError(`Model comparison failed: ${err}`);
       setIsComparing(false);
     }
@@ -458,13 +456,13 @@ export const SummarizePage: React.FC = () => {
 
   // Debug comparison results changes
   useEffect(() => {
-    console.log('comparisonResults state changed:', {
-      hasResults: !!comparisonResults,
-      resultsLength: comparisonResults?.results?.length,
-      results: comparisonResults?.results,
-      metrics: comparisonResults?.comparison_metrics,
-      recommendations: comparisonResults?.recommendations
-    });
+    // console.log('comparisonResults state changed:', {
+    //   hasResults: !!comparisonResults,
+    //   resultsLength: comparisonResults?.results?.length,
+    //   results: comparisonResults?.results,
+    //   metrics: comparisonResults?.comparison_metrics,
+    //   recommendations: comparisonResults?.recommendations
+    // });
   }, [comparisonResults]);
 
   const getInputContent = () => {
@@ -593,7 +591,7 @@ export const SummarizePage: React.FC = () => {
           {/* Model Comparison Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
-              <CompareIcon className="text-purple-600" size={20} />
+              <GitCompare className="text-purple-600" size={20} />
               <h2 className="text-lg font-semibold text-gray-900">Model Comparison</h2>
             </div>
             
@@ -648,33 +646,30 @@ export const SummarizePage: React.FC = () => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                  {defaultModelCombinations.length > 0 ? (
-                    defaultModelCombinations.map((combination, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          console.log('Setting models for combination:', combination.name, combination.models); // Debug log
+                  {defaultModelCombinations.map((combination, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (combination.name === "Compare All Local Models") {
+                          setSelectedModels(getAllLocalModels);
+                        } else {
                           setSelectedModels(combination.models);
-                        }}
-                        disabled={isComparing}
-                        className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {combination.name}
-                          {getModelCount(combination) > 0 && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              {getModelCount(combination)} models
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-600">{combination.description}</div>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500 p-2">
-                      No quick combinations available with current models. Select models manually above.
-                    </div>
-                  )}
+                        }
+                      }}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-sm font-medium text-gray-900">
+                        {combination.name}
+                        {getModelCount(combination) > 0 && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {getModelCount(combination)} models
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600">{combination.description}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -960,11 +955,11 @@ An Open Source AI is an AI system made available under terms and in a way that g
               </div>
             )}
 
-                        <div className="flex justify-between items-center mt-4">
+            <div className="flex justify-between items-center mt-4">
               <div className="flex space-x-2">
                 <button
                   onClick={handleSummarize}
-                  disabled={isSummarizing || !inputContent}
+                  disabled={isSummarizing || !validateInput()}
                   className="btn-primary flex items-center space-x-2"
                 >
                   {isSummarizing ? (
@@ -982,7 +977,7 @@ An Open Source AI is an AI system made available under terms and in a way that g
                 
                 <button
                   onClick={handleModelComparison}
-                  disabled={isComparing || !inputContent || selectedModels.length < 2}
+                  disabled={isComparing || !validateInput() || selectedModels.length < 2}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isComparing ? (
@@ -992,17 +987,11 @@ An Open Source AI is an AI system made available under terms and in a way that g
                     </>
                   ) : (
                     <>
-                      <CompareIcon size={16} />
+                      <GitCompare size={16} />
                       <span>Compare Models</span>
                     </>
                   )}
                 </button>
-              </div>
-              
-              {/* Debug info for button */}
-              <div className="text-xs text-gray-500">
-                <p>Selected models: {selectedModels.length}</p>
-                <p>Button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
 
@@ -1045,7 +1034,7 @@ An Open Source AI is an AI system made available under terms and in a way that g
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <CompareIcon size={16} />
+                <GitCompare size={16} />
                 <span>Comparison</span>
               </button>
             </div>
@@ -1081,18 +1070,18 @@ An Open Source AI is an AI system made available under terms and in a way that g
             {activeTab === 'comparison' && (
               <div className="space-y-6">
                 {(() => {
-                  console.log('Rendering comparison tab with:', {
-                    activeTab,
-                    hasComparisonResults: !!comparisonResults,
-                    isComparing,
-                    comparisonResults: comparisonResults,
-                    selectedModels: selectedModels
-                  });
+                  // console.log('Rendering comparison tab with:', {
+                  //   activeTab,
+                  //   hasComparisonResults: !!comparisonResults,
+                  //   isComparing,
+                  //   comparisonResults: comparisonResults,
+                  //   selectedModels: selectedModels
+                  // });
                   
                   if (isComparing || comparisonResults) {
-                    console.log('Comparison tab - showing ModelComparison component');
-                    console.log('Comparison tab - isComparing:', isComparing);
-                    console.log('Comparison tab - comparisonResults:', comparisonResults);
+                    // console.log('Comparison tab - showing ModelComparison component');
+                    // console.log('Comparison tab - isComparing:', isComparing);
+                    // console.log('Comparison tab - comparisonResults:', comparisonResults);
                     
                     return (
                       <ModelComparison
@@ -1105,10 +1094,10 @@ An Open Source AI is an AI system made available under terms and in a way that g
                       />
                     );
                   } else {
-                    console.log('No comparison results and not comparing, showing empty state');
+                    // console.log('No comparison results and not comparing, showing empty state');
                     return (
                       <div className="text-center py-12">
-                        <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
+                        <GitCompare className="mx-auto text-gray-400 mb-4" size={48} />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No Model Comparison Results</h3>
                         <p className="text-gray-600 mb-4 max-w-md mx-auto">
                           Compare how different AI models summarize the same content to find the best one for your needs.

@@ -49,11 +49,6 @@ export const GeneratePage: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
-  // Debug isComparing changes
-  useEffect(() => {
-    console.log('GeneratePage: isComparing state changed:', isComparing);
-  }, [isComparing]);
-
   // Default model combinations for quick comparison
   const defaultModelCombinations = [
     {
@@ -116,7 +111,6 @@ export const GeneratePage: React.FC = () => {
   // Get all available Ollama models for the "Compare All Local Models" preset
   const getAllLocalModels = useMemo(() => {
     if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
-      console.log('availableModels.ollama_models.models is not an array:', availableModels?.ollama_models?.models);
       return [];
     }
     
@@ -323,8 +317,6 @@ export const GeneratePage: React.FC = () => {
       return;
     }
     
-    console.log('GeneratePage: Starting model comparison...');
-    console.log('GeneratePage: Setting isComparing to true');
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
@@ -346,22 +338,17 @@ export const GeneratePage: React.FC = () => {
         output_format: outputFormat
       });
       
-      console.log('GeneratePage: API call completed, setting results');
       setComparisonResults(result);
       
       // Ensure progress indicators are shown for at least minDisplayTime
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
       
-      console.log(`GeneratePage: Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
-      
       setTimeout(() => {
-        console.log('GeneratePage: Setting isComparing to false after minimum display time');
         setIsComparing(false);
       }, remainingTime);
       
     } catch (err) {
-      console.error('GeneratePage: Comparison error:', err);
       setError(`Model comparison failed: ${err}`);
       setIsComparing(false);
     }
@@ -839,12 +826,6 @@ export const GeneratePage: React.FC = () => {
                     </>
                   )}
                 </button>
-              </div>
-              
-              {/* Debug info for button */}
-              <div className="text-xs text-gray-500">
-                <p>Selected models: {selectedModels.length}</p>
-                <p>Button enabled: {selectedModels.length >= 2 ? 'Yes' : 'No'}</p>
               </div>
             </div>
 
