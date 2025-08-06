@@ -59,7 +59,7 @@ export const SummarizePage: React.FC = () => {
       models: [
         { provider: "ollama", model: "mistral:7b" },
         { provider: "openai", model: "gpt-3.5-turbo" },
-        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+        { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
     {
@@ -68,7 +68,7 @@ export const SummarizePage: React.FC = () => {
       models: [
         { provider: "ollama", model: "mistral:7b" },
         { provider: "openai", model: "gpt-3.5-turbo" },
-        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+        { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
     {
@@ -77,7 +77,7 @@ export const SummarizePage: React.FC = () => {
       models: [
         { provider: "ollama", model: "mistral:7b" },
         { provider: "openai", model: "gpt-4" },
-        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+        { provider: "anthropic", model: "claude-3-5-sonnet-20241022" }
       ]
     },
     {
@@ -86,7 +86,7 @@ export const SummarizePage: React.FC = () => {
       models: [
         { provider: "ollama", model: "gpt-oss:20b" },
         { provider: "openai", model: "gpt-4" },
-        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+        { provider: "anthropic", model: "claude-3-5-sonnet-20241022" }
       ]
     }
   ];
