@@ -31,95 +31,74 @@ export const SummarizePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
-  const getAvailableModelCombinations = useMemo(() => {
-    if (!availableModels?.providers) return [];
-    
-    const availableModelsList = availableModels.providers.flatMap((provider: any) =>
-      provider.models?.map((model: string) => ({ provider: provider.id, model })) || []
-    );
-    
-    // Calculate getAllLocalModels inline to avoid circular dependency
-    const allLocalModels = availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
-      ? availableModels.ollama_models.models
-          .filter((model: any) => model.is_available)
-          .map((model: any) => ({
-            provider: 'ollama',
-            model: model.name
-          }))
-      : [];
-    
-    const baseCombinations = [
-      {
-        name: "Compare All Local Models",
-        description: "Compare all available Ollama models",
-        models: [] // Will be populated dynamically
-      },
-      {
-        name: "Local vs Cloud",
-        description: "Compare local Ollama model with cloud models",
-        models: [
-          { provider: "ollama", model: "mistral:7b" },
-          { provider: "openai", model: "gpt-3.5-turbo" },
-          { provider: "anthropic", model: "claude-3-haiku-20240307" }
-        ]
-      },
-      {
-        name: "Efficient Models",
-        description: "Compare lightweight models for speed",
-        models: [
-          { provider: "ollama", model: "mistral:7b" },
-          { provider: "openai", model: "gpt-3.5-turbo" },
-          { provider: "anthropic", model: "claude-3-haiku-20240307" }
-        ]
-      },
-      {
-        name: "High Performance",
-        description: "Compare high-quality models for accuracy",
-        models: [
-          { provider: "ollama", model: "mistral:7b" },
-          { provider: "openai", model: "gpt-4" },
-          { provider: "anthropic", model: "claude-3-sonnet-20240229" }
-        ]
-      },
-      {
-        name: "Reasoning & Analysis",
-        description: "Compare models with advanced reasoning and analysis capabilities",
-        models: [
-          { provider: "ollama", model: "gpt-oss:20b" },
-          { provider: "openai", model: "gpt-4" },
-          { provider: "anthropic", model: "claude-3-sonnet-20240229" }
-        ]
-      }
-    ];
-    
-    // Filter combinations to only include available models
-    return baseCombinations.map(combination => ({
-      ...combination,
-      models: combination.name === "Compare All Local Models" 
-        ? allLocalModels 
-        : combination.models.filter(model => 
-            availableModelsList.some(available => 
-              available.provider === model.provider && available.model === model.model
-            )
-          )
-    })).filter(combination => combination.models.length >= 2); // Only show combinations with at least 2 models
-  }, [availableModels]);
-
   // Default model combinations for quick comparison
-  const defaultModelCombinations = getAvailableModelCombinations;
+  const defaultModelCombinations = [
+    {
+      name: "Compare All Local Models",
+      description: "Compare all available Ollama models",
+      models: [] // Will be populated dynamically
+    },
+    {
+      name: "Local vs Cloud",
+      description: "Compare local Ollama model with cloud models",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+      ]
+    },
+    {
+      name: "Efficient Models",
+      description: "Compare lightweight models for speed",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+      ]
+    },
+    {
+      name: "High Performance",
+      description: "Compare high-quality models for accuracy",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+      ]
+    },
+    {
+      name: "Reasoning & Analysis",
+      description: "Compare models with advanced reasoning and analysis capabilities",
+      models: [
+        { provider: "ollama", model: "gpt-oss:20b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+      ]
+    }
+  ];
+
+  // Get all available Ollama models for the "Compare All Local Models" preset
+  const getAllLocalModels = useMemo(() => {
+    if (!availableModels?.ollama_models?.models || !Array.isArray(availableModels.ollama_models.models)) {
+      return [];
+    }
+    
+    return availableModels.ollama_models.models
+      .filter((model: any) => model.is_available)
+      .map((model: any) => ({
+        provider: 'ollama',
+        model: model.name
+      }));
+  }, [availableModels]);
 
   // Get model count for any combination
   const getModelCount = useMemo(() => {
     return (combination: any) => {
       if (combination.name === "Compare All Local Models") {
-        // Calculate local models count inline to avoid circular dependency
-        return availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
-          ? availableModels.ollama_models.models.filter((model: any) => model.is_available).length
-          : 0;
+        return getAllLocalModels.length;
       }
       return combination.models.length;
     };
-  }, [availableModels]);
+  }, [getAllLocalModels]);
 
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -650,19 +629,12 @@ export const SummarizePage: React.FC = () => {
                       key={index}
                       onClick={() => {
                         if (combination.name === "Compare All Local Models") {
-                          setSelectedModels(availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models)
-                            ? availableModels.ollama_models.models
-                                .filter((model: any) => model.is_available)
-                                .map((model: any) => ({
-                                  provider: 'ollama',
-                                  model: model.name
-                                }))
-                            : []);
+                          setSelectedModels(getAllLocalModels);
                         } else {
                           setSelectedModels(combination.models);
                         }
                       }}
-                      disabled={isComparing || (combination.name === "Compare All Local Models" && availableModels?.ollama_models?.models && Array.isArray(availableModels.ollama_models.models) && availableModels.ollama_models.models.length === 0)}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
                     >
                       <div className="text-sm font-medium text-gray-900">
