@@ -173,7 +173,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Main Features Section */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Core Features</h2>
           <p className="text-gray-600">
@@ -181,7 +181,7 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
@@ -190,16 +190,16 @@ export const HomePage: React.FC = () => {
                 to={feature.path}
                 className="card hover:shadow-lg transition-all duration-200 group border-2 border-transparent hover:border-primary-200"
               >
-                <div className="space-y-4">
-                  <div className={`${feature.color} p-4 rounded-lg text-white w-fit`}>
-                    <Icon size={28} />
+                <div className="space-y-3">
+                  <div className={`${feature.color} p-3 rounded-lg text-white w-fit`}>
+                    <Icon size={24} />
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 mt-2 mb-4">{feature.description}</p>
-                    <div className="space-y-2">
+                    <p className="text-gray-600 mt-1 mb-3">{feature.description}</p>
+                    <div className="space-y-1.5">
                       {feature.highlights.map((highlight, index) => (
                         <div key={index} className="flex items-center text-sm text-gray-500">
                           <div className="w-1.5 h-1.5 bg-primary-400 rounded-full mr-2"></div>
@@ -220,7 +220,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Additional Capabilities */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Additional Capabilities</h2>
           <p className="text-gray-600">
@@ -249,7 +249,7 @@ export const HomePage: React.FC = () => {
       </div>
 
       {/* Models Section */}
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Supported Models</h2>
           <p className="text-gray-600">
