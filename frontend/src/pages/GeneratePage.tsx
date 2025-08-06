@@ -6,7 +6,7 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { GenerationAnalyticsDisplay } from '../components/GenerationAnalyticsDisplay';
-import { PromptTemplateSelector } from '../components/PromptTemplateSelector';
+
 import { MultipleCandidatesSelector } from '../components/MultipleCandidatesSelector';
 import { VoiceInput } from '../components/VoiceInput';
 import { VoiceOutput } from '../components/VoiceOutput';
@@ -270,11 +270,6 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
-  const handleTemplateSelect = (systemPrompt: string, userPrompt: string) => {
-    setSystemPrompt(systemPrompt);
-    setUserPrompt(userPrompt);
-  };
-
   const handleWritingStyleChange = (style: string) => {
     setSelectedWritingStyle(style);
     if (style === 'none') {
@@ -290,10 +285,7 @@ export const GeneratePage: React.FC = () => {
     setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
   };
 
-  const handleClearTemplate = () => {
-    setSystemPrompt('');
-    setUserPrompt('');
-  };
+
 
   const handleCandidateSelect = (index: number) => {
     setSelectedCandidate(index);
@@ -623,17 +615,6 @@ export const GeneratePage: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Prompt Templates */}
-          <div className="card">
-            <PromptTemplateSelector
-              onTemplateSelect={handleTemplateSelect}
-              onClearTemplate={handleClearTemplate}
-              currentSystemPrompt={systemPrompt}
-              currentUserPrompt={userPrompt}
-              className="w-full"
-            />
           </div>
 
           {/* History */}
