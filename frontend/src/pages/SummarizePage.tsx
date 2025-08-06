@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Settings, Send, Upload, Link, File, Globe, X, BarChart3, Languages, History, Zap, GitCompare } from 'lucide-react';
 import { VoiceInput } from '../components/VoiceInput';
 import { ModelSelector } from '../components/ModelSelector';
@@ -44,6 +44,7 @@ export const SummarizePage: React.FC = () => {
   const [comparisonResults, setComparisonResults] = useState<any>(null);
   const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Default model combinations for quick comparison (static like GeneratePage)
   const defaultModelCombinations = [
@@ -154,6 +155,40 @@ export const SummarizePage: React.FC = () => {
 
   const handleOutputFormatChange = (format: string) => {
     setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
+  };
+
+  const handleLoadFromHistory = (systemPrompt: string, userPrompt: string) => {
+    // For summarize page, we can load the text input from history
+    if (userPrompt.startsWith('Summarize: ')) {
+      const textToSummarize = userPrompt.replace('Summarize: ', '');
+      setText(textToSummarize);
+      setInputType('text');
+    }
+    setShowHistory(false);
+  };
+
+  const handleVoiceInput = (transcript: string) => {
+    setText(prev => prev + (prev ? ' ' : '') + transcript);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      // handleSummarize(); // We'll add this function later
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -304,6 +339,29 @@ export const SummarizePage: React.FC = () => {
             </div>
           </div>
 
+          {/* History */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <History className="text-blue-600" size={20} />
+                <h2 className="text-lg font-semibold text-gray-900">History</h2>
+              </div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              >
+                {showHistory ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            
+            {showHistory && (
+              <PromptHistoryComponent
+                onLoadPrompt={handleLoadFromHistory}
+                className="w-full"
+              />
+            )}
+          </div>
+
           {/* Model Comparison Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
@@ -446,18 +504,38 @@ export const SummarizePage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-700">
                     Text to Summarize
                   </label>
+                  <VoiceInput
+                    onTranscript={handleVoiceInput}
+                    disabled={isSummarizing}
+                    className="text-xs"
+                  />
                 </div>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   disabled={isSummarizing}
                   className="input-field h-80 resize-none"
-                  placeholder="Paste or type the text you want to summarize here..."
+                  placeholder="Paste or type the text you want to summarize here, or use voice input..."
+                  onKeyDown={handleKeyPress}
                 />
                 <div className="flex justify-between items-center mt-2">
                   <div className="text-sm text-gray-500">
                     {text.trim() ? text.trim().split(/\s+/).length : 0} words
                   </div>
+                  <button
+                    onClick={() => setText(`Open Source has demonstrated that massive benefits accrue to everyone after removing the barriers to learning, using, sharing and improving software systems. These benefits are the result of using licenses that adhere to the Open Source Definition. For AI, society needs at least the same essential freedoms of Open Source to enable AI developers, deployers and end users to enjoy those same benefits: autonomy, transparency, frictionless reuse and collaborative improvement.
+
+An Open Source AI is an AI system made available under terms and in a way that grant the freedoms to:
+• Use the system for any purpose and without having to ask for permission.
+• Study how the system works and inspect its components.
+• Modify the system for any purpose, including to change its output.
+• Share the system for others to use with or without modifications, for any purpose.`)}
+                    disabled={isSummarizing}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium disabled:opacity-50"
+                    title="Load sample text about Open Source AI"
+                  >
+                    Try Sample
+                  </button>
                 </div>
                 
                 {/* Language Detection Display */}
@@ -478,14 +556,28 @@ export const SummarizePage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   URL to Summarize
                 </label>
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  disabled={isSummarizing}
-                  className="input-field w-full"
-                  placeholder="https://example.com/article"
-                />
+                <div className="flex space-x-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={isSummarizing}
+                    className="input-field flex-1"
+                    placeholder="https://example.com/article"
+                    onKeyDown={handleKeyPress}
+                  />
+                  <button
+                    onClick={() => setUrl('https://opensource.org/ai/open-source-ai-definition')}
+                    disabled={isSummarizing}
+                    className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium disabled:opacity-50"
+                    title="Try with Open Source AI Definition"
+                  >
+                    Try Sample
+                  </button>
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  Enter a valid URL to scrape and summarize its content, or click "Try Sample" to test with the Open Source AI Definition
+                </div>
               </div>
             )}
 
@@ -496,15 +588,58 @@ export const SummarizePage: React.FC = () => {
                   File to Summarize
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="mx-auto text-gray-400 mb-4" size={32} />
-                  <div className="text-gray-600">
-                    <span className="text-primary-600 hover:text-primary-700 font-medium">
-                      Click to upload
-                    </span>
-                    {' '}or drag and drop
-                  </div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Supports: TXT, PDF, DOCX, XLSX, MD files
+                  {selectedFile ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center space-x-2">
+                        <File className="text-green-500" size={20} />
+                        <span className="font-medium text-gray-900">{selectedFile.name}</span>
+                        <button
+                          onClick={removeFile}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Upload className="mx-auto text-gray-400" size={32} />
+                      <div className="text-gray-600">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-primary-600 hover:text-primary-700 font-medium"
+                        >
+                          Click to upload
+                        </button>
+                        {' '}or drag and drop
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Supports: TXT, PDF, DOCX, XLSX, MD files
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".txt,.pdf,.docx,.xlsx,.md"
+                    className="hidden"
+                  />
+                </div>
+                <div className="mt-3 text-center">
+                  <a
+                    href="/sample-document.txt"
+                    download="sample-document.txt"
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium"
+                  >
+                    <File size={16} />
+                    <span>Download Sample Document</span>
+                  </a>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Download a sample text file to test the file upload feature
                   </div>
                 </div>
               </div>
