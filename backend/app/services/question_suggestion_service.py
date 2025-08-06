@@ -55,7 +55,7 @@ class QuestionSuggestionService:
             if term.lower() in text.lower():
                 # Count how many times this term appears to gauge importance
                 count = text.lower().count(term.lower())
-                if count >= 2:  # Only include terms that appear multiple times
+                if count >= 1:  # Reduced threshold to catch more terms
                     topics.append(term.title())
         
         # Look for section headers (lines with colons or numbered items)
@@ -90,16 +90,44 @@ class QuestionSuggestionService:
                 if not term.lower() in ['the', 'and', 'for', 'with', 'this', 'that', 'will', 'shall', 'have', 'been', 'from', 'they', 'their']:
                     term_freq[term] = term_freq.get(term, 0) + 1
         
-        # Only include terms that appear at least twice
+        # Include terms that appear at least once (reduced threshold)
         for term, freq in term_freq.items():
-            if freq >= 2:
+            if freq >= 1:
                 topics.append(term)
+        
+        # Look for any capitalized words that might be important topics
+        # This is a fallback to catch more potential topics
+        capitalized_words = re.findall(r'\b[A-Z][a-z]{2,}\b', text)
+        word_freq = {}
+        for word in capitalized_words:
+            if word not in topics and len(word) >= 3:
+                # Avoid common words
+                if word.lower() not in ['the', 'and', 'for', 'with', 'this', 'that', 'will', 'shall', 'have', 'been', 'from', 'they', 'their', 'all', 'are', 'but', 'not', 'you', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use']:
+                    word_freq[word] = word_freq.get(word, 0) + 1
+        
+        # Include capitalized words that appear at least once
+        for word, freq in word_freq.items():
+            if freq >= 1 and word not in topics:
+                topics.append(word)
         
         # Remove duplicates and limit to top topics
         unique_topics = list(set(topics))
         # Sort by length (prefer shorter, cleaner topics)
         unique_topics.sort(key=len)
-        return unique_topics[:8]  # Limit to top 8 topics instead of 10
+        
+        # If we still don't have enough topics, add some generic ones based on content
+        if len(unique_topics) < 3:
+            text_lower = text.lower()
+            if any(word in text_lower for word in ['contract', 'agreement', 'terms']):
+                unique_topics.extend(['Contract', 'Agreement', 'Terms'])
+            if any(word in text_lower for word in ['policy', 'procedure', 'guidelines']):
+                unique_topics.extend(['Policy', 'Procedure', 'Guidelines'])
+            if any(word in text_lower for word in ['report', 'analysis', 'data']):
+                unique_topics.extend(['Report', 'Analysis', 'Data'])
+            if any(word in text_lower for word in ['manual', 'guide', 'instructions']):
+                unique_topics.extend(['Manual', 'Guide', 'Instructions'])
+        
+        return unique_topics[:8]  # Limit to top 8 topics
     
     def generate_suggestions_for_collection(self, collection_name: str = "default") -> List[Dict[str, Any]]:
         """Generate question suggestions for a specific collection."""
@@ -147,10 +175,11 @@ class QuestionSuggestionService:
             logger.info(f"Analyzing {len(sample_docs['documents'])} sample documents")
             
             for i, doc in enumerate(sample_docs['documents']):
+                logger.info(f"Document {i+1}: Content preview: {doc[:200]}...")
                 topics = self.extract_topics_from_text(doc)
                 all_topics.extend(topics)
                 document_texts.append(doc)
-                logger.info(f"Document {i+1}: Found {len(topics)} topics")
+                logger.info(f"Document {i+1}: Found {len(topics)} topics: {topics}")
             
             # Get unique topics and their frequency
             topic_freq = {}
