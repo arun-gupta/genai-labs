@@ -487,19 +487,28 @@ class ModelComparisonService:
                 temperature=temperature,
                 max_tokens=max_length * 2  # Allow more tokens for generation
             ):
+                # Debug logging for chunk
+                logger.info(f"Received chunk for {model_config['provider']}/{model_config['model']}:")
+                logger.info(f"  - Chunk type: {type(chunk)}")
+                logger.info(f"  - Is complete: {getattr(chunk, 'is_complete', 'N/A')}")
+                logger.info(f"  - Has token_usage: {hasattr(chunk, 'token_usage')}")
+                logger.info(f"  - Token usage: {getattr(chunk, 'token_usage', 'N/A')}")
+                
                 # Handle both dictionary and object formats
                 if isinstance(chunk, dict):
                     full_content += chunk.get("content", "")
                     if chunk.get("token_usage"):
                         token_usage = chunk.get("token_usage")
+                        logger.info(f"  - Updated token_usage from dict: {token_usage}")
                     if chunk.get("latency_ms"):
                         latency_ms = chunk.get("latency_ms")
                 else:
                     # Handle object format (fallback)
                     full_content += getattr(chunk, 'content', '')
-                    if hasattr(chunk, 'token_usage'):
+                    if hasattr(chunk, 'token_usage') and chunk.token_usage:
                         token_usage = chunk.token_usage
-                    if hasattr(chunk, 'latency_ms'):
+                        logger.info(f"  - Updated token_usage from object: {token_usage}")
+                    if hasattr(chunk, 'latency_ms') and chunk.latency_ms:
                         latency_ms = chunk.latency_ms
             
             # Debug logging for generated content
@@ -519,6 +528,8 @@ class ModelComparisonService:
             logger.info(f"  - Quality score: {quality_metrics['quality_score']}")
             logger.info(f"  - Coherence score: {quality_metrics['coherence_score']}")
             logger.info(f"  - Relevance score: {quality_metrics['relevance_score']}")
+            logger.info(f"  - Token usage: {token_usage}")
+            logger.info(f"  - Latency: {latency_ms}ms")
             
             return ModelComparisonResult(
                 model_provider=model_config["provider"],
