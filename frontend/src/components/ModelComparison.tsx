@@ -274,6 +274,19 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
     );
   }
 
+  // Debug logging for quality scores
+  if (results && results.length > 0) {
+    console.log('Model Comparison Results - Quality Scores:');
+    results.forEach((result, index) => {
+      console.log(`  ${result.model_provider}/${result.model_name}:`);
+      console.log(`    - Quality: ${result.quality_score}%`);
+      console.log(`    - Coherence: ${result.coherence_score}%`);
+      console.log(`    - Relevance: ${result.relevance_score}%`);
+      console.log(`    - Token Usage: ${result.token_usage ? JSON.stringify(result.token_usage) : 'N/A'}`);
+      console.log(`    - Latency: ${result.latency_ms}ms`);
+    });
+  }
+
   if (!results || results.length === 0) {
     console.log('Showing no results message because:', {
       hasResults: !!results,
