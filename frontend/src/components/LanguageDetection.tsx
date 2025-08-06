@@ -22,7 +22,7 @@ export const LanguageDetectionDisplay: React.FC<LanguageDetectionProps> = ({
     );
   }
 
-  if (!detection) {
+  if (!detection && !isLoading) {
     return null;
   }
 

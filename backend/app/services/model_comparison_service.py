@@ -485,7 +485,7 @@ class ModelComparisonService:
                 model_provider=model_config["provider"],
                 model_name=model_config["model"],
                 temperature=temperature,
-                max_tokens=max_length * 2  # Allow more tokens for generation
+                max_tokens=max_length  # Restrict to max_length tokens
             ):
                 # Debug logging for chunk
                 logger.info(f"Received chunk for {model_config['provider']}/{model_config['model']}:")
@@ -497,23 +497,36 @@ class ModelComparisonService:
                 # Handle both dictionary and object formats
                 if isinstance(chunk, dict):
                     full_content += chunk.get("content", "")
-                    if chunk.get("token_usage"):
+                    # Only update values if they exist (final chunk)
+                    if chunk.get("token_usage") is not None:
                         token_usage = chunk.get("token_usage")
                         logger.info(f"  - Updated token_usage from dict: {token_usage}")
-                    if chunk.get("latency_ms"):
+                    if chunk.get("latency_ms") is not None:
                         latency_ms = chunk.get("latency_ms")
                 else:
                     # Handle object format (fallback)
                     full_content += getattr(chunk, 'content', '')
-                    if hasattr(chunk, 'token_usage') and chunk.token_usage:
+                    # Only update values if they exist (final chunk)
+                    if hasattr(chunk, 'token_usage') and chunk.token_usage is not None:
                         token_usage = chunk.token_usage
                         logger.info(f"  - Updated token_usage from object: {token_usage}")
-                    if hasattr(chunk, 'latency_ms') and chunk.latency_ms:
+                    if hasattr(chunk, 'latency_ms') and chunk.latency_ms is not None:
                         latency_ms = chunk.latency_ms
             
             # Debug logging for generated content
             logger.info(f"Generated content length: {len(full_content)}")
             logger.info(f"Generated content preview: {full_content[:200]}...")
+            
+            # Post-process to ensure summary is not longer than original
+            summary_words = full_content.split()
+            original_words = text.split()
+            
+            if len(summary_words) > len(original_words):
+                logger.warning(f"Summary ({len(summary_words)} words) is longer than original ({len(original_words)} words). Truncating.")
+                # Truncate to 80% of original length
+                max_summary_words = int(len(original_words) * 0.8)
+                full_content = ' '.join(summary_words[:max_summary_words])
+                logger.info(f"Truncated summary to {len(full_content.split())} words")
             
             # Calculate quality metrics
             quality_metrics = self._calculate_quality_metrics(text, full_content)
@@ -538,7 +551,7 @@ class ModelComparisonService:
                 original_length=original_length,
                 summary_length=summary_length,
                 compression_ratio=compression_ratio,
-                token_usage=token_usage.dict() if token_usage else None,
+                token_usage=token_usage.dict() if hasattr(token_usage, 'dict') else token_usage,
                 latency_ms=latency_ms,
                 quality_score=quality_metrics["quality_score"],
                 coherence_score=quality_metrics["coherence_score"],
@@ -577,16 +590,18 @@ class ModelComparisonService:
                 # Handle both dictionary and object formats
                 if isinstance(chunk, dict):
                     full_content += chunk.get("content", "")
-                    if chunk.get("token_usage"):
+                    # Only update token_usage and latency_ms if they exist (final chunk)
+                    if chunk.get("token_usage") is not None:
                         token_usage = chunk.get("token_usage")
-                    if chunk.get("latency_ms"):
+                    if chunk.get("latency_ms") is not None:
                         latency_ms = chunk.get("latency_ms")
                 else:
                     # Handle object format (fallback)
                     full_content += getattr(chunk, 'content', '')
-                    if hasattr(chunk, 'token_usage'):
+                    # Only update token_usage and latency_ms if they exist (final chunk)
+                    if hasattr(chunk, 'token_usage') and chunk.token_usage is not None:
                         token_usage = chunk.token_usage
-                    if hasattr(chunk, 'latency_ms'):
+                    if hasattr(chunk, 'latency_ms') and chunk.latency_ms is not None:
                         latency_ms = chunk.latency_ms
             
             # Calculate quality metrics (using user prompt as reference)
@@ -602,7 +617,7 @@ class ModelComparisonService:
                 generated_text=full_content,
                 original_length=original_length,
                 generated_length=generated_length,
-                token_usage=token_usage.dict() if token_usage else None,
+                token_usage=token_usage.dict() if hasattr(token_usage, 'dict') else token_usage,
                 latency_ms=latency_ms,
                 quality_score=quality_metrics["quality_score"],
                 coherence_score=quality_metrics["coherence_score"],
@@ -643,22 +658,26 @@ class ModelComparisonService:
                 # Handle dictionary format from RAG service
                 if isinstance(chunk, dict):
                     full_content += chunk.get("content", "")
-                    if chunk.get("latency_ms"):
+                    # Only update values if they exist (final chunk)
+                    if chunk.get("latency_ms") is not None:
                         latency_ms = chunk.get("latency_ms")
-                    if chunk.get("sources"):
+                    if chunk.get("sources") is not None:
                         sources = chunk.get("sources")
-                    if chunk.get("confidence"):
+                    if chunk.get("confidence") is not None:
                         confidence = chunk.get("confidence")
+                    if chunk.get("token_usage") is not None:
+                        token_usage = chunk.get("token_usage")
                 else:
                     # Handle object format (fallback)
                     full_content += getattr(chunk, 'content', '')
-                    if hasattr(chunk, 'token_usage'):
+                    # Only update values if they exist (final chunk)
+                    if hasattr(chunk, 'token_usage') and chunk.token_usage is not None:
                         token_usage = chunk.token_usage
-                    if hasattr(chunk, 'latency_ms'):
+                    if hasattr(chunk, 'latency_ms') and chunk.latency_ms is not None:
                         latency_ms = chunk.latency_ms
-                    if hasattr(chunk, 'sources'):
+                    if hasattr(chunk, 'sources') and chunk.sources is not None:
                         sources = chunk.sources
-                    if hasattr(chunk, 'confidence'):
+                    if hasattr(chunk, 'confidence') and chunk.confidence is not None:
                         confidence = chunk.confidence
             
             # Calculate quality metrics
@@ -672,7 +691,7 @@ class ModelComparisonService:
                 generated_text=full_content,
                 original_length=len(question.split()),
                 generated_length=len(full_content.split()),
-                token_usage=token_usage.dict() if token_usage else None,
+                token_usage=token_usage.dict() if hasattr(token_usage, 'dict') else token_usage,
                 latency_ms=latency_ms,
                 quality_score=quality_metrics["overall_score"],
                 coherence_score=quality_metrics["coherence_score"],
@@ -686,7 +705,9 @@ class ModelComparisonService:
 
     def _create_summary_prompt(self, summary_type: str, max_length: int) -> str:
         """Create appropriate system prompt based on summary type."""
-        base_prompt = f"Create a concise summary of the following text in approximately {max_length} words."
+        base_prompt = f"""You are a professional summarizer. Create a concise summary of the following text in EXACTLY {max_length} words or fewer. 
+
+IMPORTANT: Your summary MUST be shorter than the original text. Do not exceed {max_length} words under any circumstances."""
         
         if summary_type == "bullet_points":
             return base_prompt + " Format the summary as bullet points highlighting the key information."
