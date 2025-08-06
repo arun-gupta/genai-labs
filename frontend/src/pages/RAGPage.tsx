@@ -1356,11 +1356,11 @@ export const RAGPage: React.FC = () => {
 
             {activeTab === 'comparison' && (
               <div className="space-y-6">
-                {comparisonResults ? (
+                {isComparing || comparisonResults ? (
                   <ModelComparison
-                    results={comparisonResults.results}
-                    metrics={comparisonResults.comparison_metrics}
-                    recommendations={comparisonResults.recommendations}
+                    results={comparisonResults?.results || []}
+                    metrics={comparisonResults?.comparison_metrics || {}}
+                    recommendations={comparisonResults?.recommendations || []}
                     isComparing={isComparing}
                     comparisonType="rag"
                     selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}

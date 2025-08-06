@@ -49,6 +49,11 @@ export const GeneratePage: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
 
+  // Debug isComparing changes
+  useEffect(() => {
+    console.log('GeneratePage: isComparing state changed:', isComparing);
+  }, [isComparing]);
+
   // Default model combinations for quick comparison
   const defaultModelCombinations = [
     {
@@ -318,6 +323,8 @@ export const GeneratePage: React.FC = () => {
       return;
     }
     
+    console.log('GeneratePage: Starting model comparison...');
+    console.log('GeneratePage: Setting isComparing to true');
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
@@ -339,17 +346,22 @@ export const GeneratePage: React.FC = () => {
         output_format: outputFormat
       });
       
+      console.log('GeneratePage: API call completed, setting results');
       setComparisonResults(result);
       
       // Ensure progress indicators are shown for at least minDisplayTime
       const elapsedTime = Date.now() - startTime;
       const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
       
+      console.log(`GeneratePage: Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
+      
       setTimeout(() => {
+        console.log('GeneratePage: Setting isComparing to false after minimum display time');
         setIsComparing(false);
       }, remainingTime);
       
     } catch (err) {
+      console.error('GeneratePage: Comparison error:', err);
       setError(`Model comparison failed: ${err}`);
       setIsComparing(false);
     }
@@ -910,11 +922,11 @@ export const GeneratePage: React.FC = () => {
 
             {activeTab === 'comparison' && (
               <div className="space-y-6">
-                {comparisonResults ? (
+                {isComparing || comparisonResults ? (
                   <ModelComparison
-                    results={comparisonResults.results}
-                    metrics={comparisonResults.comparison_metrics}
-                    recommendations={comparisonResults.recommendations}
+                    results={comparisonResults?.results || []}
+                    metrics={comparisonResults?.comparison_metrics || {}}
+                    recommendations={comparisonResults?.recommendations || []}
                     isComparing={isComparing}
                     comparisonType="generation"
                     selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
