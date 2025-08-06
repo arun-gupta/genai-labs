@@ -181,7 +181,7 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
@@ -190,27 +190,27 @@ export const HomePage: React.FC = () => {
                 to={feature.path}
                 className="card hover:shadow-lg transition-all duration-200 group border-2 border-transparent hover:border-primary-200"
               >
-                <div className="space-y-3">
-                  <div className={`${feature.color} p-3 rounded-lg text-white w-fit`}>
-                    <Icon size={24} />
+                <div className="space-y-2.5">
+                  <div className={`${feature.color} p-2.5 rounded-lg text-white w-fit`}>
+                    <Icon size={20} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 mt-1 mb-3">{feature.description}</p>
-                    <div className="space-y-1.5">
+                    <p className="text-gray-600 mt-1 mb-2 text-sm">{feature.description}</p>
+                    <div className="space-y-1">
                       {feature.highlights.map((highlight, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-500">
-                          <div className="w-1.5 h-1.5 bg-primary-400 rounded-full mr-2"></div>
+                        <div key={index} className="flex items-center text-xs text-gray-500">
+                          <div className="w-1 h-1 bg-primary-400 rounded-full mr-1.5"></div>
                           {highlight}
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center text-primary-600 group-hover:text-primary-700 transition-colors pt-2 border-t border-gray-100">
-                    <span className="text-sm font-medium">Try it now</span>
-                    <ArrowRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex items-center text-primary-600 group-hover:text-primary-700 transition-colors pt-1.5 border-t border-gray-100">
+                    <span className="text-xs font-medium">Try it now</span>
+                    <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               </Link>
