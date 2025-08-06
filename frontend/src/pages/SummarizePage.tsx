@@ -16,6 +16,26 @@ export const SummarizePage: React.FC = () => {
   const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
   const [showComparison, setShowComparison] = useState(false);
 
+  // Preset model combinations
+  const defaultModelCombinations = [
+    {
+      name: "Local vs Cloud",
+      description: "Compare local Ollama model with cloud models",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" }
+      ]
+    },
+    {
+      name: "Fast vs Accurate",
+      description: "Compare speed vs accuracy",
+      models: [
+        { provider: "ollama", model: "qwen3:8b" },
+        { provider: "openai", model: "gpt-4" }
+      ]
+    }
+  ];
+
   useEffect(() => {
     const loadAvailableModels = async () => {
       try {
@@ -55,7 +75,7 @@ export const SummarizePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Summarize Page (Testing Model Comparison)</h1>
+      <h1 className="text-2xl font-bold mb-4">Summarize Page (Testing Preset Combinations)</h1>
       
       {/* Model Selection */}
       <div className="mb-6">
@@ -72,7 +92,31 @@ export const SummarizePage: React.FC = () => {
       {/* Model Comparison */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Model Comparison</h2>
-        <p className="text-sm text-gray-600 mb-3">Select models to compare:</p>
+        
+        {/* Preset Combinations */}
+        <div className="mb-4">
+          <h3 className="text-md font-medium mb-2">Quick Combinations</h3>
+          <div className="space-y-2">
+            {defaultModelCombinations.map((combination, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedModels(combination.models)}
+                disabled={isComparing}
+                className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+              >
+                <div className="text-sm font-medium text-gray-900">
+                  {combination.name}
+                  <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    {combination.models.length} models
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">{combination.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-3">Or select models manually:</p>
         
         {availableModels?.providers?.map((provider: any) => (
           <div key={provider.id} className="mb-3">
@@ -101,6 +145,22 @@ export const SummarizePage: React.FC = () => {
         )) || (
           <div className="text-sm text-gray-500">
             Loading available models...
+          </div>
+        )}
+        
+        {selectedModels.length > 0 && (
+          <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-purple-700">
+                Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+              </p>
+              <button
+                onClick={() => setSelectedModels([])}
+                className="text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 px-2 py-1 rounded transition-colors"
+              >
+                Clear
+              </button>
+            </div>
           </div>
         )}
         
