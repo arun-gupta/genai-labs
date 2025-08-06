@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, Sparkles } from 'lucide-react';
+import { Lightbulb, Sparkles, RefreshCw } from 'lucide-react';
 import { apiService } from '../services/api';
 
 interface QuestionSuggestion {
@@ -16,6 +16,8 @@ interface QuestionSuggestionsProps {
   onSuggestionClick: (question: string) => void;
   className?: string;
   refreshKey?: number;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
@@ -23,7 +25,9 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
   documentId,
   onSuggestionClick,
   className = "",
-  refreshKey
+  refreshKey,
+  onRefresh,
+  isRefreshing = false
 }) => {
   const [suggestions, setSuggestions] = useState<QuestionSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -197,14 +201,27 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
           <Lightbulb className="w-4 h-4 text-yellow-500" />
           <span>Question Suggestions</span>
         </div>
-        {suggestions.length > 6 && (
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="text-xs text-blue-600 hover:text-blue-700"
-          >
-            {showAll ? 'Show less' : `Show ${suggestions.length - 6} more`}
-          </button>
-        )}
+        <div className="flex items-center space-x-2">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh question suggestions based on latest documents"
+            >
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          )}
+          {suggestions.length > 6 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs text-blue-600 hover:text-blue-700"
+            >
+              {showAll ? 'Show less' : `Show ${suggestions.length - 6} more`}
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
