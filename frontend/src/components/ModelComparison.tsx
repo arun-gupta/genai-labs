@@ -579,24 +579,35 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">Token Usage</h4>
               <div className="space-y-3">
-                {results.map((result, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {result.token_usage?.total_tokens || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-orange-500 h-3 rounded-full transition-all duration-300"
-                        style={{
-                          width: `${result.token_usage?.total_tokens ? Math.min((result.token_usage.total_tokens / 1000) * 100, 100) : 0}%`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                {(() => {
+                  // Calculate relative token usage proportions
+                  const tokenCounts = results.map(result => result.token_usage?.total_tokens || 0);
+                  const maxTokens = Math.max(...tokenCounts);
+                  
+                  return results.map((result, index) => {
+                    const tokenCount = result.token_usage?.total_tokens || 0;
+                    const tokenPercentage = maxTokens > 0 ? (tokenCount / maxTokens) * 100 : 0;
+                    
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {tokenCount > 0 ? tokenCount : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-orange-500 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${tokenCount > 0 ? tokenPercentage : 0}%`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 
