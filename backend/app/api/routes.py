@@ -697,9 +697,16 @@ async def delete_rag_collection(collection_name: str):
 async def get_question_suggestions(collection_name: str):
     """Get question suggestions for a collection."""
     try:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"API: Generating suggestions for collection: {collection_name}")
+        
         suggestions = question_suggestion_service.generate_suggestions_for_collection(collection_name)
+        
+        logger.info(f"API: Generated {len(suggestions)} suggestions for collection: {collection_name}")
         return {"suggestions": suggestions}
     except Exception as e:
+        logger.error(f"API: Error generating suggestions: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/rag/suggestions/{collection_name}/document/{document_id}")

@@ -1,4 +1,6 @@
 import re
+import random
+import time
 from typing import List, Dict, Any
 from app.services.rag_service import rag_service
 import logging
@@ -166,10 +168,16 @@ class QuestionSuggestionService:
             
             # Topic-based suggestions (only from actual document content)
             seen_topics = set()
-            for topic in top_topics[:6]:  # Limit to 6 topics
+            # Shuffle topics to get different suggestions each time
+            shuffled_topics = list(top_topics[:6])
+            random.shuffle(shuffled_topics)
+            
+            for topic in shuffled_topics:
                 if topic not in seen_topics:
                     seen_topics.add(topic)
-                    question = self.common_question_templates[0].format(topic=topic)
+                    # Randomly select a question template for variety
+                    template = random.choice(self.common_question_templates)
+                    question = template.format(topic=topic)
                     suggestions.append({
                         "question": question,
                         "type": "topic",
@@ -213,8 +221,12 @@ class QuestionSuggestionService:
                     "check contract conditions"
                 ])
             
-            # Add context-aware actions
-            for action in context_actions[:4]:  # Limit to 4 context actions
+            # Add context-aware actions with randomization
+            # Shuffle actions to get different suggestions each time
+            shuffled_actions = list(context_actions[:4])
+            random.shuffle(shuffled_actions)
+            
+            for action in shuffled_actions:
                 suggestions.append({
                     "question": f"How do I {action}?",
                     "type": "action",
@@ -250,6 +262,10 @@ class QuestionSuggestionService:
                 })
             
             # Limit to top suggestions and ensure variety
+            # Add timestamp to ensure freshness
+            for suggestion in suggestions:
+                suggestion["generated_at"] = str(int(time.time()))
+            
             logger.info(f"Generated {len(suggestions)} suggestions for collection: {collection_name}")
             return suggestions[:15]  # Reduced limit for better quality
             
