@@ -534,7 +534,7 @@ async def get_available_models():
             {
                 "id": "anthropic",
                 "name": "Anthropic",
-                "models": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1"],
+                "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
                 "requires_api_key": True
             }
         ],

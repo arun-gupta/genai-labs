@@ -63,7 +63,7 @@ class ModelFactory:
         
         # Use vision model if requested
         if vision_capable:
-            model = model_name or "claude-3-sonnet-20240229"
+            model = model_name or "claude-3-5-sonnet-20241022"
         else:
             model = model_name or settings.anthropic_model
             

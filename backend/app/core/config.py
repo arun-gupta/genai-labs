@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     
     # Anthropic Configuration
     anthropic_api_key: str = ""
-    anthropic_model: str = "claude-3-sonnet-20240229"
+    anthropic_model: str = "claude-3-5-sonnet-20241022"
     
     # Ollama Configuration
     ollama_base_url: str = "http://localhost:11434"
