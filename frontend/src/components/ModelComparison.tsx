@@ -440,13 +440,13 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   const minQuality = Math.min(...qualityScores);
                   const qualityRange = maxQuality - minQuality;
                   
-                  // Scale function: amplify small differences while maintaining relative proportions
-                  const scaleScore = (score: number) => {
-                    if (qualityRange === 0) return 50; // If all scores are the same, show 50%
-                    // Scale to 20-80% range for better visibility
-                    const normalized = (score - minQuality) / qualityRange;
-                    return 20 + (normalized * 60);
-                  };
+                                     // Scale function: amplify small differences while maintaining relative proportions
+                   const scaleScore = (score: number) => {
+                     if (qualityRange === 0) return 50; // If all scores are the same, show 50%
+                     // Scale to 10-90% range for better visibility of small differences
+                     const normalized = (score - minQuality) / qualityRange;
+                     return 10 + (normalized * 80);
+                   };
                   
                   return results.map((result, index) => {
                     // Debug logging
@@ -460,9 +460,9 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div key={index} className="space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                          <span className="text-sm font-medium text-gray-900">
-                            {result.quality_score !== null && result.quality_score !== undefined ? `${result.quality_score.toFixed(0)}%` : 'N/A'}
-                          </span>
+                                                  <span className="text-sm font-medium text-gray-900">
+                          {result.quality_score !== null && result.quality_score !== undefined ? `${result.quality_score.toFixed(1)}%` : 'N/A'}
+                        </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div
@@ -491,20 +491,20 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     const minCoherence = Math.min(...coherenceScores);
                     const coherenceRange = maxCoherence - minCoherence;
                     
-                    // Scale function: amplify small differences while maintaining relative proportions
-                    const scaleCoherenceScore = (score: number) => {
-                      if (coherenceRange === 0) return 50; // If all scores are the same, show 50%
-                      // Scale to 20-80% range for better visibility
-                      const normalized = (score - minCoherence) / coherenceRange;
-                      return 20 + (normalized * 60);
-                    };
+                                         // Scale function: amplify small differences while maintaining relative proportions
+                     const scaleCoherenceScore = (score: number) => {
+                       if (coherenceRange === 0) return 50; // If all scores are the same, show 50%
+                       // Scale to 10-90% range for better visibility of small differences
+                       const normalized = (score - minCoherence) / coherenceRange;
+                       return 10 + (normalized * 80);
+                     };
                     
                     return results.map((result, index) => (
                       <div key={index} className="space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {result.coherence_score !== null && result.coherence_score !== undefined ? `${result.coherence_score.toFixed(0)}%` : 'N/A'}
+                            {result.coherence_score !== null && result.coherence_score !== undefined ? `${result.coherence_score.toFixed(1)}%` : 'N/A'}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
@@ -531,20 +531,20 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     const minRelevance = Math.min(...relevanceScores);
                     const relevanceRange = maxRelevance - minRelevance;
                     
-                    // Scale function: amplify small differences while maintaining relative proportions
-                    const scaleRelevanceScore = (score: number) => {
-                      if (relevanceRange === 0) return 50; // If all scores are the same, show 50%
-                      // Scale to 20-80% range for better visibility
-                      const normalized = (score - minRelevance) / relevanceRange;
-                      return 20 + (normalized * 60);
-                    };
+                                         // Scale function: amplify small differences while maintaining relative proportions
+                     const scaleRelevanceScore = (score: number) => {
+                       if (relevanceRange === 0) return 50; // If all scores are the same, show 50%
+                       // Scale to 10-90% range for better visibility of small differences
+                       const normalized = (score - minRelevance) / relevanceRange;
+                       return 10 + (normalized * 80);
+                     };
                     
                     return results.map((result, index) => (
                       <div key={index} className="space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                           <span className="text-sm text-gray-900">
-                            {result.relevance_score !== null && result.relevance_score !== undefined ? `${result.relevance_score.toFixed(0)}%` : 'N/A'}
+                            {result.relevance_score !== null && result.relevance_score !== undefined ? `${result.relevance_score.toFixed(1)}%` : 'N/A'}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
