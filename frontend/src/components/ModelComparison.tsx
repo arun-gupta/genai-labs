@@ -497,24 +497,35 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">Response Time (Lower is better)</h4>
               <div className="space-y-3">
-                {results.map((result, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {result.latency_ms ? `${(result.latency_ms / 1000).toFixed(1)}s` : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-green-500 h-3 rounded-full transition-all duration-300"
-                        style={{
-                          width: `${result.latency_ms ? Math.min((result.latency_ms / 10000) * 100, 100) : 0}%`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                {(() => {
+                  // Calculate relative response time proportions
+                  const responseTimes = results.map(result => result.latency_ms || 0);
+                  const maxResponseTime = Math.max(...responseTimes);
+                  
+                  return results.map((result, index) => {
+                    const responseTime = result.latency_ms || 0;
+                    const responseTimePercentage = maxResponseTime > 0 ? (responseTime / maxResponseTime) * 100 : 0;
+                    
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {responseTime > 0 ? `${(responseTime / 1000).toFixed(1)}s` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${responseTime > 0 ? responseTimePercentage : 0}%`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 
@@ -523,54 +534,80 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Words per Second</h4>
                 <div className="space-y-3">
-                  {results.map((result, index) => {
-                    const wordsPerSecond = result.latency_ms && getContent(result)
-                      ? (getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1)
-                      : 'N/A';
-                    return (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                          <span className="text-sm font-medium text-gray-900">{wordsPerSecond}</span>
+                  {(() => {
+                    // Calculate relative words per second proportions
+                    const wordsPerSecondValues = results.map(result => {
+                      if (result.latency_ms && getContent(result)) {
+                        return parseFloat((getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1));
+                      }
+                      return 0;
+                    });
+                    const maxWordsPerSecond = Math.max(...wordsPerSecondValues);
+                    
+                    return results.map((result, index) => {
+                      const wordsPerSecond = result.latency_ms && getContent(result)
+                        ? (getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1)
+                        : 'N/A';
+                      const wordsPerSecondPercentage = maxWordsPerSecond > 0 ? (wordsPerSecondValues[index] / maxWordsPerSecond) * 100 : 0;
+                      
+                      return (
+                        <div key={index} className="space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                            <span className="text-sm font-medium text-gray-900">{wordsPerSecond}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${wordsPerSecond !== 'N/A' ? wordsPerSecondPercentage : 0}%`
+                              }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${wordsPerSecond !== 'N/A' ? Math.min((parseFloat(wordsPerSecond) / 50) * 100, 100) : 0}%`
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Tokens per Second</h4>
                 <div className="space-y-3">
-                  {results.map((result, index) => {
-                    const tokensPerSecond = result.latency_ms && result.token_usage?.total_tokens
-                      ? (result.token_usage.total_tokens / (result.latency_ms / 1000)).toFixed(1)
-                      : 'N/A';
-                    return (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                          <span className="text-sm font-medium text-gray-900">{tokensPerSecond}</span>
+                  {(() => {
+                    // Calculate relative tokens per second proportions
+                    const tokensPerSecondValues = results.map(result => {
+                      if (result.latency_ms && result.token_usage?.total_tokens) {
+                        return parseFloat((result.token_usage.total_tokens / (result.latency_ms / 1000)).toFixed(1));
+                      }
+                      return 0;
+                    });
+                    const maxTokensPerSecond = Math.max(...tokensPerSecondValues);
+                    
+                    return results.map((result, index) => {
+                      const tokensPerSecond = result.latency_ms && result.token_usage?.total_tokens
+                        ? (result.token_usage.total_tokens / (result.latency_ms / 1000)).toFixed(1)
+                        : 'N/A';
+                      const tokensPerSecondPercentage = maxTokensPerSecond > 0 ? (tokensPerSecondValues[index] / maxTokensPerSecond) * 100 : 0;
+                      
+                      return (
+                        <div key={index} className="space-y-1">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                            <span className="text-sm font-medium text-gray-900">{tokensPerSecond}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-teal-500 h-3 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${tokensPerSecond !== 'N/A' ? tokensPerSecondPercentage : 0}%`
+                              }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className="bg-teal-500 h-3 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${tokensPerSecond !== 'N/A' ? Math.min((parseFloat(tokensPerSecond) / 100) * 100, 100) : 0}%`
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </div>
