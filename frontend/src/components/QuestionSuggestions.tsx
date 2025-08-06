@@ -229,8 +229,22 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
           </div>
         </div>
         <div className="text-center py-4 text-gray-500 text-sm">
-          {isLoading ? 'Loading suggestions...' : 'No suggestions available. Try refreshing or upload more documents.'}
+          {isLoading ? 'Loading suggestions...' : 
+           collectionNames.length === 0 ? 'No collections selected. Please select a collection first.' :
+           'No suggestions available. Upload documents to your collection to get intelligent question suggestions.'}
         </div>
+        {collectionNames.length > 0 && !isLoading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="text-xs text-blue-800">
+              <p className="font-medium mb-1">💡 How to get question suggestions:</p>
+              <ol className="space-y-1 text-left">
+                <li>1. Upload documents to your collection using the file upload above</li>
+                <li>2. Click "Refresh" to generate suggestions based on your documents</li>
+                <li>3. Click on any suggestion to ask that question</li>
+              </ol>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

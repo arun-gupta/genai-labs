@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Zap, FileText, Home, Database, Search, Eye } from 'lucide-react';
+import { Zap, FileText, Home, Database, Search, Eye, Github } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
   const location = useLocation();
@@ -71,6 +71,20 @@ export const Navigation: React.FC = () => {
                 </Link>
               );
             })}
+          </div>
+
+          {/* GitHub Link - Far Right */}
+          <div className="flex items-center">
+            <a
+              href="https://github.com/arun-gupta/genai-labs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              title="View on GitHub"
+            >
+              <Github size={16} />
+              <span>GitHub</span>
+            </a>
           </div>
         </div>
       </div>

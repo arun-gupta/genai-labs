@@ -52,6 +52,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   selectedModels = []
 }) => {
   const [expandedSummary, setExpandedSummary] = useState<number | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(true);
 
   // Debug info
@@ -318,6 +319,19 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
   const toggleExpandedSummary = (index: number) => {
     setExpandedSummary(expandedSummary === index ? null : index);
+    
+    // Track expanded items
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (expandedSummary === index) {
+        // If currently expanded, collapse it
+        newSet.delete(index);
+      } else {
+        // If currently collapsed, expand it
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
 
   const getContent = (result: ModelResult) => {
@@ -379,7 +393,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           onClick={() => toggleExpandedSummary(index)}
                           className="text-blue-600 hover:text-blue-800 text-xs mt-1"
                         >
-                          {expandedSummary === index ? 'Show less' : 'Show more'}
+                          {expandedSummary === index ? 'Show less' : expandedItems.has(index) ? 'expanded' : 'Show more'}
                         </button>
                       )}
                     </div>
