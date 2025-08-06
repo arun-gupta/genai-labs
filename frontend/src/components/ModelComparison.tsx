@@ -712,7 +712,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           <div
                             className="bg-orange-500 h-3 rounded-full transition-all duration-300"
                             style={{
-                              width: `${tokenCount > 0 ? tokenPercentage : 0}%`
+                              width: `${tokenCount > 0 && maxTokens > 0 ? tokenPercentage : 0}%`
                             }}
                           ></div>
                         </div>
@@ -778,35 +778,49 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     return { ...result, overallScore, originalIndex: index };
                   }).sort((a, b) => b.overallScore - a.overallScore);
 
-                  return rankedResults.map((result, rankIndex) => (
-                    <div key={result.originalIndex} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-sm font-medium ${
-                            rankIndex === 0 ? 'text-yellow-600' :
-                            rankIndex === 1 ? 'text-gray-600' :
-                            rankIndex === 2 ? 'text-amber-600' : 'text-gray-500'
-                          }`}>
-                            #{rankIndex + 1}
+                  return rankedResults.map((result, rankIndex) => {
+                    // Debug logging for performance rankings
+                    console.log(`Performance Ranking ${rankIndex + 1}:`, {
+                      model: `${result.model_provider}/${result.model_name}`,
+                      overallScore: result.overallScore,
+                      qualityScore: result.quality_score,
+                      latency: result.latency_ms,
+                      tokenUsage: result.token_usage,
+                      barWidth: `${result.overallScore > 0 ? result.overallScore : 0}%`
+                    });
+
+                    return (
+                      <div key={result.originalIndex} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-sm font-medium ${
+                              rankIndex === 0 ? 'text-yellow-600' :
+                              rankIndex === 1 ? 'text-gray-600' :
+                              rankIndex === 2 ? 'text-amber-600' : 'text-gray-500'
+                            }`}>
+                              #{rankIndex + 1}
+                            </span>
+                            <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {result.overallScore.toFixed(0)}%
                           </span>
-                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {result.overallScore.toFixed(0)}%
-                        </span>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full transition-all duration-300 ${
+                              rankIndex === 0 ? 'bg-yellow-500' :
+                              rankIndex === 1 ? 'bg-gray-500' :
+                              rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
+                            }`}
+                            style={{ 
+                              width: `${result.overallScore > 0 ? Math.min(result.overallScore, 100) : 0}%` 
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-300 ${
-                            rankIndex === 0 ? 'bg-yellow-500' :
-                            rankIndex === 1 ? 'bg-gray-500' :
-                            rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
-                          }`}
-                          style={{ width: `${result.overallScore > 0 ? result.overallScore : 0}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ));
+                    );
+                  });
                 })()}
               </div>
             </div>
