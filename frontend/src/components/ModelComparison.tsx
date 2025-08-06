@@ -604,28 +604,39 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div>
               <h4 className="text-sm font-medium text-gray-900 mb-3">Estimated Cost (USD)</h4>
               <div className="space-y-3">
-                {results.map((result, index) => {
-                  // Rough cost estimation based on token usage
-                  const estimatedCost = result.token_usage?.total_tokens
-                    ? (result.token_usage.total_tokens * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
-                    : 'N/A';
-                  return (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                        <span className="text-sm font-medium text-gray-900">${estimatedCost}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-red-500 h-3 rounded-full transition-all duration-300"
-                          style={{
-                            width: `${estimatedCost !== 'N/A' ? Math.min((parseFloat(estimatedCost) / 0.01) * 100, 100) : 0}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
+                {(() => {
+                  // Calculate relative cost proportions
+                  const costs = results.map(result => 
+                    result.token_usage?.total_tokens 
+                      ? parseFloat((result.token_usage.total_tokens * 0.00002).toFixed(4))
+                      : 0
                   );
-                })}
+                  const maxCost = Math.max(...costs);
+                  
+                  return results.map((result, index) => {
+                    const estimatedCost = result.token_usage?.total_tokens
+                      ? (result.token_usage.total_tokens * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
+                      : 'N/A';
+                    const costPercentage = maxCost > 0 ? (costs[index] / maxCost) * 100 : 0;
+                    
+                    return (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
+                          <span className="text-sm font-medium text-gray-900">${estimatedCost}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div
+                            className="bg-red-500 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${estimatedCost !== 'N/A' ? costPercentage : 0}%`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 
