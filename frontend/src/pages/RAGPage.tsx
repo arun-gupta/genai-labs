@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings, Languages, History, GitCompare, CheckCircle, Clock } from 'lucide-react';
+import { Upload, Send, FileText, Search, Trash2, FolderOpen, Plus, X, Download, Copy, Check, BarChart3, Shield, XCircle, Zap, Settings, Languages, History, GitCompare, CheckCircle, Clock, Lightbulb, RefreshCw } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { VoiceInput } from '../components/VoiceInput';
@@ -77,6 +77,7 @@ export const RAGPage: React.FC = () => {
   const [comparisonResults, setComparisonResults] = useState<any>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
+  const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
 
   // Default model combinations for quick comparison
   const defaultModelCombinations = [
@@ -414,6 +415,18 @@ export const RAGPage: React.FC = () => {
 
   const handleSuggestionClick = (suggestedQuestion: string) => {
     setQuestion(suggestedQuestion);
+  };
+
+  const handleRefreshSuggestions = async () => {
+    setIsRefreshingSuggestions(true);
+    try {
+      // Increment the refresh key to trigger a reload
+      setSuggestionsRefreshKey(prev => prev + 1);
+      // Add a small delay to show the refresh animation
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } finally {
+      setIsRefreshingSuggestions(false);
+    }
   };
 
   const copySourceText = async (source: Source) => {
@@ -1188,13 +1201,29 @@ export const RAGPage: React.FC = () => {
           </div>
 
           {/* Question Suggestions */}
-          <QuestionSuggestions
-            key={suggestionsRefreshKey}
-            collectionNames={selectedCollections}
-            onSuggestionClick={handleSuggestionClick}
-            className="mt-4"
-            refreshKey={suggestionsRefreshKey}
-          />
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <Lightbulb className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm font-medium text-gray-700">Question Suggestions</span>
+              </div>
+              <button
+                onClick={handleRefreshSuggestions}
+                disabled={isRefreshingSuggestions}
+                className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh question suggestions based on latest documents"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshingSuggestions ? 'animate-spin' : ''}`} />
+                <span>{isRefreshingSuggestions ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+            </div>
+            <QuestionSuggestions
+              key={suggestionsRefreshKey}
+              collectionNames={selectedCollections}
+              onSuggestionClick={handleSuggestionClick}
+              refreshKey={suggestionsRefreshKey}
+            />
+          </div>
 
           {/* Response Section with Tabs */}
           <div className="card">
