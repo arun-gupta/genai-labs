@@ -45,7 +45,7 @@ export const SummarizePage: React.FC = () => {
       }));
   }, [availableModels]);
 
-  const getAvailableModelCombinations = () => {
+  const getAvailableModelCombinations = useMemo(() => {
     if (!availableModels?.providers) return [];
     
     const availableModelsList = availableModels.providers.flatMap((provider: any) =>
@@ -107,10 +107,10 @@ export const SummarizePage: React.FC = () => {
             )
           )
     })).filter(combination => combination.models.length >= 2); // Only show combinations with at least 2 models
-  };
+  }, [availableModels, getAllLocalModels]);
 
   // Default model combinations for quick comparison
-  const defaultModelCombinations = getAvailableModelCombinations();
+  const defaultModelCombinations = getAvailableModelCombinations;
 
   // Get model count for any combination
   const getModelCount = useMemo(() => {
