@@ -48,6 +48,11 @@ export const SummarizePage: React.FC = () => {
   // Default model combinations for quick comparison (static like GeneratePage)
   const defaultModelCombinations = [
     {
+      name: "Compare All Local Models",
+      description: "Compare all available Ollama models",
+      models: [] // Will be populated dynamically
+    },
+    {
       name: "Local vs Cloud",
       description: "Compare local Ollama model with cloud models",
       models: [
@@ -57,11 +62,30 @@ export const SummarizePage: React.FC = () => {
       ]
     },
     {
-      name: "Fast vs Accurate",
-      description: "Compare speed vs accuracy",
+      name: "Efficient Models",
+      description: "Compare lightweight models for speed",
       models: [
-        { provider: "ollama", model: "qwen3:8b" },
-        { provider: "openai", model: "gpt-4" }
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "anthropic", model: "claude-3-haiku-20240307" }
+      ]
+    },
+    {
+      name: "High Performance",
+      description: "Compare high-quality models for accuracy",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
+      ]
+    },
+    {
+      name: "Reasoning & Analysis",
+      description: "Compare models with advanced reasoning and analysis capabilities",
+      models: [
+        { provider: "ollama", model: "gpt-oss:20b" },
+        { provider: "openai", model: "gpt-4" },
+        { provider: "anthropic", model: "claude-3-sonnet-20240229" }
       ]
     }
   ];
@@ -96,9 +120,12 @@ export const SummarizePage: React.FC = () => {
   // Get model count for any combination (same pattern as GeneratePage)
   const getModelCount = useMemo(() => {
     return (combination: any) => {
+      if (combination.name === "Compare All Local Models") {
+        return getAllLocalModels.length;
+      }
       return combination.models.length;
     };
-  }, []);
+  }, [getAllLocalModels]);
 
   // Language detection effect
   useEffect(() => {
@@ -165,13 +192,19 @@ export const SummarizePage: React.FC = () => {
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                  {defaultModelCombinations.map((combination, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedModels(combination.models)}
-                      disabled={isComparing}
-                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
-                    >
+                                     {defaultModelCombinations.map((combination, index) => (
+                     <button
+                       key={index}
+                       onClick={() => {
+                         if (combination.name === "Compare All Local Models") {
+                           setSelectedModels(getAllLocalModels);
+                         } else {
+                           setSelectedModels(combination.models);
+                         }
+                       }}
+                       disabled={isComparing}
+                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                     >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
                         <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
