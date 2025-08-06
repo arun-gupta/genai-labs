@@ -12,7 +12,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="py-8">
+      <main className="pt-24 pb-8">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/generate" element={<GeneratePage />} />
