@@ -426,6 +426,13 @@ export const HomePage: React.FC = () => {
               <Search size={16} />
               <span>Q&A over Documents</span>
             </Link>
+            <Link
+              to="/vision"
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <Eye size={16} />
+              <span>Vision AI</span>
+            </Link>
           </div>
         </div>
       </div>
