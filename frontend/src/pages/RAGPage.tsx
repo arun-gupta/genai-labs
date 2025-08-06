@@ -653,6 +653,39 @@ export const RAGPage: React.FC = () => {
                 Select models to compare for RAG question answering performance
               </p>
               
+              {/* Default Model Combinations */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
+                <div className="space-y-2">
+                  {defaultModelCombinations.map((combination, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (combination.name === "Compare All Local Models") {
+                          setSelectedModels(getAllLocalModels);
+                        } else {
+                          setSelectedModels(combination.models);
+                        }
+                      }}
+                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-sm font-medium text-gray-900">
+                        {combination.name}
+                        {getModelCount(combination) > 0 && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {getModelCount(combination)} models
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600">{combination.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-3">Or select models manually:</p>
+              
               {availableModels?.providers?.map((provider: any) => (
                 <div key={provider.id} className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
@@ -694,37 +727,6 @@ export const RAGPage: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {/* Default Model Combinations */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
-                <div className="space-y-2">
-                  {defaultModelCombinations.map((combination, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        if (combination.name === "Compare All Local Models") {
-                          setSelectedModels(getAllLocalModels);
-                        } else {
-                          setSelectedModels(combination.models);
-                        }
-                      }}
-                      disabled={isComparing || (combination.name === "Compare All Local Models" && getAllLocalModels.length === 0)}
-                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
-                    >
-                      <div className="text-sm font-medium text-gray-900">
-                        {combination.name}
-                        {getModelCount(combination) > 0 && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {getModelCount(combination)} models
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-600">{combination.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 

@@ -152,6 +152,10 @@ export const SummarizePage: React.FC = () => {
     }
   };
 
+  const handleOutputFormatChange = (format: string) => {
+    setOutputFormat(format as 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table');
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -178,6 +182,128 @@ export const SummarizePage: React.FC = () => {
             />
           </div>
 
+                    {/* Summary Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Settings className="text-gray-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Summary Settings</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Summary Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Summary Type</label>
+                <select
+                  value={summaryType}
+                  onChange={(e) => setSummaryType(e.target.value)}
+                  disabled={isSummarizing}
+                  className="input-field"
+                >
+                  {availableModels?.summary_types?.map((type: SummaryType) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  )) || (
+                    <>
+                      <option value="general">General Summary</option>
+                      <option value="bullet_points">Bullet Points</option>
+                      <option value="key_points">Key Points</option>
+                      <option value="extractive">Extractive</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {/* Max Length */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700">Max Length</label>
+                  <span className="text-xs text-gray-500">{maxLength} words</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="500"
+                  value={maxLength}
+                  onChange={(e) => setMaxLength(parseInt(e.target.value))}
+                  disabled={isSummarizing}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Short</span>
+                  <span>Long</span>
+                </div>
+              </div>
+
+              {/* Temperature */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700">Creativity</label>
+                  <span className="text-xs text-gray-500">{temperature}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  disabled={isSummarizing}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Focused</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+
+              {/* Output Format */}
+              <div>
+                <OutputFormatSelector
+                  selectedFormat={outputFormat}
+                  onFormatChange={handleOutputFormatChange}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Language Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <Languages className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Language</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="translate-output"
+                  checked={translateOutput}
+                  onChange={(e) => setTranslateOutput(e.target.checked)}
+                  disabled={isSummarizing}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="translate-output" className="text-sm text-gray-700">
+                  Translate output
+                </label>
+              </div>
+              
+              {translateOutput && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Target Language</label>
+                  <LanguageSelector
+                    selectedLanguage={targetLanguage}
+                    onLanguageChange={setTargetLanguage}
+                    placeholder="Select target language..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Model Comparison Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
@@ -192,19 +318,19 @@ export const SummarizePage: React.FC = () => {
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                                     {defaultModelCombinations.map((combination, index) => (
-                     <button
-                       key={index}
-                       onClick={() => {
-                         if (combination.name === "Compare All Local Models") {
-                           setSelectedModels(getAllLocalModels);
-                         } else {
-                           setSelectedModels(combination.models);
-                         }
-                       }}
-                       disabled={isComparing}
-                       className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
-                     >
+                  {defaultModelCombinations.map((combination, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        if (combination.name === "Compare All Local Models") {
+                          setSelectedModels(getAllLocalModels);
+                        } else {
+                          setSelectedModels(combination.models);
+                        }
+                      }}
+                      disabled={isComparing}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
                         <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
