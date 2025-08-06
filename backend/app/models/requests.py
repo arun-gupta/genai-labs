@@ -55,7 +55,7 @@ class SummarizeRequest(BaseModel):
     max_length: int = Field(150, ge=10, le=1000, description="Maximum length of summary")
     temperature: float = Field(0.3, ge=0.0, le=2.0, description="Sampling temperature")
     stream: bool = Field(True, description="Whether to stream the response")
-    summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive")
+    summary_type: str = Field("general", description="Type of summary: general, bullet_points, key_points, extractive, executive, technical, news")
     target_language: Optional[str] = Field("en", description="Target language for translation (default: en)")
     translate_summary: bool = Field(False, description="Whether to translate the summary")
     output_format: OutputFormat = Field(OutputFormat.TEXT, description="Output format for the summary")
