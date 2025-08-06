@@ -551,7 +551,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       const wordsPerSecond = result.latency_ms && getContent(result)
                         ? (getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1)
                         : 'N/A';
-                      const wordsPerSecondPercentage = maxWordsPerSecond > 0 ? (wordsPerSecondValues[index] / maxWordsPerSecond) * 100 : 0;
+                      const wordsPerSecondValue = wordsPerSecondValues[index];
+                      const wordsPerSecondPercentage = maxWordsPerSecond > 0 && wordsPerSecondValue > 0 
+                        ? (wordsPerSecondValue / maxWordsPerSecond) * 100 
+                        : 0;
                       
                       return (
                         <div key={index} className="space-y-1">
@@ -563,7 +566,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <div
                               className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
                               style={{
-                                width: `${wordsPerSecond !== 'N/A' ? wordsPerSecondPercentage : 0}%`
+                                width: `${wordsPerSecond !== 'N/A' && wordsPerSecondValue > 0 ? wordsPerSecondPercentage : 0}%`
                               }}
                             ></div>
                           </div>
@@ -591,7 +594,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       const tokensPerSecond = result.latency_ms && result.token_usage?.total_tokens
                         ? (result.token_usage.total_tokens / (result.latency_ms / 1000)).toFixed(1)
                         : 'N/A';
-                      const tokensPerSecondPercentage = maxTokensPerSecond > 0 ? (tokensPerSecondValues[index] / maxTokensPerSecond) * 100 : 0;
+                      const tokensPerSecondValue = tokensPerSecondValues[index];
+                      const tokensPerSecondPercentage = maxTokensPerSecond > 0 && tokensPerSecondValue > 0 
+                        ? (tokensPerSecondValue / maxTokensPerSecond) * 100 
+                        : 0;
                       
                       return (
                         <div key={index} className="space-y-1">
@@ -603,7 +609,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <div
                               className="bg-teal-500 h-3 rounded-full transition-all duration-300"
                               style={{
-                                width: `${tokensPerSecond !== 'N/A' ? tokensPerSecondPercentage : 0}%`
+                                width: `${tokensPerSecond !== 'N/A' && tokensPerSecondValue > 0 ? tokensPerSecondPercentage : 0}%`
                               }}
                             ></div>
                           </div>
