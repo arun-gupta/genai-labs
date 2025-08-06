@@ -258,13 +258,16 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <Clock className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-700">
               {comparisonType === 'rag'
-                ? `Estimated time: ${Math.max(15, selectedModels.length * 5)}s`
-                : `Estimated completion time: ${selectedModels.length > 0 ? `${Math.max(2, selectedModels.length * 1.5)}s` : '2-5s'}`
+                ? `Estimated time: ${Math.max(30, selectedModels.length * 20)}s`
+                : `Estimated completion time: ${selectedModels.length > 0 ? `${Math.max(10, selectedModels.length * 15)}s` : '10-30s'}`
               }
             </span>
           </div>
           {comparisonType === 'rag' && (
             <p className="text-xs text-blue-600 mt-1">Time varies based on document complexity and model performance.</p>
+          )}
+          {comparisonType !== 'rag' && (
+            <p className="text-xs text-blue-600 mt-1">Time varies based on input length and model performance.</p>
           )}
         </div>
       </div>
