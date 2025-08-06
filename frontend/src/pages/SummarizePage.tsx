@@ -90,16 +90,6 @@ export const SummarizePage: React.FC = () => {
       }));
   }, [availableModels]);
 
-  // Get model count for any combination
-  const getModelCount = useMemo(() => {
-    return (combination: any) => {
-      if (combination.name === "Compare All Local Models") {
-        return getAllLocalModels.length;
-      }
-      return combination.models.length;
-    };
-  }, [getAllLocalModels]);
-
   const [analytics, setAnalytics] = useState<AnalyticsResponse['analytics'] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
@@ -639,9 +629,9 @@ export const SummarizePage: React.FC = () => {
                     >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
-                        {getModelCount(combination) > 0 && (
+                        {(combination.name === "Compare All Local Models" ? getAllLocalModels.length : combination.models.length) > 0 && (
                           <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {getModelCount(combination)} models
+                            {combination.name === "Compare All Local Models" ? getAllLocalModels.length : combination.models.length} models
                           </span>
                         )}
                       </div>
