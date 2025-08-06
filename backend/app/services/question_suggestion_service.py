@@ -217,8 +217,10 @@ class QuestionSuggestionService:
             # Context-aware action suggestions based on document content
             context_actions = []
             
-            # Property management related
-            if any(term in combined_text for term in ['property', 'rent', 'lease', 'tenant', 'landlord']):
+            # Property management related - only if there's significant property content
+            property_terms = ['property', 'rent', 'lease', 'tenant', 'landlord', 'maintenance', 'deposit']
+            property_content_count = sum(combined_text.count(term) for term in property_terms)
+            if property_content_count >= 3:  # Require at least 3 mentions of property terms
                 context_actions.extend([
                     "request property maintenance",
                     "pay rent or security deposit",
@@ -226,24 +228,30 @@ class QuestionSuggestionService:
                     "report property issues"
                 ])
             
-            # Business/company related
-            if any(term in combined_text for term in ['company', 'business', 'management', 'corp', 'inc']):
+            # Business/company related - only if there's significant business content
+            business_terms = ['company', 'business', 'management', 'corp', 'inc', 'llc', 'enterprise']
+            business_content_count = sum(combined_text.count(term) for term in business_terms)
+            if business_content_count >= 2:  # Require at least 2 mentions of business terms
                 context_actions.extend([
                     "contact the company",
                     "get business information",
                     "find company services"
                 ])
             
-            # Technical/documentation related
-            if any(term in combined_text for term in ['manual', 'guide', 'instruction', 'procedure', 'process']):
+            # Technical/documentation related - only if there's significant technical content
+            technical_terms = ['manual', 'guide', 'instruction', 'procedure', 'process', 'setup', 'configuration']
+            technical_content_count = sum(combined_text.count(term) for term in technical_terms)
+            if technical_content_count >= 2:  # Require at least 2 mentions of technical terms
                 context_actions.extend([
                     "follow the procedure",
                     "understand the process",
                     "get step-by-step instructions"
                 ])
             
-            # Legal/agreement related
-            if any(term in combined_text for term in ['agreement', 'contract', 'terms', 'conditions', 'legal']):
+            # Legal/agreement related - only if there's significant legal content
+            legal_terms = ['agreement', 'contract', 'terms', 'conditions', 'legal', 'liability', 'obligation']
+            legal_content_count = sum(combined_text.count(term) for term in legal_terms)
+            if legal_content_count >= 2:  # Require at least 2 mentions of legal terms
                 context_actions.extend([
                     "understand the terms",
                     "review the agreement",
@@ -252,16 +260,20 @@ class QuestionSuggestionService:
             
             # Add context-aware actions with randomization
             # Shuffle actions to get different suggestions each time
-            shuffled_actions = list(context_actions[:4])
-            random.shuffle(shuffled_actions)
+            logger.info(f"Context analysis - Property terms: {property_content_count}, Business terms: {business_content_count}, Technical terms: {technical_content_count}, Legal terms: {legal_content_count}")
+            logger.info(f"Generated context actions: {context_actions}")
             
-            for action in shuffled_actions:
-                suggestions.append({
-                    "question": f"How do I {action}?",
-                    "type": "action",
-                    "action": action,
-                    "confidence": 0.3
-                })
+            if context_actions:  # Only process if there are context actions
+                shuffled_actions = list(context_actions[:4])
+                random.shuffle(shuffled_actions)
+                
+                for action in shuffled_actions:
+                    suggestions.append({
+                        "question": f"How do I {action}?",
+                        "type": "action",
+                        "action": action,
+                        "confidence": 0.3
+                    })
             
             # Collection-specific suggestions (always relevant)
             suggestions.append({
