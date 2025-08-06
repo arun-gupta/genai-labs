@@ -422,12 +422,14 @@ class ApiService {
     });
   }
 
-  async getQuestionSuggestions(collectionName: string): Promise<{suggestions: any[]}> {
-    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}`);
+  async getQuestionSuggestions(collectionName: string, forceRefresh: boolean = false): Promise<{suggestions: any[]}> {
+    const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}${cacheBuster}`);
   }
 
-  async getDocumentQuestionSuggestions(collectionName: string, documentId: string): Promise<{suggestions: any[]}> {
-    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}/document/${documentId}`);
+  async getDocumentQuestionSuggestions(collectionName: string, documentId: string, forceRefresh: boolean = false): Promise<{suggestions: any[]}> {
+    const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+    return this.request<{suggestions: any[]}>(`/rag/suggestions/${collectionName}/document/${documentId}${cacheBuster}`);
   }
 
   async getDocumentAnalytics(collectionName: string, documentId: string): Promise<{analytics: any}> {
