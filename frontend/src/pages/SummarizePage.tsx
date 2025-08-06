@@ -61,15 +61,16 @@ export const SummarizePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const loadAvailableModels = async () => {
-      try {
-        const models = await apiService.getAvailableModels();
-        setAvailableModels(models);
-      } catch (err) {
-        console.error('Error loading models:', err);
-      }
-    };
-    loadAvailableModels();
+    // Temporarily commented out to test if this causes the infinite re-render
+    // const loadAvailableModels = async () => {
+    //   try {
+    //     const models = await apiService.getAvailableModels();
+    //     setAvailableModels(models);
+    //   } catch (err) {
+    //     console.error('Error loading models:', err);
+    //   }
+    // };
+    // loadAvailableModels();
   }, []);
 
   const detectLanguage = async (text: string) => {
