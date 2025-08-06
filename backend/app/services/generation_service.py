@@ -325,5 +325,14 @@ class GenerationService:
         elif summary_type == "extractive":
             return f"{base_prompt} Create an extractive summary by selecting and combining the most important sentences from the text."
         
+        elif summary_type == "executive":
+            return f"{base_prompt} Create an executive summary suitable for decision-makers. Focus on high-level insights, key recommendations, and actionable takeaways. Structure with clear sections for background, findings, and next steps."
+        
+        elif summary_type == "technical":
+            return f"{base_prompt} Create a technical summary focusing on technical details, specifications, methodologies, and technical implications. Include relevant technical terminology and maintain technical accuracy."
+        
+        elif summary_type == "news":
+            return f"{base_prompt} Create a news-style summary following the 5W1H format (Who, What, When, Where, Why, How). Focus on the most newsworthy aspects, key facts, and current relevance. Write in a journalistic style."
+        
         else:
             return base_prompt 

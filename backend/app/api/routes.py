@@ -543,7 +543,10 @@ async def get_available_models():
             {"id": "general", "name": "General Summary", "description": "Standard summary of main points"},
             {"id": "bullet_points", "name": "Bullet Points", "description": "Key points in bullet format"},
             {"id": "key_points", "name": "Key Points", "description": "Extract main ideas and key points"},
-            {"id": "extractive", "name": "Extractive", "description": "Select important sentences from text"}
+            {"id": "extractive", "name": "Extractive", "description": "Select important sentences from text"},
+            {"id": "executive", "name": "Executive Summary", "description": "High-level summary for decision-makers with recommendations"},
+            {"id": "technical", "name": "Technical Summary", "description": "Technical details, specifications, and methodologies"},
+            {"id": "news", "name": "News Summary", "description": "News-style summary following 5W1H format"}
         ],
         "supported_file_types": [
             {"extension": "txt", "name": "Text File", "description": "Plain text files"},

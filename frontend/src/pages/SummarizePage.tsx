@@ -443,14 +443,17 @@ export const SummarizePage: React.FC = () => {
                   <option key={type.id} value={type.id}>
                     {type.name}
                   </option>
-                )) || (
-                  <>
-                    <option value="general">General Summary</option>
-                    <option value="bullet_points">Bullet Points</option>
-                    <option value="key_points">Key Points</option>
-                    <option value="extractive">Extractive</option>
-                  </>
-                )}
+                                      )) || (
+                        <>
+                          <option value="general">General Summary</option>
+                          <option value="bullet_points">Bullet Points</option>
+                          <option value="key_points">Key Points</option>
+                          <option value="extractive">Extractive</option>
+                          <option value="executive">Executive Summary</option>
+                          <option value="technical">Technical Summary</option>
+                          <option value="news">News Summary</option>
+                        </>
+                      )}
               </select>
             </div>
           </div>

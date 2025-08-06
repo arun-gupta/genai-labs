@@ -74,7 +74,7 @@ export interface SummarizeRequest {
   max_length: number;
   temperature: number;
   stream: boolean;
-  summary_type: 'general' | 'bullet_points' | 'key_points' | 'extractive';
+  summary_type: 'general' | 'bullet_points' | 'key_points' | 'extractive' | 'executive' | 'technical' | 'news';
   target_language?: string;
   translate_summary?: boolean;
   output_format?: 'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table';
