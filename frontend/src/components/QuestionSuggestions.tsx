@@ -40,7 +40,7 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
     }
   }, [collectionNames, documentId, refreshKey]);
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = async (forceRefresh = false) => {
     if (collectionNames.length === 0) return;
     
     setIsLoading(true);
@@ -57,7 +57,9 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
         // For collection suggestions, combine suggestions from all selected collections
         for (const collectionName of collectionNames) {
           try {
-            const response = await apiService.getQuestionSuggestions(collectionName);
+            // Add cache-busting parameter if force refresh is requested
+            const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
+            const response = await apiService.getQuestionSuggestions(collectionName + cacheBuster);
             const collectionSuggestions = response.suggestions || [];
             // Add collection name to suggestions for context
             const labeledSuggestions = collectionSuggestions.map(s => ({
@@ -204,7 +206,19 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
         <div className="flex items-center space-x-2">
           {onRefresh && (
             <button
-              onClick={onRefresh}
+              onClick={async () => {
+                // Clear current suggestions first
+                setSuggestions([]);
+                setError(null);
+                
+                // Call external refresh function if provided
+                if (onRefresh) {
+                  await onRefresh();
+                }
+                
+                // Force reload suggestions with fresh data and cache busting
+                await loadSuggestions(true);
+              }}
               disabled={isRefreshing}
               className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Refresh question suggestions based on latest documents"
