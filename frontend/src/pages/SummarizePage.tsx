@@ -39,6 +39,26 @@ export const SummarizePage: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
 
+  // Static preset combinations (no dynamic useMemo)
+  const defaultModelCombinations = [
+    {
+      name: "Local vs Cloud",
+      description: "Compare local Ollama model with cloud models",
+      models: [
+        { provider: "ollama", model: "mistral:7b" },
+        { provider: "openai", model: "gpt-3.5-turbo" }
+      ]
+    },
+    {
+      name: "Fast vs Accurate",
+      description: "Compare speed vs accuracy",
+      models: [
+        { provider: "ollama", model: "qwen3:8b" },
+        { provider: "openai", model: "gpt-4" }
+      ]
+    }
+  ];
+
   useEffect(() => {
     const loadAvailableModels = async () => {
       try {
@@ -161,6 +181,91 @@ export const SummarizePage: React.FC = () => {
                   <span>Creative</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Model Comparison Settings */}
+          <div className="card">
+            <div className="flex items-center space-x-2 mb-4">
+              <GitCompare className="text-purple-600" size={20} />
+              <h2 className="text-lg font-semibold text-gray-900">Model Comparison</h2>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">
+                Select models to compare for summarization performance
+              </p>
+              
+              {/* Preset Combinations */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
+                <div className="space-y-2">
+                  {defaultModelCombinations.map((combination, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedModels(combination.models)}
+                      disabled={isComparing}
+                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                    >
+                      <div className="text-sm font-medium text-gray-900">
+                        {combination.name}
+                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {combination.models.length} models
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">{combination.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-3">Or select models manually:</p>
+              
+              {availableModels?.providers?.map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isComparing}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )) || (
+                <div className="text-sm text-gray-500">
+                  Loading available models...
+                </div>
+              )}
+              
+              {selectedModels.length > 0 && (
+                <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-purple-700">
+                      Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                    </p>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      className="text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 px-2 py-1 rounded transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
