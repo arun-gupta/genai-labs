@@ -188,9 +188,9 @@ export const HomePage: React.FC = () => {
               <Link
                 key={feature.path}
                 to={feature.path}
-                className="card hover:shadow-lg transition-all duration-200 group border-2 border-transparent hover:border-primary-200"
+                className="card hover:shadow-lg transition-all duration-200 group border-2 border-transparent hover:border-primary-200 flex flex-col h-full"
               >
-                <div className="space-y-2.5">
+                <div className="flex-1 space-y-2.5">
                   <div className={`${feature.color} p-2.5 rounded-lg text-white w-fit`}>
                     <Icon size={20} />
                   </div>
@@ -208,10 +208,10 @@ export const HomePage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center text-primary-600 group-hover:text-primary-700 transition-colors pt-1.5 border-t border-gray-100">
-                    <span className="text-xs font-medium">Try it now</span>
-                    <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
-                  </div>
+                </div>
+                <div className="flex items-center text-primary-600 group-hover:text-primary-700 transition-colors pt-1.5 border-t border-gray-100 mt-auto">
+                  <span className="text-xs font-medium">Try it now</span>
+                  <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
             );
