@@ -546,29 +546,6 @@ export const SummarizePage: React.FC = () => {
             </div>
           </div>
 
-          {/* History */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <History className="text-blue-600" size={20} />
-                <h2 className="text-lg font-semibold text-gray-900">History</h2>
-              </div>
-              <button
-                onClick={() => setShowHistory(!showHistory)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-              >
-                {showHistory ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            
-            {showHistory && (
-              <PromptHistoryComponent
-                onLoadPrompt={handleLoadFromHistory}
-                className="w-full"
-              />
-            )}
-          </div>
-
           {/* Model Comparison Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
@@ -656,6 +633,29 @@ export const SummarizePage: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* History */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <History className="text-blue-600" size={20} />
+                <h2 className="text-lg font-semibold text-gray-900">History</h2>
+              </div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+              >
+                {showHistory ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            
+            {showHistory && (
+              <PromptHistoryComponent
+                onLoadPrompt={handleLoadFromHistory}
+                className="w-full"
+              />
+            )}
           </div>
         </div>
 
