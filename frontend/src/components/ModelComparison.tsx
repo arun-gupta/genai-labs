@@ -645,7 +645,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   
                   return results.map((result, index) => {
                     const tokenCount = result.token_usage?.total_tokens || 0;
-                    const tokenPercentage = maxTokens > 0 ? (tokenCount / maxTokens) * 100 : 0;
+                    const tokenPercentage = maxTokens > 0 && tokenCount > 0 ? (tokenCount / maxTokens) * 100 : 0;
                     
                     return (
                       <div key={index} className="space-y-1">
@@ -687,7 +687,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     const estimatedCost = result.token_usage?.total_tokens
                       ? (result.token_usage.total_tokens * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
                       : 'N/A';
-                    const costPercentage = maxCost > 0 ? (costs[index] / maxCost) * 100 : 0;
+                    const costValue = costs[index];
+                    const costPercentage = maxCost > 0 && costValue > 0 ? (costValue / maxCost) * 100 : 0;
                     
                     return (
                       <div key={index} className="space-y-1">
@@ -699,7 +700,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           <div
                             className="bg-red-500 h-3 rounded-full transition-all duration-300"
                             style={{
-                              width: `${estimatedCost !== 'N/A' ? costPercentage : 0}%`
+                              width: `${estimatedCost !== 'N/A' && costValue > 0 ? costPercentage : 0}%`
                             }}
                           ></div>
                         </div>
@@ -748,7 +749,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             rankIndex === 1 ? 'bg-gray-500' :
                             rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
                           }`}
-                          style={{ width: `${result.overallScore}%` }}
+                          style={{ width: `${result.overallScore > 0 ? result.overallScore : 0}%` }}
                         ></div>
                       </div>
                     </div>
