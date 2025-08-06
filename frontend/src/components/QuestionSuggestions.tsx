@@ -35,8 +35,15 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    console.log('QuestionSuggestions useEffect triggered:', { collectionNames, documentId, refreshKey });
     if (collectionNames.length > 0) {
+      console.log('Loading suggestions for collections:', collectionNames);
       loadSuggestions();
+    } else {
+      console.log('No collections selected, clearing suggestions');
+      // Clear suggestions when no collections are selected
+      setSuggestions([]);
+      setError(null);
     }
   }, [collectionNames, documentId, refreshKey]);
 
@@ -51,14 +58,14 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
       
       if (documentId) {
         // For document-specific suggestions, use the first collection
-        const response = await apiService.getDocumentQuestionSuggestions(collectionNames[0], documentId);
+        const response = await apiService.getDocumentQuestionSuggestions(collectionNames[0], documentId, forceRefresh);
         allSuggestions = response.suggestions || [];
       } else {
         // For collection suggestions, combine suggestions from all selected collections
         for (const collectionName of collectionNames) {
           try {
-            // Simple call without cache-busting for now
-            const response = await apiService.getQuestionSuggestions(collectionName);
+            // Call API with cache-busting if forceRefresh is true
+            const response = await apiService.getQuestionSuggestions(collectionName, forceRefresh);
             const collectionSuggestions = response.suggestions || [];
             // Add collection name to suggestions for context
             const labeledSuggestions = collectionSuggestions.map(s => ({

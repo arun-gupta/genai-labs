@@ -217,9 +217,20 @@ class QuestionSuggestionService:
             # Context-aware action suggestions based on document content
             context_actions = []
             
-            # Property management related - only if there's significant property content
+            # Initialize all content counts
             property_terms = ['property', 'rent', 'lease', 'tenant', 'landlord', 'maintenance', 'deposit']
             property_content_count = sum(combined_text.count(term) for term in property_terms)
+            
+            business_terms = ['company', 'business', 'management', 'corp', 'inc', 'llc', 'enterprise']
+            business_content_count = sum(combined_text.count(term) for term in business_terms)
+            
+            technical_terms = ['manual', 'guide', 'instruction', 'procedure', 'process', 'setup', 'configuration']
+            technical_content_count = sum(combined_text.count(term) for term in technical_terms)
+            
+            legal_terms = ['agreement', 'contract', 'terms', 'conditions', 'legal', 'liability', 'obligation']
+            legal_content_count = sum(combined_text.count(term) for term in legal_terms)
+            
+            # Property management related - only if there's significant property content
             if property_content_count >= 3:  # Require at least 3 mentions of property terms
                 context_actions.extend([
                     "request property maintenance",
@@ -229,8 +240,6 @@ class QuestionSuggestionService:
                 ])
             
             # Business/company related - only if there's significant business content
-            business_terms = ['company', 'business', 'management', 'corp', 'inc', 'llc', 'enterprise']
-            business_content_count = sum(combined_text.count(term) for term in business_terms)
             if business_content_count >= 2:  # Require at least 2 mentions of business terms
                 context_actions.extend([
                     "contact the company",
@@ -239,8 +248,6 @@ class QuestionSuggestionService:
                 ])
             
             # Technical/documentation related - only if there's significant technical content
-            technical_terms = ['manual', 'guide', 'instruction', 'procedure', 'process', 'setup', 'configuration']
-            technical_content_count = sum(combined_text.count(term) for term in technical_terms)
             if technical_content_count >= 2:  # Require at least 2 mentions of technical terms
                 context_actions.extend([
                     "follow the procedure",
@@ -249,8 +256,6 @@ class QuestionSuggestionService:
                 ])
             
             # Legal/agreement related - only if there's significant legal content
-            legal_terms = ['agreement', 'contract', 'terms', 'conditions', 'legal', 'liability', 'obligation']
-            legal_content_count = sum(combined_text.count(term) for term in legal_terms)
             if legal_content_count >= 2:  # Require at least 2 mentions of legal terms
                 context_actions.extend([
                     "understand the terms",
