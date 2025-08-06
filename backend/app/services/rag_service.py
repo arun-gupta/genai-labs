@@ -596,11 +596,24 @@ Question: {question}"""
                                 })
                 
                 if not relevant_chunks:
+                    # Estimate token usage for error message
+                    error_message = "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents."
+                    prompt_tokens = len(question) // 4
+                    completion_tokens = len(error_message) // 4
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    token_usage = {
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens
+                    }
+                    
                     yield {
-                        "content": "I couldn't find any relevant information in the uploaded documents to answer your question. Please try rephrasing your question or upload more relevant documents.",
+                        "content": error_message,
                         "is_complete": True,
                         "sources": [],
-                        "latency_ms": (time.time() - start_time) * 1000
+                        "latency_ms": (time.time() - start_time) * 1000,
+                        "token_usage": token_usage
                     }
                     return
             
@@ -631,6 +644,18 @@ Question: {question}"""
                 full_prompt = f"{system_prompt}\n\nQuestion: {question}"
                 response_content = await model.ainvoke(full_prompt)
                 
+                # Estimate token usage for Ollama (since it doesn't provide exact counts)
+                # Rough estimation: 1 token ≈ 4 characters for English text
+                prompt_tokens = len(full_prompt) // 4
+                completion_tokens = len(response_content) // 4
+                total_tokens = prompt_tokens + completion_tokens
+                
+                token_usage = {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens
+                }
+                
                 # Calculate confidence score
                 confidence_data = self.confidence_service.calculate_overall_confidence(
                     response_content, question, sources
@@ -641,40 +666,115 @@ Question: {question}"""
                     "is_complete": True,
                     "sources": sources,
                     "latency_ms": (time.time() - start_time) * 1000,
-                    "confidence": confidence_data
+                    "confidence": confidence_data,
+                    "token_usage": token_usage
                 }
             else:
-                # For other models, use streaming
+                # For other models, use streaming with enhanced token usage extraction
                 from langchain.schema import HumanMessage, SystemMessage
+                from app.services.generation_service import StreamingCallbackHandler
+                
                 messages = [
                     SystemMessage(content=system_prompt),
                     HumanMessage(content=question)
                 ]
-                # Note: This would need to be implemented for other models
-                # For now, just generate the full response
-                response_result = await model.agenerate([messages])
-                response_content = response_result.generations[0][0].text
                 
-                # Calculate confidence score
-                confidence_data = self.confidence_service.calculate_overall_confidence(
-                    response_content, question, sources
-                )
+                # Create callback handler for token usage extraction
+                callback_handler = StreamingCallbackHandler()
                 
-                yield {
-                    "content": response_content,
-                    "is_complete": True,
-                    "sources": sources,
-                    "latency_ms": (time.time() - start_time) * 1000,
-                    "confidence": confidence_data
-                }
+                try:
+                    # Use streaming approach with callback handler
+                    response_result = await model.agenerate(
+                        [messages],
+                        callbacks=[callback_handler]
+                    )
+                    response_content = response_result.generations[0][0].text
+                    
+                    # Use token usage from callback handler (enhanced extraction)
+                    token_usage = None
+                    if callback_handler.token_usage:
+                        token_usage = {
+                            "prompt_tokens": callback_handler.token_usage.prompt_tokens,
+                            "completion_tokens": callback_handler.token_usage.completion_tokens,
+                            "total_tokens": callback_handler.token_usage.total_tokens
+                        }
+                    else:
+                        # Fallback to response_result if callback handler doesn't have token usage
+                        if hasattr(response_result, 'llm_output') and response_result.llm_output:
+                            token_info = response_result.llm_output.get('token_usage', {})
+                            if token_info:
+                                token_usage = {
+                                    "prompt_tokens": token_info.get('prompt_tokens', 0),
+                                    "completion_tokens": token_info.get('completion_tokens', 0),
+                                    "total_tokens": token_info.get('total_tokens', 0)
+                                }
+                    
+                    # Calculate confidence score
+                    confidence_data = self.confidence_service.calculate_overall_confidence(
+                        response_content, question, sources
+                    )
+                    
+                    yield {
+                        "content": response_content,
+                        "is_complete": True,
+                        "sources": sources,
+                        "latency_ms": (time.time() - start_time) * 1000,
+                        "confidence": confidence_data,
+                        "token_usage": token_usage
+                    }
+                    
+                except Exception as e:
+                    logger.error(f"Error in streaming RAG response: {str(e)}")
+                    # Fallback to non-streaming approach
+                    response_result = await model.agenerate([messages])
+                    response_content = response_result.generations[0][0].text
+                    
+                    # Extract token usage from response if available
+                    token_usage = None
+                    if hasattr(response_result, 'llm_output') and response_result.llm_output:
+                        token_info = response_result.llm_output.get('token_usage', {})
+                        if token_info:
+                            token_usage = {
+                                "prompt_tokens": token_info.get('prompt_tokens', 0),
+                                "completion_tokens": token_info.get('completion_tokens', 0),
+                                "total_tokens": token_info.get('total_tokens', 0)
+                            }
+                    
+                    # Calculate confidence score
+                    confidence_data = self.confidence_service.calculate_overall_confidence(
+                        response_content, question, sources
+                    )
+                    
+                    yield {
+                        "content": response_content,
+                        "is_complete": True,
+                        "sources": sources,
+                        "latency_ms": (time.time() - start_time) * 1000,
+                        "confidence": confidence_data,
+                        "token_usage": token_usage
+                    }
                 
         except Exception as e:
             logger.error(f"Error in streaming question: {str(e)}")
+            
+            # Estimate token usage for error message
+            error_message = f"Error: {str(e)}"
+            prompt_tokens = len(question) // 4
+            completion_tokens = len(error_message) // 4
+            total_tokens = prompt_tokens + completion_tokens
+            
+            token_usage = {
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens
+            }
+            
             yield {
-                "content": f"Error: {str(e)}",
+                "content": error_message,
                 "is_complete": True,
                 "sources": [],
-                "latency_ms": (time.time() - start_time) * 1000
+                "latency_ms": (time.time() - start_time) * 1000,
+                "token_usage": token_usage
             }
     
     def list_all_collections(self) -> Dict:

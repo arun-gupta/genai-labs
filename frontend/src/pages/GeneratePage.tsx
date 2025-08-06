@@ -689,78 +689,81 @@ export const GeneratePage: React.FC = () => {
                   onKeyDown={handleKeyPress}
                 />
                 
-                {/* Sample Prompts */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-gray-600">Sample Prompts</span>
-                    <button
-                      onClick={() => setUserPrompt('')}
-                      className="text-xs text-gray-500 hover:text-gray-700"
-                    >
-                      Clear
-                    </button>
+                {/* Sample Prompts and Language Detection Container */}
+                <div className="mt-3 space-y-3">
+                  {/* Sample Prompts */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-600">Sample Prompts</span>
+                      <button
+                        onClick={() => setUserPrompt('')}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setUserPrompt('Write a professional email to schedule a meeting with a client next week.')}
+                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                      >
+                        📧 Email
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Create a detailed project plan for launching a new mobile app.')}
+                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                      >
+                        📋 Project Plan
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Write a compelling product description for a smart home device.')}
+                        className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                      >
+                        🛍️ Product
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Explain quantum computing in simple terms for a high school student.')}
+                        className="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors"
+                      >
+                        🧠 Explain
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Write a creative story about a time traveler who visits ancient Rome.')}
+                        className="px-3 py-1 text-xs bg-pink-100 text-pink-700 rounded-full hover:bg-pink-200 transition-colors"
+                      >
+                        📚 Story
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Create a step-by-step guide for beginners to learn Python programming.')}
+                        className="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
+                      >
+                        💻 Tutorial
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Write a persuasive argument for why renewable energy is the future.')}
+                        className="px-3 py-1 text-xs bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 transition-colors"
+                      >
+                        🌱 Argument
+                      </button>
+                      <button
+                        onClick={() => setUserPrompt('Create a comprehensive workout plan for building muscle and strength.')}
+                        className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
+                      >
+                        💪 Fitness
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setUserPrompt('Write a professional email to schedule a meeting with a client next week.')}
-                      className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
-                    >
-                      📧 Email
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Create a detailed project plan for launching a new mobile app.')}
-                      className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                    >
-                      📋 Project Plan
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Write a compelling product description for a smart home device.')}
-                      className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
-                    >
-                      🛍️ Product
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Explain quantum computing in simple terms for a high school student.')}
-                      className="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors"
-                    >
-                      🧠 Explain
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Write a creative story about a time traveler who visits ancient Rome.')}
-                      className="px-3 py-1 text-xs bg-pink-100 text-pink-700 rounded-full hover:bg-pink-200 transition-colors"
-                    >
-                      📚 Story
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Create a step-by-step guide for beginners to learn Python programming.')}
-                      className="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
-                    >
-                      💻 Tutorial
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Write a persuasive argument for why renewable energy is the future.')}
-                      className="px-3 py-1 text-xs bg-teal-100 text-teal-700 rounded-full hover:bg-teal-200 transition-colors"
-                    >
-                      🌱 Argument
-                    </button>
-                    <button
-                      onClick={() => setUserPrompt('Create a comprehensive workout plan for building muscle and strength.')}
-                      className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-colors"
-                    >
-                      💪 Fitness
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Language Detection */}
-                {userPrompt.trim() && (
-                  <div className="mt-2">
+                  
+                  {/* Language Detection - Always rendered but conditionally visible */}
+                  <div className={`transition-all duration-300 ease-in-out ${
+                    userPrompt.trim() ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'
+                  }`}>
                     <LanguageDetectionDisplay
                       detection={languageDetection}
                       isLoading={isDetectingLanguage}
                     />
                   </div>
-                )}
+                </div>
               </div>
             </div>
 

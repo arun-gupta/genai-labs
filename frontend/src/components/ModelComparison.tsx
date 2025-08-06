@@ -431,7 +431,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <div className="space-y-6">
             {/* Quality Comparison Chart */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Quality Scores</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Quality Scores</h4>
+              <p className="text-xs text-gray-500 mb-3">Overall quality assessment based on content coherence, relevance, and readability</p>
               <div className="space-y-3">
                 {(() => {
                   // Calculate scaled quality scores for better visualization
@@ -482,7 +483,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             {/* Coherence & Relevance Scores */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Coherence Scores</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">Coherence Scores</h4>
+                <p className="text-xs text-gray-500 mb-3">How well the content flows logically and maintains consistent structure</p>
                 <div className="space-y-3">
                   {(() => {
                     // Calculate scaled coherence scores for better visualization
@@ -522,7 +524,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Relevance Scores</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">Relevance Scores</h4>
+                <p className="text-xs text-gray-500 mb-3">How closely the generated content matches the original prompt or question</p>
                 <div className="space-y-3">
                   {(() => {
                     // Calculate scaled relevance scores for better visualization
@@ -564,7 +567,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
             {/* Speed Comparison Chart */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Response Time (Lower is better)</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Response Time (Lower is better)</h4>
+              <p className="text-xs text-gray-500 mb-3">Total time taken to generate the complete response</p>
               <div className="space-y-3">
                 {(() => {
                   // Calculate relative response time proportions
@@ -601,7 +605,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             {/* Efficiency Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Words per Second</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">Words per Second</h4>
+                <p className="text-xs text-gray-500 mb-3">Rate at which the model generates words in the output</p>
                 <div className="space-y-3">
                   {(() => {
                     // Calculate relative words per second proportions
@@ -654,7 +659,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Tokens per Second</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-1">Tokens per Second</h4>
+                <p className="text-xs text-gray-500 mb-3">Processing speed measured in tokens (text units) per second</p>
                 <div className="space-y-3">
                   {(() => {
                     // Calculate relative tokens per second proportions
@@ -709,15 +715,54 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
             {/* Token Usage Chart */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Token Usage</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Token Usage</h4>
+              <p className="text-xs text-gray-500 mb-3">Total number of tokens (text units) processed by the model</p>
               <div className="space-y-3">
                 {(() => {
-                  // Calculate relative token usage proportions
-                  const tokenCounts = results.map(result => result.token_usage?.total_tokens || 0);
+                  // Debug logging for token usage calculation
+                  console.log('Token usage calculation debug:', results.map(result => ({
+                    model: `${result.model_provider}/${result.model_name}`,
+                    token_usage: result.token_usage,
+                    total_tokens: result.token_usage?.total_tokens,
+                    token_usage_type: typeof result.token_usage,
+                    total_tokens_type: typeof result.token_usage?.total_tokens
+                  })));
+                  
+                  // Calculate relative token usage proportions with robust data handling
+                  const tokenCounts = results.map(result => {
+                    const totalTokens = result.token_usage?.total_tokens;
+                    
+                    // Handle different data types
+                    let tokenCount = 0;
+                    if (typeof totalTokens === 'number') {
+                      tokenCount = totalTokens;
+                    } else if (typeof totalTokens === 'string') {
+                      tokenCount = parseInt(totalTokens, 10) || 0;
+                    } else if (totalTokens) {
+                      tokenCount = Number(totalTokens) || 0;
+                    }
+                    
+                    console.log(`Model ${result.model_provider}/${result.model_name}: processed token count = ${tokenCount}`);
+                    return tokenCount;
+                  });
                   const maxTokens = Math.max(...tokenCounts);
                   
+                  console.log('Token counts:', tokenCounts);
+                  console.log('Max tokens:', maxTokens);
+                  
                   return results.map((result, index) => {
-                    const tokenCount = result.token_usage?.total_tokens || 0;
+                    const totalTokens = result.token_usage?.total_tokens;
+                    
+                    // Handle different data types
+                    let tokenCount = 0;
+                    if (typeof totalTokens === 'number') {
+                      tokenCount = totalTokens;
+                    } else if (typeof totalTokens === 'string') {
+                      tokenCount = parseInt(totalTokens, 10) || 0;
+                    } else if (totalTokens) {
+                      tokenCount = Number(totalTokens) || 0;
+                    }
+                    
                     const tokenPercentage = maxTokens > 0 && tokenCount > 0 ? (tokenCount / maxTokens) * 100 : 0;
                     const shouldShowBar = tokenCount > 0 && maxTokens > 0;
                     
@@ -746,20 +791,59 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
             {/* Cost Estimation */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Estimated Cost (USD)</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Estimated Cost (USD)</h4>
+              <p className="text-xs text-gray-500 mb-3">Approximate cost based on token usage (estimated at $0.02 per 1K tokens)</p>
               <div className="space-y-3">
                 {(() => {
+                  // Debug logging for cost calculation
+                  console.log('Cost calculation debug:', results.map(result => ({
+                    model: `${result.model_provider}/${result.model_name}`,
+                    token_usage: result.token_usage,
+                    total_tokens: result.token_usage?.total_tokens,
+                    has_token_usage: !!result.token_usage,
+                    has_total_tokens: !!result.token_usage?.total_tokens,
+                    token_usage_type: typeof result.token_usage,
+                    total_tokens_type: typeof result.token_usage?.total_tokens
+                  })));
+                  
                   // Calculate relative cost proportions
-                  const costs = results.map(result => 
-                    result.token_usage?.total_tokens 
-                      ? parseFloat((result.token_usage.total_tokens * 0.00002).toFixed(4))
-                      : 0
-                  );
+                  const costs = results.map(result => {
+                    const totalTokens = result.token_usage?.total_tokens;
+                    console.log(`Model ${result.model_provider}/${result.model_name}: total_tokens = ${totalTokens}, type = ${typeof totalTokens}`);
+                    
+                    // Handle different data types
+                    let tokenCount = 0;
+                    if (typeof totalTokens === 'number') {
+                      tokenCount = totalTokens;
+                    } else if (typeof totalTokens === 'string') {
+                      tokenCount = parseInt(totalTokens, 10) || 0;
+                    } else if (totalTokens) {
+                      tokenCount = Number(totalTokens) || 0;
+                    }
+                    
+                    console.log(`Model ${result.model_provider}/${result.model_name}: processed token count = ${tokenCount}`);
+                    return tokenCount > 0 ? parseFloat((tokenCount * 0.00002).toFixed(4)) : 0;
+                  });
                   const maxCost = Math.max(...costs);
                   
+                  console.log('Calculated costs:', costs);
+                  console.log('Max cost:', maxCost);
+                  
                   return results.map((result, index) => {
-                    const estimatedCost = result.token_usage?.total_tokens
-                      ? (result.token_usage.total_tokens * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
+                    const totalTokens = result.token_usage?.total_tokens;
+                    
+                    // Handle different data types
+                    let tokenCount = 0;
+                    if (typeof totalTokens === 'number') {
+                      tokenCount = totalTokens;
+                    } else if (typeof totalTokens === 'string') {
+                      tokenCount = parseInt(totalTokens, 10) || 0;
+                    } else if (totalTokens) {
+                      tokenCount = Number(totalTokens) || 0;
+                    }
+                    
+                    const estimatedCost = tokenCount > 0
+                      ? (tokenCount * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
                       : 'N/A';
                     const costValue = costs[index];
                     const costPercentage = maxCost > 0 && costValue > 0 ? (costValue / maxCost) * 100 : 0;
@@ -788,16 +872,52 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
             {/* Comparative Rankings */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Performance Rankings</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Performance Rankings</h4>
+              <p className="text-xs text-gray-500 mb-3">Overall ranking based on quality, speed, and efficiency combined</p>
               <div className="space-y-3">
                 {(() => {
-                  // Calculate rankings based on multiple factors
+                  // Calculate rankings based on multiple factors with better precision
                   const rankedResults = results.map((result, index) => {
+                    // Quality score (already in percentage)
                     const qualityScore = result.quality_score || 0;
-                    const speedScore = result.latency_ms ? Math.max(0, 100 - (result.latency_ms / 100)) : 0;
-                    const efficiencyScore = result.token_usage?.total_tokens ? Math.max(0, 100 - (result.token_usage.total_tokens / 10)) : 0;
-                    const overallScore = (qualityScore + speedScore + efficiencyScore) / 3;
-                    return { ...result, overallScore, originalIndex: index };
+                    
+                    // Speed score: normalize latency to 0-100 scale (lower latency = higher score)
+                    let speedScore = 0;
+                    if (result.latency_ms) {
+                      // Find the range of latencies to normalize
+                      const latencies = results.map(r => r.latency_ms || 0).filter(l => l > 0);
+                      const minLatency = Math.min(...latencies);
+                      const maxLatency = Math.max(...latencies);
+                      const latencyRange = maxLatency - minLatency;
+                      
+                      if (latencyRange > 0) {
+                        // Invert the scale: faster = higher score
+                        speedScore = 100 - ((result.latency_ms - minLatency) / latencyRange) * 100;
+                      } else {
+                        speedScore = 100; // All same latency
+                      }
+                    }
+                    
+                    // Efficiency score: normalize token usage to 0-100 scale (lower tokens = higher score)
+                    let efficiencyScore = 0;
+                    if (result.token_usage?.total_tokens) {
+                      const tokenUsages = results.map(r => r.token_usage?.total_tokens || 0).filter(t => t > 0);
+                      const minTokens = Math.min(...tokenUsages);
+                      const maxTokens = Math.max(...tokenUsages);
+                      const tokenRange = maxTokens - minTokens;
+                      
+                      if (tokenRange > 0) {
+                        // Invert the scale: fewer tokens = higher score
+                        efficiencyScore = 100 - ((result.token_usage.total_tokens - minTokens) / tokenRange) * 100;
+                      } else {
+                        efficiencyScore = 100; // All same token usage
+                      }
+                    }
+                    
+                    // Weighted overall score (quality is most important)
+                    const overallScore = (qualityScore * 0.5) + (speedScore * 0.3) + (efficiencyScore * 0.2);
+                    
+                    return { ...result, overallScore, speedScore, efficiencyScore, originalIndex: index };
                   }).sort((a, b) => b.overallScore - a.overallScore);
 
                   return rankedResults.map((result, rankIndex) => {
@@ -806,9 +926,11 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       model: `${result.model_provider}/${result.model_name}`,
                       overallScore: result.overallScore,
                       qualityScore: result.quality_score,
+                      speedScore: result.speedScore,
+                      efficiencyScore: result.efficiencyScore,
                       latency: result.latency_ms,
                       tokenUsage: result.token_usage,
-                      barWidth: `${result.overallScore > 0 ? result.overallScore : 0}%`
+                      barWidth: `${Math.max(Math.min(result.overallScore, 100), 5)}%`
                     });
 
                     return (
@@ -825,11 +947,11 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                           </div>
                           <span className="text-sm font-medium text-gray-900">
-                            {result.overallScore.toFixed(0)}%
+                            {result.overallScore.toFixed(1)}%
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          {result.overallScore > 0 && (
+                          {result.overallScore >= 0 && (
                             <div
                               className={`h-3 rounded-full transition-all duration-300 ${
                                 rankIndex === 0 ? 'bg-yellow-500' :
@@ -837,7 +959,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                                 rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
                               }`}
                               style={{ 
-                                width: `${Math.min(result.overallScore, 100)}%` 
+                                width: `${Math.max(Math.min(result.overallScore, 100), 5)}%` 
                               }}
                             ></div>
                           )}
@@ -858,16 +980,23 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className={`text-sm font-medium ${
+                          result.compression_ratio && (result.compression_ratio * 100) > 100 
+                            ? 'text-red-600' 
+                            : 'text-gray-900'
+                        }`}>
                           {result.compression_ratio ?
                             `${(result.compression_ratio * 100).toFixed(1)}% of original` : 'N/A'}
+                          {result.compression_ratio && (result.compression_ratio * 100) > 100 && 
+                            <span className="text-xs text-red-500 ml-1">(⚠️ longer than original)</span>
+                          }
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
                         <div
                           className="bg-purple-500 h-3 rounded-full transition-all duration-300"
                           style={{
-                            width: `${result.compression_ratio ? (result.compression_ratio * 100) : 0}%`
+                            width: `${result.compression_ratio ? Math.min((result.compression_ratio * 100), 100) : 0}%`
                           }}
                         ></div>
                       </div>

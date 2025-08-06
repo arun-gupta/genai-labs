@@ -756,14 +756,14 @@ An Open Source AI is an AI system made available under terms and in a way that g
                 </div>
                 
                 {/* Language Detection Display */}
-                {(languageDetection || isDetectingLanguage) && (
-                  <div className="mt-3">
-                    <LanguageDetectionDisplay
-                      detection={languageDetection}
-                      isLoading={isDetectingLanguage}
-                    />
-                  </div>
-                )}
+                <div className={`mt-3 transition-all duration-300 ease-in-out ${
+                  (languageDetection || isDetectingLanguage) ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'
+                }`}>
+                  <LanguageDetectionDisplay
+                    detection={languageDetection}
+                    isLoading={isDetectingLanguage}
+                  />
+                </div>
               </div>
             )}
 

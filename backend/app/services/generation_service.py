@@ -23,13 +23,63 @@ class StreamingCallbackHandler(BaseCallbackHandler):
     
     def on_llm_end(self, response, **kwargs):
         """Handle end of LLM response."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Try multiple ways to extract token usage
+        token_usage = None
+        
+        # Method 1: Check llm_output
         if hasattr(response, 'llm_output') and response.llm_output:
             token_info = response.llm_output.get('token_usage', {})
-            self.token_usage = TokenUsage(
-                prompt_tokens=token_info.get('prompt_tokens', 0),
-                completion_tokens=token_info.get('completion_tokens', 0),
-                total_tokens=token_info.get('total_tokens', 0)
+            if token_info:
+                token_usage = TokenUsage(
+                    prompt_tokens=token_info.get('prompt_tokens', 0),
+                    completion_tokens=token_info.get('completion_tokens', 0),
+                    total_tokens=token_info.get('total_tokens', 0)
+                )
+        
+        # Method 2: Check response.usage (OpenAI format)
+        if not token_usage and hasattr(response, 'usage'):
+            if response.usage:
+                token_usage = TokenUsage(
+                    prompt_tokens=getattr(response.usage, 'prompt_tokens', 0),
+                    completion_tokens=getattr(response.usage, 'completion_tokens', 0),
+                    total_tokens=getattr(response.usage, 'total_tokens', 0)
+                )
+        
+        # Method 3: Check response.llm_output.usage
+        if not token_usage and hasattr(response, 'llm_output') and response.llm_output:
+            usage_info = response.llm_output.get('usage', {})
+            if usage_info:
+                token_usage = TokenUsage(
+                    prompt_tokens=usage_info.get('prompt_tokens', 0),
+                    completion_tokens=usage_info.get('completion_tokens', 0),
+                    total_tokens=usage_info.get('total_tokens', 0)
+                )
+        
+        # Method 4: Check kwargs for token usage
+        if not token_usage and 'token_usage' in kwargs:
+            token_info = kwargs['token_usage']
+            if isinstance(token_info, dict):
+                token_usage = TokenUsage(
+                    prompt_tokens=token_info.get('prompt_tokens', 0),
+                    completion_tokens=token_info.get('completion_tokens', 0),
+                    total_tokens=token_info.get('total_tokens', 0)
+                )
+        
+        # Method 5: Estimate token usage if none found
+        if not token_usage:
+            logger.warning(f"No token usage found in response for {type(response)}, estimating...")
+            # Estimate based on content length (rough approximation)
+            estimated_tokens = len(self.content) // 4  # ~4 characters per token
+            token_usage = TokenUsage(
+                prompt_tokens=0,  # We don't have prompt length here
+                completion_tokens=estimated_tokens,
+                total_tokens=estimated_tokens
             )
+        
+        self.token_usage = token_usage
 
 
 class GenerationService:
@@ -192,10 +242,22 @@ class GenerationService:
                 )
             
         except Exception as e:
-            # Yield error chunk
+            # Yield error chunk with estimated token usage
+            error_message = f"Error: {self._format_error_message(str(e))}"
+            
+            # Estimate token usage for error response
+            estimated_tokens = len(error_message) // 4  # ~4 characters per token
+            
+            error_token_usage = TokenUsage(
+                prompt_tokens=0,  # We don't have prompt length here
+                completion_tokens=estimated_tokens,
+                total_tokens=estimated_tokens
+            )
+            
             yield StreamChunk(
-                content=f"Error: {self._format_error_message(str(e))}",
+                content=error_message,
                 is_complete=True,
+                token_usage=error_token_usage,
                 latency_ms=(time.time() - start_time) * 1000
             )
     
@@ -302,10 +364,22 @@ class GenerationService:
             )
             
         except Exception as e:
-            # Yield error chunk
+            # Yield error chunk with estimated token usage
+            error_message = f"Error: {self._format_error_message(str(e))}"
+            
+            # Estimate token usage for error response
+            estimated_tokens = len(error_message) // 4  # ~4 characters per token
+            
+            error_token_usage = TokenUsage(
+                prompt_tokens=0,  # We don't have prompt length here
+                completion_tokens=estimated_tokens,
+                total_tokens=estimated_tokens
+            )
+            
             yield StreamChunk(
-                content=f"Error: {self._format_error_message(str(e))}",
+                content=error_message,
                 is_complete=True,
+                token_usage=error_token_usage,
                 latency_ms=(time.time() - start_time) * 1000
             )
     
