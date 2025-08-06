@@ -67,7 +67,7 @@ export const RAGPage: React.FC = () => {
   const [showNewCollectionInput, setShowNewCollectionInput] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>(['default']);
   const [lastUploadAnalytics, setLastUploadAnalytics] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('response'); // 'response', 'analytics'
+  const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
   const [translateOutput, setTranslateOutput] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en');
