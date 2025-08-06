@@ -168,6 +168,15 @@ export const RAGPage: React.FC = () => {
         collection.available_tags?.forEach(tag => allTags.add(tag));
       });
       setAvailableTags(Array.from(allTags));
+      
+      // Ensure selected collections are still valid
+      const validCollectionNames = collectionsData.map((c: Collection) => c.collection_name);
+      setSelectedCollections(prev => prev.filter(collection => validCollectionNames.includes(collection)));
+      
+      // If no valid collections are selected, default to 'default'
+      if (selectedCollections.length === 0 && validCollectionNames.includes('default')) {
+        setSelectedCollections(['default']);
+      }
     } catch (error) {
       setError(`Failed to load collections: ${error}`);
     }
@@ -267,7 +276,10 @@ export const RAGPage: React.FC = () => {
         
         setUploadedFiles(prev => [...prev, file]);
         await loadCollections(); // Refresh collections
-        setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+        // Add a small delay to ensure backend has processed the changes
+        setTimeout(() => {
+          setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+        }, 500);
       }
     } catch (error) {
       setError(`Upload failed: ${error}`);
@@ -421,7 +433,10 @@ export const RAGPage: React.FC = () => {
         collection_name: selectedCollection
       });
       await loadCollections();
-      setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+      // Add a small delay to ensure backend has processed the changes
+      setTimeout(() => {
+        setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+      }, 500);
     } catch (error) {
       setError(`Failed to delete document: ${error}`);
     }
@@ -439,7 +454,10 @@ export const RAGPage: React.FC = () => {
         setSelectedCollection('default');
       }
       await loadCollections();
-      setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+      // Add a small delay to ensure backend has processed the changes
+      setTimeout(() => {
+        setSuggestionsRefreshKey(prev => prev + 1); // Refresh suggestions
+      }, 500);
     } catch (error) {
       setError(`Failed to delete collection: ${error}`);
     }
