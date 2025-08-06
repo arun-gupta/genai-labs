@@ -613,7 +613,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     });
                     const maxWordsPerSecond = Math.max(...wordsPerSecondValues);
                     
-                    return results.map((result, index) => {
+                                        return results.map((result, index) => {
                       const wordsPerSecond = result.latency_ms && getContent(result)
                         ? (getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1)
                         : 'N/A';
@@ -621,6 +621,16 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       const wordsPerSecondPercentage = maxWordsPerSecond > 0 && wordsPerSecondValue > 0 
                         ? (wordsPerSecondValue / maxWordsPerSecond) * 100 
                         : 0;
+                      const shouldShowBar = wordsPerSecond !== 'N/A' && wordsPerSecondValue > 0 && maxWordsPerSecond > 0;
+                      
+                      // Debug logging
+                      console.log(`Words per Second for ${result.model_provider}/${result.model_name}:`, {
+                        wordsPerSecond,
+                        wordsPerSecondValue,
+                        maxWordsPerSecond,
+                        wordsPerSecondPercentage,
+                        shouldShowBar
+                      });
                       
                       return (
                         <div key={index} className="space-y-1">
@@ -628,14 +638,14 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                             <span className="text-sm font-medium text-gray-900">{wordsPerSecond}</span>
                           </div>
-                                                  <div className="w-full bg-gray-200 rounded-full h-3">
-                          {wordsPerSecond !== 'N/A' && wordsPerSecondValue > 0 && (
-                            <div
-                              className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
-                              style={{ width: `${wordsPerSecondPercentage}%` }}
-                            ></div>
-                          )}
-                        </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            {shouldShowBar && (
+                              <div
+                                className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
+                                style={{ width: `${wordsPerSecondPercentage}%` }}
+                              ></div>
+                            )}
+                          </div>
                         </div>
                       );
                     });
@@ -664,6 +674,16 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       const tokensPerSecondPercentage = maxTokensPerSecond > 0 && tokensPerSecondValue > 0 
                         ? (tokensPerSecondValue / maxTokensPerSecond) * 100 
                         : 0;
+                      const shouldShowBar = tokensPerSecond !== 'N/A' && tokensPerSecondValue > 0 && maxTokensPerSecond > 0;
+                      
+                      // Debug logging
+                      console.log(`Tokens per Second for ${result.model_provider}/${result.model_name}:`, {
+                        tokensPerSecond,
+                        tokensPerSecondValue,
+                        maxTokensPerSecond,
+                        tokensPerSecondPercentage,
+                        shouldShowBar
+                      });
                       
                       return (
                         <div key={index} className="space-y-1">
@@ -672,7 +692,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                             <span className="text-sm font-medium text-gray-900">{tokensPerSecond}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-3">
-                            {tokensPerSecond !== 'N/A' && tokensPerSecondValue > 0 && (
+                            {shouldShowBar && (
                               <div
                                 className="bg-teal-500 h-3 rounded-full transition-all duration-300"
                                 style={{ width: `${tokensPerSecondPercentage}%` }}
