@@ -55,9 +55,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(true);
 
   // Debug info
-  console.log('ModelComparison render:', { 
-    isComparing, 
-    results: results?.length, 
+  console.log('ModelComparison render:', {
+    isComparing,
+    comparisonType,
+    results: results?.length,
     selectedModels: selectedModels?.length,
     hasResults: !!results,
     resultsData: results,
@@ -67,7 +68,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
 
   if (isComparing) {
     console.log('Showing progress indicators because isComparing is true');
-    
+    console.log('Progress indicators should be visible now');
+
     // Different progress steps based on comparison type
     const getProgressSteps = () => {
       if (comparisonType === 'rag') {
@@ -186,7 +188,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <BarChart3 className="text-blue-600" size={20} />
           <h3 className="text-lg font-semibold text-gray-900">Model Comparison in Progress</h3>
         </div>
-        
+
         {/* Progress Overview */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -199,7 +201,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
             <div className="bg-blue-500 h-2 rounded-full transition-all duration-500 animate-pulse" style={{ width: comparisonType === 'rag' ? '60%' : '75%' }}></div>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            {comparisonType === 'rag' 
+            {comparisonType === 'rag'
               ? 'Analyzing model performance with document context...'
               : 'Analyzing model performance and generating comprehensive metrics...'
             }
@@ -238,7 +240,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                   <div className="flex-1">
                     <p className="text-sm text-gray-700">{model}</p>
                     <p className="text-xs text-gray-500">
-                      {comparisonType === 'rag' 
+                      {comparisonType === 'rag'
                         ? 'Processing with document context...'
                         : 'Processing and analyzing response quality'
                       }
@@ -255,7 +257,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-700">
-              {comparisonType === 'rag' 
+              {comparisonType === 'rag'
                 ? `Estimated time: ${Math.max(15, selectedModels.length * 5)}s`
                 : `Estimated completion time: ${selectedModels.length > 0 ? `${Math.max(2, selectedModels.length * 1.5)}s` : '2-5s'}`
               }
@@ -270,10 +272,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
   }
 
   if (!results || results.length === 0) {
-    console.log('Showing no results message because:', { 
-      hasResults: !!results, 
+    console.log('Showing no results message because:', {
+      hasResults: !!results,
       resultsLength: results?.length,
-      results: results 
+      results: results
     });
     return (
       <div className="card">
@@ -283,7 +285,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
           <p className="text-gray-600 mb-6">
             Compare how different AI models {comparisonType === 'summarization' ? 'summarize' : 'generate'} the same content to find the best one for your needs.
           </p>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
             <h4 className="font-medium text-blue-900 mb-2">How to compare models:</h4>
             <ol className="text-sm text-blue-800 space-y-1">
@@ -345,7 +347,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                 </span>
               )}
             </div>
-            
+
             {/* Content */}
             <div className="space-y-3">
               <div>
@@ -423,7 +425,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                     relevance_score: result.relevance_score,
                     raw_result: result
                   });
-                  
+
                   return (
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between items-center">
@@ -433,8 +435,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-blue-500 h-3 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-blue-500 h-3 rounded-full transition-all duration-300"
                           style={{ width: `${result.quality_score || 0}%` }}
                         ></div>
                       </div>
@@ -458,8 +460,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-green-500 h-3 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-green-500 h-3 rounded-full transition-all duration-300"
                           style={{ width: `${result.coherence_score || 0}%` }}
                         ></div>
                       </div>
@@ -480,8 +482,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-purple-500 h-3 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-purple-500 h-3 rounded-full transition-all duration-300"
                           style={{ width: `${result.relevance_score || 0}%` }}
                         ></div>
                       </div>
@@ -504,10 +506,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-green-500 h-3 rounded-full transition-all duration-300" 
-                        style={{ 
-                          width: `${result.latency_ms ? Math.min((result.latency_ms / 10000) * 100, 100) : 0}%` 
+                      <div
+                        className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${result.latency_ms ? Math.min((result.latency_ms / 10000) * 100, 100) : 0}%`
                         }}
                       ></div>
                     </div>
@@ -522,7 +524,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Words per Second</h4>
                 <div className="space-y-3">
                   {results.map((result, index) => {
-                    const wordsPerSecond = result.latency_ms && getContent(result) 
+                    const wordsPerSecond = result.latency_ms && getContent(result)
                       ? (getContent(result)!.split(' ').length / (result.latency_ms / 1000)).toFixed(1)
                       : 'N/A';
                     return (
@@ -532,10 +534,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           <span className="text-sm font-medium text-gray-900">{wordsPerSecond}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-cyan-500 h-3 rounded-full transition-all duration-300" 
-                            style={{ 
-                              width: `${wordsPerSecond !== 'N/A' ? Math.min((parseFloat(wordsPerSecond) / 50) * 100, 100) : 0}%` 
+                          <div
+                            className="bg-cyan-500 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${wordsPerSecond !== 'N/A' ? Math.min((parseFloat(wordsPerSecond) / 50) * 100, 100) : 0}%`
                             }}
                           ></div>
                         </div>
@@ -559,10 +561,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                           <span className="text-sm font-medium text-gray-900">{tokensPerSecond}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div 
-                            className="bg-teal-500 h-3 rounded-full transition-all duration-300" 
-                            style={{ 
-                              width: `${tokensPerSecond !== 'N/A' ? Math.min((parseFloat(tokensPerSecond) / 100) * 100, 100) : 0}%` 
+                          <div
+                            className="bg-teal-500 h-3 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${tokensPerSecond !== 'N/A' ? Math.min((parseFloat(tokensPerSecond) / 100) * 100, 100) : 0}%`
                             }}
                           ></div>
                         </div>
@@ -586,10 +588,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div 
-                        className="bg-orange-500 h-3 rounded-full transition-all duration-300" 
-                        style={{ 
-                          width: `${result.token_usage?.total_tokens ? Math.min((result.token_usage.total_tokens / 1000) * 100, 100) : 0}%` 
+                      <div
+                        className="bg-orange-500 h-3 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${result.token_usage?.total_tokens ? Math.min((result.token_usage.total_tokens / 1000) * 100, 100) : 0}%`
                         }}
                       ></div>
                     </div>
@@ -604,7 +606,7 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
               <div className="space-y-3">
                 {results.map((result, index) => {
                   // Rough cost estimation based on token usage
-                  const estimatedCost = result.token_usage?.total_tokens 
+                  const estimatedCost = result.token_usage?.total_tokens
                     ? (result.token_usage.total_tokens * 0.00002).toFixed(4) // ~$0.02 per 1K tokens
                     : 'N/A';
                   return (
@@ -614,10 +616,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         <span className="text-sm font-medium text-gray-900">${estimatedCost}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-red-500 h-3 rounded-full transition-all duration-300" 
-                          style={{ 
-                            width: `${estimatedCost !== 'N/A' ? Math.min((parseFloat(estimatedCost) / 0.01) * 100, 100) : 0}%` 
+                        <div
+                          className="bg-red-500 h-3 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${estimatedCost !== 'N/A' ? Math.min((parseFloat(estimatedCost) / 0.01) * 100, 100) : 0}%`
                           }}
                         ></div>
                       </div>
@@ -646,8 +648,8 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                           <span className={`text-sm font-medium ${
-                            rankIndex === 0 ? 'text-yellow-600' : 
-                            rankIndex === 1 ? 'text-gray-600' : 
+                            rankIndex === 0 ? 'text-yellow-600' :
+                            rankIndex === 1 ? 'text-gray-600' :
                             rankIndex === 2 ? 'text-amber-600' : 'text-gray-500'
                           }`}>
                             #{rankIndex + 1}
@@ -659,10 +661,10 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
+                        <div
                           className={`h-3 rounded-full transition-all duration-300 ${
-                            rankIndex === 0 ? 'bg-yellow-500' : 
-                            rankIndex === 1 ? 'bg-gray-500' : 
+                            rankIndex === 0 ? 'bg-yellow-500' :
+                            rankIndex === 1 ? 'bg-gray-500' :
                             rankIndex === 2 ? 'bg-amber-500' : 'bg-gray-400'
                           }`}
                           style={{ width: `${result.overallScore}%` }}
@@ -684,15 +686,15 @@ export const ModelComparison: React.FC<ModelComparisonProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{result.model_provider}/{result.model_name}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {result.compression_ratio ? 
+                          {result.compression_ratio ?
                             `${(result.compression_ratio * 100).toFixed(1)}% of original` : 'N/A'}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-purple-500 h-3 rounded-full transition-all duration-300" 
-                          style={{ 
-                            width: `${result.compression_ratio ? (result.compression_ratio * 100) : 0}%` 
+                        <div
+                          className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${result.compression_ratio ? (result.compression_ratio * 100) : 0}%`
                           }}
                         ></div>
                       </div>

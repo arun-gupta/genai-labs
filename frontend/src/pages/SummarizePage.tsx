@@ -144,6 +144,11 @@ export const SummarizePage: React.FC = () => {
     loadAvailableModels();
   }, []);
 
+  // Debug isComparing changes
+  useEffect(() => {
+    console.log('SummarizePage: isComparing state changed:', isComparing);
+  }, [isComparing]);
+
   const loadAvailableModels = async () => {
     try {
       const models = await apiService.getAvailableModels();
@@ -351,7 +356,8 @@ export const SummarizePage: React.FC = () => {
   const handleModelComparison = async () => {
     if (!validateInput()) return;
     
-    console.log('Starting model comparison...');
+    console.log('SummarizePage: Starting model comparison...');
+    console.log('SummarizePage: Setting isComparing to true');
     setIsComparing(true);
     setError(null);
     setComparisonResults(null);
@@ -377,43 +383,43 @@ export const SummarizePage: React.FC = () => {
         request.file_content = selectedFile;
       }
       
-      console.log('Comparison request:', request);
-      console.log('About to call apiService.compareSummarizationModels...');
+      console.log('SummarizePage: Comparison request:', request);
+      console.log('SummarizePage: About to call apiService.compareSummarizationModels...');
       
       const result = await apiService.compareSummarizationModels(request);
       
-      console.log('API call completed successfully!');
-      console.log('Raw API result:', result);
-      console.log('Result type:', typeof result);
-      console.log('Result keys:', Object.keys(result || {}));
-      console.log('Results array:', result?.results);
-      console.log('Results length:', result?.results?.length);
+      console.log('SummarizePage: API call completed successfully!');
+      console.log('SummarizePage: Raw API result:', result);
+      console.log('SummarizePage: Result type:', typeof result);
+      console.log('SummarizePage: Result keys:', Object.keys(result || {}));
+      console.log('SummarizePage: Results array:', result?.results);
+      console.log('SummarizePage: Results length:', result?.results?.length);
       
       if (result && result.results && result.results.length > 0) {
-        console.log('Setting comparison results...');
+        console.log('SummarizePage: Setting comparison results...');
         setComparisonResults(result);
-        console.log('Comparison results set successfully!');
+        console.log('SummarizePage: Comparison results set successfully!');
         
         // Ensure progress indicators are shown for at least minDisplayTime
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
         
-        console.log(`Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
+        console.log(`SummarizePage: Comparison completed in ${elapsedTime}ms, showing progress for ${remainingTime}ms more`);
         
         setTimeout(() => {
-          console.log('Setting isComparing to false after minimum display time');
+          console.log('SummarizePage: Setting isComparing to false after minimum display time');
           setIsComparing(false);
         }, remainingTime);
         
       } else {
-        console.error('API returned invalid result structure:', result);
+        console.error('SummarizePage: API returned invalid result structure:', result);
         setError('Invalid response from comparison API');
         setIsComparing(false);
       }
       
     } catch (err) {
-      console.error('Comparison error:', err);
-      console.error('Error details:', {
+      console.error('SummarizePage: Comparison error:', err);
+      console.error('SummarizePage: Error details:', {
         message: err.message,
         stack: err.stack,
         name: err.name
@@ -460,11 +466,6 @@ export const SummarizePage: React.FC = () => {
       recommendations: comparisonResults?.recommendations
     });
   }, [comparisonResults]);
-
-  // Debug isComparing changes
-  useEffect(() => {
-    console.log('isComparing state changed:', isComparing);
-  }, [isComparing]);
 
   const getInputContent = () => {
     if (inputType === 'text') return text;
@@ -1088,24 +1089,23 @@ An Open Source AI is an AI system made available under terms and in a way that g
                     selectedModels: selectedModels
                   });
                   
-                  if (comparisonResults) {
-                    console.log('Comparison tab - comparisonResults:', comparisonResults);
+                  if (isComparing || comparisonResults) {
+                    console.log('Comparison tab - showing ModelComparison component');
                     console.log('Comparison tab - isComparing:', isComparing);
-                    console.log('Comparison tab - results length:', comparisonResults.results?.length);
-                    console.log('Comparison tab - first result:', comparisonResults.results?.[0]);
+                    console.log('Comparison tab - comparisonResults:', comparisonResults);
                     
                     return (
                       <ModelComparison
-                        results={comparisonResults.results}
-                        metrics={comparisonResults.comparison_metrics}
-                        recommendations={comparisonResults.recommendations}
+                        results={comparisonResults?.results || []}
+                        metrics={comparisonResults?.comparison_metrics || {}}
+                        recommendations={comparisonResults?.recommendations || []}
                         isComparing={isComparing}
                         comparisonType="summarization"
                         selectedModels={selectedModels.map(m => `${m.provider}/${m.model}`)}
                       />
                     );
                   } else {
-                    console.log('No comparison results, showing empty state');
+                    console.log('No comparison results and not comparing, showing empty state');
                     return (
                       <div className="text-center py-12">
                         <CompareIcon className="mx-auto text-gray-400 mb-4" size={48} />
