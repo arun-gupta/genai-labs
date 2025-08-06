@@ -194,8 +194,45 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
   console.log('Frontend: Suggestions length:', suggestions.length);
   
   if (suggestions.length === 0) {
-    console.log('Frontend: No suggestions, returning null');
-    return null;
+    console.log('Frontend: No suggestions, showing empty state');
+    return (
+      <div className={`space-y-3 ${className}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+            <Lightbulb className="w-4 h-4 text-yellow-500" />
+            <span>Question Suggestions</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {onRefresh && (
+              <button
+                onClick={async () => {
+                  // Clear current suggestions first
+                  setSuggestions([]);
+                  setError(null);
+                  
+                  // Call external refresh function if provided
+                  if (onRefresh) {
+                    await onRefresh();
+                  }
+                  
+                  // Force reload suggestions with fresh data and cache busting
+                  await loadSuggestions(true);
+                }}
+                disabled={isRefreshing}
+                className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh question suggestions based on latest documents"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="text-center py-4 text-gray-500 text-sm">
+          {isLoading ? 'Loading suggestions...' : 'No suggestions available. Try refreshing or upload more documents.'}
+        </div>
+      </div>
+    );
   }
 
   const displayedSuggestions = showAll ? suggestions : suggestions.slice(0, 6);
