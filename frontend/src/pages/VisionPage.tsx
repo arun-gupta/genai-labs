@@ -393,7 +393,12 @@ export const VisionPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Vision AI</h1>
+          <div className="flex items-center space-x-3 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Vision AI</h1>
+            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+              🚧 Work in Progress
+            </span>
+          </div>
           <p className="text-gray-600">Analyze images and generate new ones using AI vision models</p>
           <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
             <span className="flex items-center space-x-1">
