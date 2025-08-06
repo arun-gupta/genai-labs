@@ -552,11 +552,11 @@ export const RAGPage: React.FC = () => {
             />
           </div>
 
-          {/* RAG Settings */}
+          {/* Quick Settings */}
           <div className="card">
             <div className="flex items-center space-x-2 mb-4">
               <Settings className="text-gray-600" size={20} />
-              <h2 className="text-lg font-semibold text-gray-900">RAG Settings</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Quick Settings</h2>
             </div>
             
             <div className="space-y-4">
