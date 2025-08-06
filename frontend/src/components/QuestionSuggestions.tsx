@@ -57,9 +57,8 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
         // For collection suggestions, combine suggestions from all selected collections
         for (const collectionName of collectionNames) {
           try {
-            // Add cache-busting parameter if force refresh is requested
-            const cacheBuster = forceRefresh ? `?t=${Date.now()}` : '';
-            const response = await apiService.getQuestionSuggestions(collectionName + cacheBuster);
+            // Simple call without cache-busting for now
+            const response = await apiService.getQuestionSuggestions(collectionName);
             const collectionSuggestions = response.suggestions || [];
             // Add collection name to suggestions for context
             const labeledSuggestions = collectionSuggestions.map(s => ({
@@ -83,6 +82,7 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
         allSuggestions = organizedSuggestions;
       }
       
+      console.log('Frontend: Received suggestions:', allSuggestions);
       setSuggestions(allSuggestions);
     } catch (err) {
       setError('Failed to load suggestions');
@@ -190,7 +190,11 @@ export const QuestionSuggestions: React.FC<QuestionSuggestionsProps> = ({
     );
   }
 
+  console.log('Frontend: Current suggestions state:', suggestions);
+  console.log('Frontend: Suggestions length:', suggestions.length);
+  
   if (suggestions.length === 0) {
+    console.log('Frontend: No suggestions, returning null');
     return null;
   }
 
