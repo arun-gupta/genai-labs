@@ -78,6 +78,7 @@ export const RAGPage: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
   const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+  const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set());
 
   // Default model combinations for quick comparison
   const defaultModelCombinations = [
@@ -1344,9 +1345,29 @@ export const RAGPage: React.FC = () => {
                               ))}
                             </div>
                           )}
-                          <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                            {source.chunk_text}
-                          </p>
+                          <div>
+                            <div 
+                              className={`text-sm text-gray-700 bg-gray-50 p-3 rounded ${source.chunk_text.length > 300 && !expandedSources.has(source.document_id) ? 'max-h-24 overflow-hidden' : ''}`}
+                            >
+                              {source.chunk_text}
+                            </div>
+                            {source.chunk_text.length > 300 && (
+                              <button
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedSources);
+                                  if (newExpanded.has(source.document_id)) {
+                                    newExpanded.delete(source.document_id);
+                                  } else {
+                                    newExpanded.add(source.document_id);
+                                  }
+                                  setExpandedSources(newExpanded);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-xs mt-1"
+                              >
+                                {expandedSources.has(source.document_id) ? 'Show less' : 'Show more'}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

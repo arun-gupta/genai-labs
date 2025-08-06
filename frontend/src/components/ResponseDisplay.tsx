@@ -21,6 +21,7 @@ export const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
   modelProvider,
 }) => {
   const [copied, setCopied] = React.useState(false);
+  const [showFullContent, setShowFullContent] = React.useState(false);
 
   const copyToClipboard = async () => {
     try {
@@ -81,7 +82,19 @@ export const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
       <div className="bg-gray-50 rounded-lg p-4 mb-4">
         <div className="prose prose-sm max-w-none">
           {content ? (
-            <div className="whitespace-pre-wrap text-gray-800">{content}</div>
+            <div>
+              <div className={`whitespace-pre-wrap text-gray-800 ${!showFullContent && content.length > 500 ? 'max-h-32 overflow-hidden' : ''}`}>
+                {content}
+              </div>
+              {content.length > 500 && (
+                <button
+                  onClick={() => setShowFullContent(!showFullContent)}
+                  className="text-blue-600 hover:text-blue-800 text-xs mt-2"
+                >
+                  {showFullContent ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
           ) : (
             <div className="text-gray-500 italic">
               {isStreaming ? 'Generating response...' : 'No response yet'}

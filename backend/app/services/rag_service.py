@@ -383,7 +383,12 @@ Instructions:
 Question: {question}"""
             
             # Get model and generate response
-            model = self.model_factory.get_model(model_provider, model_name)
+            model = self.model_factory.get_model(
+                model_provider, 
+                model_name, 
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
             
             # Handle Ollama models differently
             if model_provider == "ollama":
@@ -636,7 +641,12 @@ Instructions:
 Question: {question}"""
             
             # Get model and generate streaming response
-            model = self.model_factory.get_model(model_provider, model_name)
+            model = self.model_factory.get_model(
+                model_provider, 
+                model_name, 
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
             
             # Handle Ollama models differently for streaming
             if model_provider == "ollama":

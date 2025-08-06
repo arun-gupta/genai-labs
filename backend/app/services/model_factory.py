@@ -70,11 +70,16 @@ class ModelFactory:
         # Remove temperature, streaming, and max_tokens from kwargs to avoid duplicates
         model_kwargs = {k: v for k, v in kwargs.items() if k not in ['temperature', 'streaming', 'max_tokens']}
         
+        # Provide default max_tokens for Anthropic if None
+        max_tokens = kwargs.get('max_tokens')
+        if max_tokens is None:
+            max_tokens = 1000  # Default value for Anthropic models
+        
         return ChatAnthropic(
             model=model,
             anthropic_api_key=settings.anthropic_api_key,
             temperature=kwargs.get('temperature', 0.7),
-            max_tokens=kwargs.get('max_tokens'),
+            max_tokens=max_tokens,
             streaming=kwargs.get('streaming', True),
             **model_kwargs
         )
