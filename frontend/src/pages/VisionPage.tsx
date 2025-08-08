@@ -31,8 +31,8 @@ interface ImageGenerationResult {
 export const VisionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'analysis' | 'generation' | 'gallery'>('analysis');
   const [selectedProvider, setSelectedProvider] = useState('openai');
-  const [selectedModel, setSelectedModel] = useState('gpt-4-vision-preview');
-  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState('gpt-5');
+  const [availableModels, setAvailableModels] = useState<any>(null);
   
   // Image Analysis State
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
@@ -614,10 +614,9 @@ export const VisionPage: React.FC = () => {
               <div className="mb-6">
                 <ModelSelector
                   selectedProvider={selectedProvider}
-                  setSelectedProvider={setSelectedProvider}
+                  onProviderChange={setSelectedProvider}
                   selectedModel={selectedModel}
-                  setSelectedModel={setSelectedModel}
-                  availableModels={availableModels}
+                  onModelChange={setSelectedModel}
                 />
               </div>
 
@@ -885,10 +884,9 @@ export const VisionPage: React.FC = () => {
               <div className="mb-6">
                 <ModelSelector
                   selectedProvider={selectedProvider}
-                  setSelectedProvider={setSelectedProvider}
+                  onProviderChange={setSelectedProvider}
                   selectedModel={selectedModel}
-                  setSelectedModel={setSelectedModel}
-                  availableModels={availableModels}
+                  onModelChange={setSelectedModel}
                 />
               </div>
 

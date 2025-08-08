@@ -40,7 +40,11 @@ class ModelFactory:
         
         # Use vision model if requested
         if vision_capable:
-            model = model_name or "gpt-4-vision-preview"
+            # GPT-5 has built-in vision capabilities, so use it if available
+            if model_name == "gpt-5":
+                model = "gpt-5"
+            else:
+                model = model_name or "gpt-4-vision-preview"
         else:
             model = model_name or settings.openai_model
             
@@ -63,7 +67,11 @@ class ModelFactory:
         
         # Use vision model if requested
         if vision_capable:
-            model = model_name or "claude-3-5-sonnet-20241022"
+            # Claude Sonnet 4 and Opus 4 have built-in vision capabilities
+            if model_name in ["claude-sonnet-4", "claude-opus-4"]:
+                model = model_name
+            else:
+                model = model_name or "claude-sonnet-4"  # Default to latest vision-capable model
         else:
             model = model_name or settings.anthropic_model
             

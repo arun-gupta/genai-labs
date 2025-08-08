@@ -528,13 +528,13 @@ async def get_available_models():
             {
                 "id": "openai",
                 "name": "OpenAI",
-                "models": ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
+                "models": ["gpt-5", "gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
                 "requires_api_key": True
             },
             {
                 "id": "anthropic",
                 "name": "Anthropic",
-                "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
+                "models": ["claude-sonnet-4", "claude-opus-4", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
                 "requires_api_key": True
             }
         ],
