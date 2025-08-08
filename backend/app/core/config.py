@@ -6,11 +6,11 @@ import os
 class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: str = ""
-    openai_model: str = "gpt-4"
+    openai_model: str = "gpt-5"  # Updated to use GPT-5 as default
     
     # Anthropic Configuration
     anthropic_api_key: str = ""
-    anthropic_model: str = "claude-3-5-sonnet-20241022"
+    anthropic_model: str = "claude-sonnet-4"  # Updated to latest Claude model
     
     # Ollama Configuration
     ollama_base_url: str = "http://localhost:11434"

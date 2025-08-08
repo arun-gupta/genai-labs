@@ -184,6 +184,40 @@ npm install
 npm run dev
 ```
 
+### 4. Ollama Setup (Optional - For Local Models)
+
+If you want to use local models via Ollama:
+
+```bash
+# Install Ollama (if not already installed)
+# Visit https://ollama.ai for installation instructions
+
+# Start Ollama server
+ollama serve
+
+# Download and run a model
+ollama pull mistral:7b
+ollama run mistral:7b
+
+# Keep models running indefinitely for better performance
+curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'
+```
+
+**Benefits of keeping models loaded:**
+- ⚡ **Instant responses** - No loading delay for the first request
+- 🔄 **Consistent performance** - Eliminates cold start latency
+- 🏭 **Production ready** - Ideal for server deployments
+
+**Managing running models:**
+```bash
+# Check which models are currently running
+ollama ps
+
+# Stop a model to free memory
+curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
+```
+
 ## 🐛 Troubleshooting
 
 ### Common Issues

@@ -103,8 +103,8 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 ## 🤖 Supported Models
 
 ### Cloud Models
-- **OpenAI**: GPT-3.5-turbo, GPT-4, GPT-4-turbo, GPT-4-vision-preview
-- **Anthropic**: Claude-3-haiku, Claude-3-sonnet, Claude-3-opus
+- **OpenAI**: GPT-5, GPT-4, GPT-3.5-turbo, GPT-4-turbo, GPT-4-vision-preview
+- **Anthropic**: Claude Sonnet 4, Claude Opus 4, Claude 3.5 Sonnet, Claude 3.5 Haiku, Claude 3 Opus
 
 ### Local Models (via Ollama)
 - **GPT-OSS-20B**: OpenAI's open-weight model with advanced reasoning and agentic capabilities

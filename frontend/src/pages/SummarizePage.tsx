@@ -46,8 +46,17 @@ export const SummarizePage: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Type for model combinations
+  interface ModelCombination {
+    name: string;
+    description: string;
+    models: Array<{ provider: string; model: string }>;
+    disabled?: boolean;
+    disabledReason?: string | null;
+  }
+
   // Default model combinations for quick comparison (static like GeneratePage)
-  const defaultModelCombinations = [
+  const defaultModelCombinations: ModelCombination[] = [
     {
       name: "Compare All Local Models",
       description: "Compare all available Ollama models",
@@ -76,8 +85,8 @@ export const SummarizePage: React.FC = () => {
       description: "Compare high-quality models for accuracy",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-4" },
-        { provider: "anthropic", model: "claude-3-5-sonnet-20241022" }
+        { provider: "openai", model: "gpt-5" },
+        { provider: "anthropic", model: "claude-sonnet-4" }
       ]
     },
     {
@@ -85,8 +94,8 @@ export const SummarizePage: React.FC = () => {
       description: "Compare models with advanced reasoning and analysis capabilities",
       models: [
         { provider: "ollama", model: "gpt-oss:20b" },
-        { provider: "openai", model: "gpt-4" },
-        { provider: "anthropic", model: "claude-3-5-sonnet-20241022" }
+        { provider: "openai", model: "gpt-5" },
+        { provider: "anthropic", model: "claude-sonnet-4" }
       ]
     }
   ];
@@ -127,6 +136,54 @@ export const SummarizePage: React.FC = () => {
       return combination.models.length;
     };
   }, [getAllLocalModels]);
+
+  // Filter and modify combinations based on model availability
+  const getAvailableCombinations = useMemo(() => {
+    if (!availableModels?.providers) {
+      return defaultModelCombinations;
+    }
+
+    const ollamaProvider = availableModels.providers.find((p: any) => p.id === 'ollama');
+    const hasOllamaModels = ollamaProvider && ollamaProvider.models && ollamaProvider.models.length > 0;
+
+    return defaultModelCombinations.map(combination => {
+      // For "Compare All Local Models", always show but disable if no models
+      if (combination.name === "Compare All Local Models") {
+        return {
+          ...combination,
+          disabled: !hasOllamaModels,
+          disabledReason: hasOllamaModels ? null : "No Ollama models running"
+        };
+      }
+
+      // For other combinations, filter out unavailable Ollama models but keep cloud models
+      const availableModelsInCombination = combination.models.filter((model: any) => {
+        if (model.provider === 'ollama') {
+          return hasOllamaModels;
+        }
+        return true; // Keep cloud models
+      });
+
+      // Only disable if ALL models in the combination are unavailable
+      const hasOllamaInCombination = combination.models.some((model: any) => model.provider === 'ollama');
+      const hasCloudInCombination = combination.models.some((model: any) => model.provider !== 'ollama');
+      const isDisabled = hasOllamaInCombination && !hasOllamaModels && !hasCloudInCombination;
+
+      // Update description if some Ollama models were filtered out
+      let updatedDescription = combination.description;
+      if (hasOllamaInCombination && !hasOllamaModels && hasCloudInCombination) {
+        updatedDescription = `${combination.description} (cloud models only)`;
+      }
+
+      return {
+        ...combination,
+        models: availableModelsInCombination,
+        disabled: isDisabled,
+        disabledReason: isDisabled ? "No models available" : null,
+        description: updatedDescription
+      };
+    });
+  }, [availableModels, getAllLocalModels]);
 
   // Language detection effect
   useEffect(() => {
@@ -570,7 +627,7 @@ export const SummarizePage: React.FC = () => {
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                  {defaultModelCombinations.map((combination, index) => (
+                  {getAvailableCombinations.map((combination, index) => (
                     <button
                       key={index}
                       onClick={() => {
@@ -580,16 +637,32 @@ export const SummarizePage: React.FC = () => {
                           setSelectedModels(combination.models);
                         }
                       }}
-                      disabled={isComparing}
-                      className="w-full text-left p-2 rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                      disabled={isComparing || combination.disabled}
+                      className={`w-full text-left p-2 rounded-lg border transition-colors ${
+                        combination.disabled 
+                          ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
+                          : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+                      }`}
                     >
                       <div className="text-sm font-medium text-gray-900">
                         {combination.name}
-                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {getModelCount(combination)} models
-                        </span>
+                        {getModelCount(combination) > 0 && !combination.disabled && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {getModelCount(combination)} models
+                          </span>
+                        )}
+                        {combination.disabled && (
+                          <span className="ml-2 text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                            Unavailable
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-600">{combination.description}</div>
+                      {combination.disabled && combination.disabledReason && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {combination.disabledReason}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -619,6 +692,37 @@ export const SummarizePage: React.FC = () => {
                         <span className="text-sm text-gray-700">{model}</span>
                       </label>
                     ))}
+                    
+                    {/* Show helpful message when no models are available for Ollama */}
+                    {provider.id === 'ollama' && (!provider.models || provider.models.length === 0) && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-2">
+                          <div className="flex-shrink-0">
+                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">!</span>
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-blue-700 mb-2">
+                              No Ollama models are currently running. To use local models:
+                            </p>
+                            <div className="text-xs text-blue-600 space-y-1">
+                              <div>1. Start Ollama: <code className="bg-blue-100 px-1 rounded">ollama serve</code></div>
+                              <div>2. Download a model: <code className="bg-blue-100 px-1 rounded">ollama pull mistral:7b</code></div>
+                              <div>3. Run the model: <code className="bg-blue-100 px-1 rounded">ollama run mistral:7b</code></div>
+                            </div>
+                            <div className="mt-2">
+                              <a
+                                href="/models"
+                                className="text-xs text-blue-600 hover:text-blue-700 underline"
+                              >
+                                Browse available models →
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )) || (

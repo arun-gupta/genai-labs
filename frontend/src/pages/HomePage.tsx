@@ -74,19 +74,19 @@ export const HomePage: React.FC = () => {
   const models = [
     {
       name: 'OpenAI',
-      description: 'GPT-4, GPT-3.5 Turbo, and more',
+      description: 'GPT-5, GPT-4, GPT-3.5 Turbo, and more',
       icon: Brain,
       requiresKey: true,
-      models: ['gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo'],
+      models: ['gpt-5', 'gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo'],
       features: ['Advanced reasoning', 'Code generation', 'Real-time streaming']
     },
     {
       name: 'Anthropic',
-      description: 'Claude models for advanced reasoning',
+      description: 'Latest Claude models with hybrid reasoning',
       icon: Brain,
       requiresKey: true,
-      models: ['claude-3-sonnet', 'claude-3-haiku', 'claude-2.1'],
-      features: ['Constitutional AI', 'Safety-focused', 'Long context']
+      models: ['claude-sonnet-4', 'claude-opus-4', 'claude-3.5-sonnet', 'claude-3.5-haiku'],
+      features: ['Hybrid reasoning', 'Advanced autonomy', '200K context window']
     },
     {
       name: 'Ollama (Local)',
@@ -101,25 +101,25 @@ export const HomePage: React.FC = () => {
   const modelCategories = [
     {
       title: 'High Performance',
-      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Mistral-7B', 'GPT-4'],
+      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Mistral-7B', 'GPT-5'],
       icon: Zap,
       color: 'text-blue-600'
     },
     {
       title: 'Coding & Development',
-      models: ['DeepSeek Coder', 'Code Llama', 'GPT-4', 'Claude-3'],
+      models: ['DeepSeek Coder', 'Code Llama', 'GPT-5', 'Claude Sonnet 4'],
       icon: Code,
       color: 'text-green-600'
     },
     {
       title: 'Reasoning & Analysis',
-      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Phi-3', 'Claude-3'],
+      models: ['Claude Opus 4', 'GPT-OSS-20B', 'Qwen3-8B', 'Claude Sonnet 4'],
       icon: Brain,
       color: 'text-purple-600'
     },
     {
       title: 'Multilingual',
-      models: ['Qwen3-8B', 'BLOOM', 'Mistral-7B', 'GPT-4'],
+      models: ['Qwen3-8B', 'BLOOM', 'Mistral-7B', 'GPT-5'],
       icon: Globe,
       color: 'text-orange-600'
     }

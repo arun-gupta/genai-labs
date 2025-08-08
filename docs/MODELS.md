@@ -32,14 +32,17 @@ The application includes a comprehensive **Models Explorer** page that showcases
 ## 🚀 Cloud Models
 
 ### OpenAI Models
+- **GPT-5** - Latest and most advanced reasoning and analysis
 - **GPT-4** - Advanced reasoning and analysis
 - **GPT-3.5 Turbo** - Fast and cost-effective generation
 - **GPT-4 Turbo** - Enhanced performance with larger context
 
 ### Anthropic Models
-- **Claude 3 Opus** - Most capable model for complex tasks
-- **Claude 3 Sonnet** - Balanced performance and speed
-- **Claude 3 Haiku** - Fast and efficient for simple tasks
+- **Claude Sonnet 4** - Latest flagship model with hybrid reasoning and 200K context
+- **Claude Opus 4** - Most powerful model with advanced autonomy and vision capabilities
+- **Claude 3.5 Sonnet** - Enhanced reasoning with excellent coding abilities
+- **Claude 3.5 Haiku** - Fastest model for simple tasks with improved efficiency
+- **Claude 3 Opus** - High-quality model for complex analysis
 
 ## 📊 Model Comparison
 
@@ -47,8 +50,12 @@ The application includes a comprehensive **Models Explorer** page that showcases
 
 | Model | Size | Speed | Quality | Use Case |
 |-------|------|-------|---------|----------|
+| **Claude Opus 4** | Very Large | Medium | Exceptional | Most advanced reasoning and autonomy |
+| **Claude Sonnet 4** | Large | Fast | Very High | Latest reasoning with hybrid thinking |
+| **GPT-5** | Large | Medium | Very High | Latest reasoning and analysis |
 | **GPT-4** | Large | Medium | High | Complex reasoning |
-| **Claude 3** | Large | Medium | High | Analysis & writing |
+| **Claude 3.5 Sonnet** | Large | Fast | High | Enhanced coding and analysis |
+| **Claude 3.5 Haiku** | Medium | Very Fast | Good | Fast responses and simple tasks |
 | **Mistral 7B** | Medium | Fast | Good | General purpose |
 | **Llama 3.1** | Small | Very Fast | Good | Quick responses |
 | **Code Llama** | Medium | Fast | Good | Programming |
@@ -94,19 +101,19 @@ ollama pull qwen2.5:3b
 ## 🎯 Model Selection Guide
 
 ### For Text Generation
-- **Creative Writing**: GPT-4, Claude 3, Mistral 7B
-- **Business Content**: GPT-4, Claude 3 Sonnet
-- **Technical Writing**: GPT-4, Claude 3, Code Llama
+- **Creative Writing**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
+- **Business Content**: Claude Sonnet 4, GPT-5, GPT-4, Claude 3.5 Sonnet
+- **Technical Writing**: Claude Opus 4, Claude Sonnet 4, GPT-5, Code Llama
 
 ### For Summarization
-- **Long Documents**: GPT-4, Claude 3 Opus
-- **Quick Summaries**: GPT-3.5 Turbo, Mistral 7B
-- **Technical Content**: Claude 3, Code Llama
+- **Long Documents**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
+- **Quick Summaries**: Claude 3.5 Haiku, GPT-3.5 Turbo, Mistral 7B
+- **Technical Content**: Claude Sonnet 4, Claude 3.5 Sonnet, Code Llama
 
 ### For Development
-- **Code Generation**: Code Llama, DeepSeek Coder
-- **Code Review**: GPT-4, Claude 3
-- **Documentation**: GPT-4, Claude 3
+- **Code Generation**: Claude Sonnet 4, Code Llama, DeepSeek Coder
+- **Code Review**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
+- **Documentation**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
 
 ## ⚡ Performance Tips
 
@@ -117,10 +124,13 @@ ollama pull qwen2.5:3b
 - **Close other applications** to free up RAM
 
 ### Cloud Models
-- **Use GPT-3.5 Turbo** for cost-effective generation
-- **Use GPT-4** for complex reasoning tasks
+- **Use Claude 3.5 Haiku** for fast, cost-effective generation
+- **Use Claude Sonnet 4** for balanced performance and advanced reasoning
+- **Use Claude Opus 4** for the most sophisticated and autonomous tasks
+- **Use GPT-5** for the latest OpenAI reasoning capabilities
 - **Monitor API usage** to avoid rate limits
 - **Cache responses** when possible
+- **Use hybrid reasoning mode** with Claude Sonnet 4 for complex analysis
 
 ## 🔍 Model Status
 
@@ -145,6 +155,38 @@ ollama pull modelname
 
 # Check model info
 ollama show modelname
+```
+
+### Keeping Models Running Indefinitely
+
+By default, Ollama unloads models after a period of inactivity to free up memory. For production environments or when you want immediate responses, you can keep models loaded indefinitely:
+
+```bash
+# Keep a model running forever (until manually stopped)
+curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": -1}'
+
+# Examples for other models
+curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "codellama:3b", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "qwen2.5:3b", "keep_alive": -1}'
+```
+
+**Benefits of keeping models loaded:**
+- ⚡ **Instant responses** - No loading delay for the first request
+- 🔄 **Consistent performance** - Eliminates cold start latency
+- 🏭 **Production ready** - Ideal for server deployments and high-traffic applications
+
+**Memory considerations:**
+- Each loaded model consumes RAM based on its size (3B ≈ 4GB, 7B ≈ 8GB)
+- Monitor system resources when keeping multiple models loaded
+- Use `ollama ps` to check which models are currently running
+
+```bash
+# Check currently running models
+ollama ps
+
+# Stop a specific model to free memory
+curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
 ```
 
 ## 🛠️ Troubleshooting

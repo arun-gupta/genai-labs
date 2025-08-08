@@ -389,7 +389,7 @@ Get document analytics.
 {
   "analytics": {
     "topics": ["AI", "Machine Learning", "Data Science"],
-    "entities": ["OpenAI", "GPT-4", "Neural Networks"],
+    "entities": ["OpenAI", "GPT-5", "GPT-4", "Neural Networks"],
     "readability": {
       "flesch_reading_ease": 65.2,
       "gunning_fog": 12.1
@@ -459,7 +459,7 @@ Currently, the API does not require authentication for local development. For pr
 ### OpenAI Rate Limits
 - **TPM (Tokens Per Minute)**: 10,000 tokens per minute
 - **RPM (Requests Per Minute)**: Varies by model and account tier
-- **Context Length**: GPT-4 has 8,192 token context limit
+- **Context Length**: GPT-5 has 128K token context limit, GPT-4 has 8,192 token context limit
 
 ### Handling Rate Limits
 The API includes built-in rate limit handling:
