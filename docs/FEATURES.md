@@ -85,6 +85,35 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Safari**: Full support for text-to-speech, limited speech recognition
 - **Mobile Browsers**: Limited support, varies by platform
 
+## 🎨 Vision & Image Generation
+
+### Image Analysis
+- **Multi-modal Vision**: Upload and analyze images with AI models
+- **Detailed Descriptions**: Get comprehensive image descriptions
+- **Object Recognition**: Identify objects, people, and scenes
+- **Text Extraction**: Extract and analyze text within images
+- **Comparative Analysis**: Compare vision models side-by-side
+
+### Image Generation
+- **Text-to-Image**: Generate images from detailed text prompts
+- **Artistic Styles**: Choose from 14+ predefined artistic styles
+- **Local Generation**: Use Stable Diffusion via AUTOMATIC1111 WebUI or OllamaDiffuser
+- **Cloud Generation**: High-quality generation via OpenAI DALL-E
+- **Flexible Sizing**: Multiple resolution options (512x512 to 1024x1024)
+- **Quality Control**: Standard and HD quality options
+- **Batch Generation**: Generate multiple images at once
+
+### Supported Models
+- **Vision Models**: GPT-5, GPT-4 Vision, Claude Sonnet 4, Claude Opus 4, LLaVA, Gemma 3
+- **Local Image Generation**: Stable Diffusion 1.5, 2.1, XL, FLUX.1 models
+- **Cloud Image Generation**: DALL-E 2, DALL-E 3
+
+### Local Setup Options
+- **AUTOMATIC1111 WebUI**: Full-featured Stable Diffusion interface (port 7860)
+- **OllamaDiffuser**: Lightweight local image generation (port 8000)
+- **ComfyUI**: Node-based workflow system for advanced users
+- **Privacy-First**: All local generation keeps data on your machine
+
 ## 📊 Analytics & Export
 
 ### Generation Analytics
@@ -135,6 +164,8 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Text Generation**: Compare models for creative and technical writing
 - **Text Summarization**: Compare models for different summary types
 - **Q&A over Documents**: Compare models for document question answering
+- **Image Analysis**: Upload and analyze images with vision-capable models
+- **Image Generation**: Generate images from text prompts using local or cloud models
 
 ### Export Options
 - **Multiple Formats**: PDF, Word, Markdown, HTML export

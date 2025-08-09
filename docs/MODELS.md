@@ -189,6 +189,102 @@ ollama ps
 curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
 ```
 
+## 🎨 Image Generation Models
+
+### Cloud-Based Image Generation
+
+#### OpenAI DALL-E
+- **DALL-E 3** - Latest, highest quality image generation
+- **DALL-E 2** - Previous generation, good quality and speed
+- **Features**: Natural language prompts, high resolution, style variations
+- **API Key Required**: Yes (OpenAI account)
+
+### Local Image Generation
+
+#### Stable Diffusion (via AUTOMATIC1111 WebUI)
+```bash
+# Installation (Linux/macOS)
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+cd stable-diffusion-webui
+./webui.sh --api
+
+# Windows
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+cd stable-diffusion-webui
+webui-user.bat
+```
+
+**Supported Models:**
+- **Stable Diffusion 1.5** - Fast, good quality baseline model
+- **Stable Diffusion 2.1** - Improved version with better composition
+- **Stable Diffusion XL** - Higher resolution, more detailed images
+- **Custom Models** - Community fine-tuned models from Civitai, Hugging Face
+
+**Features:**
+- Full control over generation parameters
+- Custom model support
+- Advanced samplers and schedulers
+- ControlNet integration
+- Upscaling and post-processing
+
+#### OllamaDiffuser
+```bash
+# Installation
+pip install ollamadiffuser
+
+# Pull and run models
+ollamadiffuser pull flux.1-schnell
+ollamadiffuser run flux.1-schnell
+
+# Generate images via API
+curl -X POST http://localhost:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A beautiful sunset over mountains"}' \
+  --output image.png
+```
+
+**Supported Models:**
+- **FLUX.1 Schnell** - Fast, high-quality generation
+- **FLUX.1 Dev** - Development version with enhanced capabilities
+- **Stable Diffusion 3.5** - Latest Stability AI model
+- **Stable Diffusion 1.5** - Classic baseline model
+
+**Features:**
+- Ollama-style model management
+- Simple API interface
+- Lightweight deployment
+- Cross-platform support
+
+### Integration with Ollama
+
+When using Ollama for image generation, the system automatically:
+1. **Tries AUTOMATIC1111 WebUI** (http://localhost:7860) first
+2. **Falls back to OllamaDiffuser** (http://localhost:8000) if WebUI unavailable
+3. **Provides clear error messages** if neither service is running
+
+### Model Selection Guide
+
+| Use Case | Recommended Model | Setup Complexity | Quality | Speed |
+|----------|------------------|------------------|---------|-------|
+| **Quick Testing** | DALL-E 3 | Low (API key) | Excellent | Fast |
+| **Privacy/Local** | Stable Diffusion 1.5 | Medium | Good | Medium |
+| **High Quality** | Stable Diffusion XL | Medium | Excellent | Slow |
+| **Experimental** | FLUX.1 models | Medium | Very Good | Fast |
+| **Production** | AUTOMATIC1111 + Custom | High | Excellent | Variable |
+
+### Performance Considerations
+
+#### Hardware Requirements
+- **Minimum**: 8GB RAM, 4GB VRAM (for SD 1.5)
+- **Recommended**: 16GB RAM, 8GB VRAM (for SD XL)
+- **Optimal**: 32GB RAM, 12GB+ VRAM (for multiple models)
+
+#### Generation Speed
+- **DALL-E 3**: ~10-30 seconds (cloud latency)
+- **SD 1.5**: ~5-15 seconds (local, depends on hardware)
+- **SD XL**: ~15-45 seconds (local, higher quality)
+- **FLUX.1**: ~10-25 seconds (local, optimized)
+
 ## 🛠️ Troubleshooting
 
 ### Common Issues

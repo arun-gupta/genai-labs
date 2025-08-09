@@ -218,6 +218,97 @@ ollama ps
 curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
 ```
 
+### 5. Local Image Generation Setup (Optional)
+
+For privacy-focused, local image generation without cloud dependencies:
+
+#### Option A: AUTOMATIC1111 Stable Diffusion WebUI (Recommended)
+
+```bash
+# Install Git LFS (if not already installed)
+git lfs install
+
+# Clone the repository
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+cd stable-diffusion-webui
+
+# Linux/macOS: Run with API enabled
+./webui.sh --api --listen
+
+# Windows: Run with API enabled
+webui-user.bat
+# Add to webui-user.bat: set COMMANDLINE_ARGS=--api --listen
+```
+
+**Download Models:**
+```bash
+# Navigate to models/Stable-diffusion directory
+cd models/Stable-diffusion
+
+# Download Stable Diffusion 1.5 (recommended starter model)
+wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.ckpt
+
+# Or download via WebUI interface at http://localhost:7860
+```
+
+**Verify Installation:**
+- Access WebUI at: http://localhost:7860
+- API should be available at: http://localhost:7860/docs
+- Test generation in the WebUI before using with our app
+
+#### Option B: OllamaDiffuser (Lightweight Alternative)
+
+```bash
+# Install OllamaDiffuser
+pip install ollamadiffuser
+
+# Pull and run a model
+ollamadiffuser pull flux.1-schnell
+ollamadiffuser serve
+
+# Verify installation
+curl -X POST http://localhost:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A red rose"}'
+```
+
+**Available Models:**
+- `flux.1-schnell` - Fast, high-quality (recommended)
+- `flux.1-dev` - Development version with more features
+- `stable-diffusion-3.5` - Latest Stability AI model
+- `stable-diffusion-1.5` - Classic model
+
+#### Hardware Requirements
+
+**Minimum (SD 1.5):**
+- 8GB RAM
+- 4GB VRAM (GPU) or 16GB RAM (CPU-only)
+- 10GB free disk space
+
+**Recommended (SD XL/FLUX):**
+- 16GB RAM
+- 8GB VRAM (GPU) or 32GB RAM (CPU-only)
+- 20GB free disk space
+
+**Optimal (Multiple models):**
+- 32GB+ RAM
+- 12GB+ VRAM
+- 50GB+ free disk space
+
+#### Integration with Our App
+
+Once your local image generation is running:
+
+1. **Open Vision AI page** in the app
+2. **Select "Ollama" or "Stable Diffusion"** as provider
+3. **Choose your model** from the dropdown
+4. **Start generating images** locally and privately!
+
+The app automatically detects and connects to:
+- AUTOMATIC1111 WebUI (port 7860)
+- OllamaDiffuser (port 8000)
+```
+
 ## 🐛 Troubleshooting
 
 ### Common Issues

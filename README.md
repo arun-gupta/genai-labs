@@ -31,7 +31,20 @@ cd genai-labs
 
 ## 🆕 Recent Updates
 
-### Summary Types Enhancement (Latest)
+### Local Image Generation Support (Latest)
+- **🎨 Stable Diffusion Integration** - Full support for AUTOMATIC1111 WebUI and OllamaDiffuser
+- **🏠 Privacy-First Generation** - Generate images locally without cloud dependencies
+- **🎭 14+ Artistic Styles** - Photorealistic, Oil Painting, Anime, Cyberpunk, and more
+- **⚡ Ollama Image Support** - Use Ollama provider for both vision analysis AND image generation
+- **🔧 Multiple Local Options** - Choose between WebUI (port 7860) or OllamaDiffuser (port 8000)
+- **📱 Enhanced Vision UI** - Improved user experience with setup guidance and status indicators
+
+### Model Updates
+- **🚀 GPT-5 Support** - Latest OpenAI model with advanced reasoning capabilities
+- **🧠 Claude Sonnet 4 & Opus 4** - Latest Anthropic models with hybrid reasoning and 200K context
+- **🔄 Updated Quick Combinations** - Enhanced model comparison with latest models
+
+### Summary Types Enhancement
 - **📊 Executive Summary** - High-level summaries for decision-makers with recommendations and actionable takeaways
 - **🔧 Technical Summary** - Technical details, specifications, and methodologies for technical content
 - **📰 News Summary** - News-style summaries following 5W1H format for journalistic content

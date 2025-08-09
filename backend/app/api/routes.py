@@ -536,6 +536,13 @@ async def get_available_models():
                 "name": "Anthropic",
                 "models": ["claude-sonnet-4", "claude-opus-4", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
                 "requires_api_key": True
+            },
+            {
+                "id": "stable_diffusion",
+                "name": "Stable Diffusion (Local)",
+                "models": ["stable-diffusion-1.5", "stable-diffusion-2.1", "stable-diffusion-xl", "flux.1-schnell", "flux.1-dev"],
+                "requires_api_key": False,
+                "description": "Local image generation via Stable Diffusion WebUI or OllamaDiffuser"
             }
         ],
         "ollama_models": ollama_models_data,

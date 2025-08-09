@@ -115,10 +115,41 @@ export const VisionPage: React.FC = () => {
     'A cozy coffee shop interior with warm lighting and people working',
     'A futuristic cityscape with flying cars and neon lights',
     'A peaceful garden with blooming flowers and butterflies',
-    'A professional portrait of a confident business person',
-    'An underwater scene with colorful coral reefs and fish',
-    'A magical forest with glowing mushrooms and fairy lights',
-    'A modern minimalist kitchen with clean lines and natural light'
+    'A professional portrait of a confident business person in oil painting style',
+    'An underwater scene with colorful coral reefs and fish in watercolor style',
+    'A magical forest with glowing mushrooms and fairy lights in anime style',
+    'A modern minimalist kitchen with clean lines and natural light',
+    'A vintage steam locomotive crossing a mountain bridge',
+    'A cyberpunk street scene with neon signs and rain',
+    'An abstract representation of music and sound waves',
+    'A renaissance-style portrait of a modern tech entrepreneur'
+  ];
+
+  const artisticStyles = [
+    { value: '', label: 'Default Style' },
+    { value: 'photorealistic', label: 'Photorealistic' },
+    { value: 'oil painting', label: 'Oil Painting' },
+    { value: 'watercolor', label: 'Watercolor' },
+    { value: 'digital art', label: 'Digital Art' },
+    { value: 'anime', label: 'Anime Style' },
+    { value: 'cartoon', label: 'Cartoon' },
+    { value: 'sketch', label: 'Pencil Sketch' },
+    { value: 'pop art', label: 'Pop Art' },
+    { value: 'impressionist', label: 'Impressionist' },
+    { value: 'surreal', label: 'Surreal' },
+    { value: 'minimalist', label: 'Minimalist' },
+    { value: 'vintage', label: 'Vintage' },
+    { value: 'cyberpunk', label: 'Cyberpunk' },
+    { value: 'steampunk', label: 'Steampunk' },
+    { value: 'gothic', label: 'Gothic' },
+    { value: 'art deco', label: 'Art Deco' },
+    { value: 'pixel art', label: 'Pixel Art' },
+    { value: 'abstract', label: 'Abstract' },
+    { value: 'renaissance', label: 'Renaissance Style' },
+    { value: 'baroque', label: 'Baroque' },
+    { value: 'cubist', label: 'Cubist' },
+    { value: 'neon', label: 'Neon/Synthwave' },
+    { value: 'film noir', label: 'Film Noir' }
   ];
 
   // Load available models
@@ -299,6 +330,11 @@ export const VisionPage: React.FC = () => {
       return;
     }
 
+    if (selectedProvider === 'ollama') {
+      alert('Ollama does not support image generation. Please switch to OpenAI or Anthropic.');
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const result = await apiService.generateImage({
@@ -317,7 +353,12 @@ export const VisionPage: React.FC = () => {
       setResultsTab('response'); // Switch to response tab when results are available
     } catch (error) {
       console.error('Image generation failed:', error);
-      alert('Image generation failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      if (errorMessage.includes('Ollama image generation not yet implemented')) {
+        alert('Ollama image generation is not yet supported. Please use OpenAI (DALL-E) or Anthropic for image generation.');
+      } else {
+        alert(`Image generation failed: ${errorMessage}. Please try again.`);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -870,13 +911,17 @@ export const VisionPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Artistic Style
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={artisticStyle}
                     onChange={(e) => setArtisticStyle(e.target.value)}
-                    placeholder="e.g., oil painting, digital art"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    {artisticStyles.map((style) => (
+                      <option key={style.value} value={style.value}>
+                        {style.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -888,6 +933,51 @@ export const VisionPage: React.FC = () => {
                   selectedModel={selectedModel}
                   onModelChange={setSelectedModel}
                 />
+                
+                {/* Info about local image generation */}
+                {selectedProvider === 'ollama' && (
+                  <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-blue-900 mb-1">
+                          Local Image Generation via Stable Diffusion
+                        </h4>
+                        <p className="text-sm text-blue-700">
+                          Ollama will use your local Stable Diffusion WebUI (port 7860) or OllamaDiffuser (port 8000) for image generation. Make sure one of these services is running.
+                        </p>
+                        <div className="mt-2 text-xs text-blue-600">
+                          <strong>Setup Required:</strong> Install AUTOMATIC1111 WebUI or OllamaDiffuser to enable local image generation
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Info about Stable Diffusion provider */}
+                {selectedProvider === 'stable_diffusion' && (
+                  <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-green-900 mb-1">
+                          Direct Stable Diffusion Connection
+                        </h4>
+                        <p className="text-sm text-green-700">
+                          Connects directly to your local Stable Diffusion WebUI or OllamaDiffuser for high-quality, private image generation.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Generate Button */}

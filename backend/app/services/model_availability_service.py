@@ -139,6 +139,61 @@ class ModelAvailabilityService:
                 "tags": ["reasoning", "high-performance", "mistral"]
             },
             {
+                "name": "mistral-small3.1",
+                "display_name": "Mistral Small 3.1 (Vision)",
+                "description": "Latest multimodal model with vision capabilities and enhanced reasoning",
+                "parameters": "22B",
+                "organization": "Mistral AI",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull mistral-small3.1",
+                "category": "Vision & Multimodal",
+                "tags": ["vision", "multimodal", "reasoning", "mistral", "latest"]
+            },
+            {
+                "name": "mistral-nemo",
+                "display_name": "Mistral Nemo (12B)",
+                "description": "Efficient 12B parameter model with strong reasoning capabilities",
+                "parameters": "12B",
+                "organization": "Mistral AI",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull mistral-nemo",
+                "category": "High Performance",
+                "tags": ["reasoning", "efficient", "mistral"]
+            },
+            {
+                "name": "llava:7b",
+                "display_name": "LLaVA (7B)",
+                "description": "Large Language-and-Vision Assistant for image understanding and analysis",
+                "parameters": "7B",
+                "organization": "Microsoft Research",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull llava:7b",
+                "category": "Vision & Multimodal",
+                "tags": ["vision", "multimodal", "image-analysis", "llava"]
+            },
+            {
+                "name": "llava:13b",
+                "display_name": "LLaVA (13B)",
+                "description": "Larger Language-and-Vision Assistant with enhanced capabilities",
+                "parameters": "13B",
+                "organization": "Microsoft Research",
+                "license": "Apache 2.0",
+                "download_command": "ollama pull llava:13b",
+                "category": "Vision & Multimodal",
+                "tags": ["vision", "multimodal", "image-analysis", "llava", "high-performance"]
+            },
+            {
+                "name": "llama3.2-vision:11b",
+                "display_name": "Llama 3.2 Vision (11B)",
+                "description": "Meta's latest vision model with image understanding capabilities",
+                "parameters": "11B",
+                "organization": "Meta",
+                "license": "Llama License",
+                "download_command": "ollama pull llama3.2-vision:11b",
+                "category": "Vision & Multimodal",
+                "tags": ["vision", "multimodal", "llama", "meta", "latest"]
+            },
+            {
                 "name": "codellama:3b",
                 "display_name": "Code Llama (3B)",
                 "description": "Specialized coding model with code generation capabilities",

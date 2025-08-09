@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 import time
 import uuid
 from typing import Dict, List, Optional, Any, AsyncGenerator
@@ -45,6 +46,10 @@ class ImageGenerationService:
                 )
             elif model_provider == "ollama":
                 return await self._generate_ollama_image(
+                    prompt, model_name, size, quality, style, num_images
+                )
+            elif model_provider == "stable_diffusion":
+                return await self._generate_stable_diffusion_image(
                     prompt, model_name, size, quality, style, num_images
                 )
             else:
@@ -216,10 +221,215 @@ class ImageGenerationService:
         style: Optional[str],
         num_images: int
     ) -> Dict[str, Any]:
-        """Generate image using Ollama (if available)."""
-        # Note: This is a placeholder for future Ollama image generation support
-        # Currently, Ollama doesn't have robust image generation capabilities
-        raise NotImplementedError("Ollama image generation not yet implemented")
+        """Generate image using local Stable Diffusion via WebUI API."""
+        try:
+            # Try Stable Diffusion WebUI API (AUTOMATIC1111)
+            return await self._generate_stable_diffusion_image(
+                prompt, model_name, size, quality, style, num_images
+            )
+        except Exception as e:
+            # Try OllamaDiffuser API as fallback
+            try:
+                return await self._generate_ollamadiffuser_image(
+                    prompt, model_name, size, quality, style, num_images
+                )
+            except Exception as e2:
+                raise Exception(f"Local image generation failed. Please ensure Stable Diffusion WebUI or OllamaDiffuser is running. WebUI error: {str(e)}, OllamaDiffuser error: {str(e2)}")
+
+    async def _generate_stable_diffusion_image(
+        self,
+        prompt: str,
+        model_name: Optional[str],
+        size: str,
+        quality: str,
+        style: Optional[str],
+        num_images: int
+    ) -> Dict[str, Any]:
+        """Generate image using Stable Diffusion WebUI API (AUTOMATIC1111)."""
+        
+        # Parse size
+        width, height = self._parse_image_size(size, default="512x512")
+        
+        # Build enhanced prompt with style
+        enhanced_prompt = prompt
+        if style and style != "Default Style":
+            style_prompts = {
+                "Photorealistic": "photorealistic, high quality, detailed",
+                "Oil Painting": "oil painting, artistic, classical art style",
+                "Watercolor": "watercolor painting, soft, flowing",
+                "Digital Art": "digital art, concept art, artstation",
+                "Anime Style": "anime style, manga, cel shading",
+                "Cartoon": "cartoon style, animated, colorful",
+                "Pencil Sketch": "pencil sketch, hand drawn, monochrome",
+                "Pop Art": "pop art style, bold colors, retro",
+                "Impressionist": "impressionist painting, loose brushstrokes",
+                "Surreal": "surreal art, dreamlike, fantasy",
+                "Minimalist": "minimalist, clean, simple composition",
+                "Cyberpunk": "cyberpunk style, neon, futuristic",
+                "Vintage": "vintage style, retro, aged",
+                "Abstract": "abstract art, non-representational"
+            }
+            if style in style_prompts:
+                enhanced_prompt = f"{prompt}, {style_prompts[style]}"
+        
+        # Prepare API payload
+        payload = {
+            "prompt": enhanced_prompt,
+            "negative_prompt": "blurry, low quality, distorted, deformed, ugly, bad anatomy",
+            "width": width,
+            "height": height,
+            "steps": 20,
+            "cfg_scale": 7,
+            "sampler_name": "Euler a",
+            "batch_size": num_images,
+            "n_iter": 1,
+            "restore_faces": True,
+            "seed": -1
+        }
+        
+        # Add quality settings
+        if quality == "hd":
+            payload.update({
+                "steps": 30,
+                "cfg_scale": 8,
+                "sampler_name": "DPM++ 2M Karras"
+            })
+        
+        # Call Stable Diffusion WebUI API
+        webui_url = "http://localhost:7860"  # Default WebUI port
+        
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    f"{webui_url}/sdapi/v1/txt2img",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=300)  # 5 minute timeout
+                ) as response:
+                    if response.status != 200:
+                        raise Exception(f"Stable Diffusion WebUI API error: {response.status}")
+                    
+                    result = await response.json()
+                    
+                    if "images" not in result or not result["images"]:
+                        raise Exception("No images returned from Stable Diffusion WebUI")
+                    
+                    # Convert base64 images to URLs
+                    images = []
+                    for i, base64_image in enumerate(result["images"]):
+                        # Save base64 image to temp file
+                        image_data = base64.b64decode(base64_image)
+                        temp_filename = f"sd_generated_{int(time.time())}_{i}.png"
+                        temp_path = os.path.join("temp_uploads", temp_filename)
+                        
+                        os.makedirs("temp_uploads", exist_ok=True)
+                        with open(temp_path, "wb") as f:
+                            f.write(image_data)
+                        
+                        # Create URL for the image
+                        image_url = f"/temp_uploads/{temp_filename}"
+                        images.append({
+                            "url": image_url,
+                            "width": width,
+                            "height": height
+                        })
+                    
+                    return {
+                        "model_provider": "stable_diffusion",
+                        "model_name": model_name or "stable-diffusion-1.5",
+                        "prompt": prompt,
+                        "images": images,
+                        "generation_id": str(uuid.uuid4()),
+                        "timestamp": time.time()
+                    }
+                    
+            except aiohttp.ClientError as e:
+                raise Exception(f"Failed to connect to Stable Diffusion WebUI at {webui_url}: {str(e)}")
+
+    async def _generate_ollamadiffuser_image(
+        self,
+        prompt: str,
+        model_name: Optional[str],
+        size: str,
+        quality: str,
+        style: Optional[str],
+        num_images: int
+    ) -> Dict[str, Any]:
+        """Generate image using OllamaDiffuser API."""
+        
+        # Parse size
+        width, height = self._parse_image_size(size, default="512x512")
+        
+        # Build enhanced prompt with style
+        enhanced_prompt = prompt
+        if style and style != "Default Style":
+            enhanced_prompt = f"{prompt}, {style.lower().replace(' ', ' ')}"
+        
+        # Prepare API payload
+        payload = {
+            "prompt": enhanced_prompt,
+            "width": width,
+            "height": height,
+            "num_images": num_images,
+            "model": model_name or "flux.1-schnell"
+        }
+        
+        # Call OllamaDiffuser API
+        diffuser_url = "http://localhost:8000"  # Default OllamaDiffuser port
+        
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    f"{diffuser_url}/api/generate",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=300)  # 5 minute timeout
+                ) as response:
+                    if response.status != 200:
+                        raise Exception(f"OllamaDiffuser API error: {response.status}")
+                    
+                    # OllamaDiffuser returns images directly
+                    image_data = await response.read()
+                    
+                    # Save image to temp file
+                    temp_filename = f"od_generated_{int(time.time())}.png"
+                    temp_path = os.path.join("temp_uploads", temp_filename)
+                    
+                    os.makedirs("temp_uploads", exist_ok=True)
+                    with open(temp_path, "wb") as f:
+                        f.write(image_data)
+                    
+                    # Create URL for the image
+                    image_url = f"/temp_uploads/{temp_filename}"
+                    
+                    return {
+                        "model_provider": "ollamadiffuser",
+                        "model_name": model_name or "flux.1-schnell",
+                        "prompt": prompt,
+                        "images": [{
+                            "url": image_url,
+                            "width": width,
+                            "height": height
+                        }],
+                        "generation_id": str(uuid.uuid4()),
+                        "timestamp": time.time()
+                    }
+                    
+            except aiohttp.ClientError as e:
+                raise Exception(f"Failed to connect to OllamaDiffuser at {diffuser_url}: {str(e)}")
+
+    def _parse_image_size(self, size: str, default: str = "512x512") -> tuple[int, int]:
+        """Parse image size string into width and height."""
+        try:
+            if 'x' in size:
+                width, height = map(int, size.split('x'))
+            else:
+                # Handle single number (square)
+                dimension = int(size)
+                width, height = dimension, dimension
+            return width, height
+        except (ValueError, AttributeError):
+            # Fallback to default
+            width, height = map(int, default.split('x'))
+            return width, height
     
     async def _download_image(self, session: aiohttp.ClientSession, url: str) -> bytes:
         """Download image from URL."""
