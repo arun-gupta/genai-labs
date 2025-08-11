@@ -129,4 +129,13 @@ temp/
 
 
 # Ollama models (if stored locally)
-ollama_models/ 
+ollama_models/
+
+# Stable Diffusion and AI models (large files)
+backend/models/diffusion/
+backend/models/*/
+*.safetensors
+*.bin
+*.model
+*.ckpt
+*.pth 
