@@ -63,6 +63,94 @@ class IntegratedDiffusionService:
         enhanced = f"{enhanced}, masterpiece, best quality, highly detailed"
         
         return enhanced
+
+    def _create_storyboard_panel_prompt(self, story_prompt: str, panel_number: int, total_panels: int, style: str = "") -> str:
+        """Create dynamic panel-specific prompts for story progression."""
+        
+        # Define story progression phases
+        if total_panels == 1:
+            # Single panel - show the main scene
+            panel_prompt = f"Scene: {story_prompt}"
+        elif total_panels == 2:
+            # Two panels - setup and resolution
+            if panel_number == 1:
+                panel_prompt = f"Setup scene: {story_prompt}, establishing shot, introduction"
+            else:
+                panel_prompt = f"Resolution scene: {story_prompt}, climax, conclusion"
+        elif total_panels == 3:
+            # Three panels - beginning, middle, end
+            if panel_number == 1:
+                panel_prompt = f"Opening scene: {story_prompt}, introduction, setup"
+            elif panel_number == 2:
+                panel_prompt = f"Middle scene: {story_prompt}, action, development"
+            else:
+                panel_prompt = f"Final scene: {story_prompt}, resolution, conclusion"
+        elif total_panels == 4:
+            # Four panels - setup, development, climax, resolution
+            if panel_number == 1:
+                panel_prompt = f"Setup: {story_prompt}, introduction, establishing shot"
+            elif panel_number == 2:
+                panel_prompt = f"Development: {story_prompt}, rising action, building tension"
+            elif panel_number == 3:
+                panel_prompt = f"Climax: {story_prompt}, peak action, dramatic moment"
+            else:
+                panel_prompt = f"Resolution: {story_prompt}, conclusion, aftermath"
+        elif total_panels == 5:
+            # Five panels - classic story structure
+            if panel_number == 1:
+                panel_prompt = f"Exposition: {story_prompt}, introduction, setting the scene"
+            elif panel_number == 2:
+                panel_prompt = f"Rising Action: {story_prompt}, building tension, development"
+            elif panel_number == 3:
+                panel_prompt = f"Climax: {story_prompt}, peak moment, dramatic action"
+            elif panel_number == 4:
+                panel_prompt = f"Falling Action: {story_prompt}, consequences, aftermath"
+            else:
+                panel_prompt = f"Resolution: {story_prompt}, conclusion, final outcome"
+        else:
+            # 6+ panels - progressive story development
+            progress = panel_number / total_panels
+            if progress <= 0.2:
+                panel_prompt = f"Opening scene {panel_number}: {story_prompt}, introduction, setup"
+            elif progress <= 0.4:
+                panel_prompt = f"Early development {panel_number}: {story_prompt}, building story"
+            elif progress <= 0.6:
+                panel_prompt = f"Middle scene {panel_number}: {story_prompt}, main action"
+            elif progress <= 0.8:
+                panel_prompt = f"Late development {panel_number}: {story_prompt}, approaching climax"
+            else:
+                panel_prompt = f"Final scene {panel_number}: {story_prompt}, conclusion, resolution"
+        
+        # Enhance with style
+        return self._enhance_prompt(panel_prompt, style)
+
+    def _create_panel_caption(self, story_prompt: str, panel_number: int, total_panels: int) -> str:
+        """Create descriptive captions for each panel."""
+        
+        # Create shorter, more descriptive captions
+        if total_panels == 1:
+            return story_prompt[:60] + "..." if len(story_prompt) > 60 else story_prompt
+        elif total_panels == 2:
+            if panel_number == 1:
+                return "Setup: " + story_prompt[:50] + "..." if len(story_prompt) > 50 else story_prompt
+            else:
+                return "Resolution: " + story_prompt[:45] + "..." if len(story_prompt) > 45 else story_prompt
+        elif total_panels == 3:
+            if panel_number == 1:
+                return "Opening: " + story_prompt[:50] + "..." if len(story_prompt) > 50 else story_prompt
+            elif panel_number == 2:
+                return "Development: " + story_prompt[:45] + "..." if len(story_prompt) > 45 else story_prompt
+            else:
+                return "Conclusion: " + story_prompt[:45] + "..." if len(story_prompt) > 45 else story_prompt
+        elif total_panels == 4:
+            phases = ["Setup", "Development", "Climax", "Resolution"]
+            return f"{phases[panel_number-1]}: " + story_prompt[:40] + "..." if len(story_prompt) > 40 else story_prompt
+        elif total_panels == 5:
+            phases = ["Exposition", "Rising Action", "Climax", "Falling Action", "Resolution"]
+            return f"{phases[panel_number-1]}: " + story_prompt[:35] + "..." if len(story_prompt) > 35 else story_prompt
+        else:
+            # For 6+ panels, use numbered progression
+            return f"Scene {panel_number}: " + story_prompt[:40] + "..." if len(story_prompt) > 40 else story_prompt
     
     async def _load_model(self, model_name: str = "stable-diffusion-v1-5"):
         """Load the Stable Diffusion model."""
@@ -286,8 +374,9 @@ class IntegratedDiffusionService:
             
             for i in range(num_panels):
                 logger.info(f"Generating storyboard panel {i+1}/{num_panels}")
-                # Create panel-specific prompt
-                panel_prompt = f"Panel {i+1} of {num_panels}: {story_prompt}"
+                
+                # Create dynamic panel-specific prompts for story progression
+                panel_prompt = self._create_storyboard_panel_prompt(story_prompt, i + 1, num_panels, style)
                 
                 # Generate image for this panel (use smaller size for faster generation)
                 image = await self._generate_image(panel_prompt, style, width=384, height=384)
@@ -301,7 +390,7 @@ class IntegratedDiffusionService:
                     "panel_number": i + 1,
                     "prompt": panel_prompt,
                     "image_data": image_data,
-                    "caption": f"Panel {i+1}: {story_prompt[:50]}..."
+                    "caption": f"Panel {i+1}: {self._create_panel_caption(story_prompt, i + 1, num_panels)}"
                 })
             
             generation_time = time.time() - start_time

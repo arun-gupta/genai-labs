@@ -601,6 +601,7 @@ export const VisionPage: React.FC = () => {
     setStoryDownloadProgress(0);
     setStoryLoadProgress(0);
     setStoryGenerateProgress(0);
+    setStoryResult(null); // Clear previous storyboard results
     
     // Smart phase detection based on model status and provider
     let startPhase: 'download' | 'load' | 'generate';
@@ -730,6 +731,26 @@ export const VisionPage: React.FC = () => {
       setStoryGenerateProgress(100);
       setStoryPhase('complete');
       setStoryResult(result);
+      console.log('Storyboard result:', result); // Debug log
+      
+      // Add storyboard images to gallery
+      if (result && result.panels && Array.isArray(result.panels)) {
+        // Convert storyboard panels to gallery format
+        const galleryEntry: ImageGenerationResult = {
+          provider: result.model || storyboardProvider,
+          model: result.model || 'stable-diffusion-xl-base-1.0',
+          prompt: result.story_prompt,
+          images: result.panels.map((panel: any) => ({
+            base64: panel.image_data,
+            size: '384x384',
+            url: undefined
+          })),
+          generation_id: `storyboard-${Date.now()}`,
+          timestamp: Date.now()
+        };
+        setGeneratedImages(prev => [galleryEntry, ...prev]);
+      }
+      
       setResultsTab('response'); // Switch to response tab when results are available
       
       // Update model status if using Stable Diffusion
@@ -822,11 +843,8 @@ export const VisionPage: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
             <h1 className="text-3xl font-bold text-gray-900">Vision AI</h1>
-            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-              🚧 Work in Progress
-            </span>
           </div>
-          <p className="text-gray-600">Analyze images and generate new ones using AI vision models</p>
+          <p className="text-gray-600">Analyze images, generate new ones, and create storyboards using advanced AI vision models</p>
           <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
             <span className="flex items-center space-x-1">
               <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">Ctrl+V</span>
@@ -2297,11 +2315,23 @@ export const VisionPage: React.FC = () => {
                             Panel {panel.panel_number}
                           </span>
                         </div>
-                        <img
-                          src={`data:image/png;base64,${panel.image.base64}`}
-                          alt={`Panel ${panel.panel_number}`}
-                          className="w-full h-40 object-cover rounded mb-2"
-                        />
+                        {panel.image_data ? (
+                          <img
+                            src={`data:image/png;base64,${panel.image_data}`}
+                            alt={`Panel ${panel.panel_number}`}
+                            className="w-full h-40 object-contain rounded mb-2 bg-gray-100"
+                          />
+                        ) : panel.url ? (
+                          <img
+                            src={panel.url}
+                            alt={`Panel ${panel.panel_number}`}
+                            className="w-full h-40 object-contain rounded mb-2 bg-gray-100"
+                          />
+                        ) : (
+                          <div className="w-full h-40 bg-gray-200 rounded mb-2 flex items-center justify-center">
+                            <span className="text-gray-500">Image not available</span>
+                          </div>
+                        )}
                         <p className="text-sm text-gray-600">{panel.prompt}</p>
                       </div>
                     ))}
@@ -2334,18 +2364,26 @@ export const VisionPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-2">
                         {result.images.map((image, imageIndex) => (
                           <div key={imageIndex} className="relative group">
-                            <img
-                              src={`data:image/png;base64,${image.base64}`}
-                              alt={`Generated image ${imageIndex + 1}`}
-                              className="w-full h-32 object-cover rounded"
-                            />
+                            {image && image.base64 ? (
+                              <img
+                                src={`data:image/png;base64,${image.base64}`}
+                                alt={`Generated image ${imageIndex + 1}`}
+                                className="w-full h-32 object-contain rounded bg-gray-100"
+                              />
+                            ) : (
+                              <div className="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
+                                <span className="text-gray-500 text-xs">Image not available</span>
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
-                              <button
-                                onClick={() => downloadImage(image.base64, `gallery-image-${resultIndex}-${imageIndex}.png`)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white text-gray-900 px-3 py-1 rounded text-sm font-medium"
-                              >
-                                Download
-                              </button>
+                              {image && image.base64 && (
+                                <button
+                                  onClick={() => downloadImage(image.base64, `gallery-image-${resultIndex}-${imageIndex}.png`)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white text-gray-900 px-3 py-1 rounded text-sm font-medium"
+                                >
+                                  Download
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}

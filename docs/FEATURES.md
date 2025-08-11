@@ -63,6 +63,75 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Filter by Tags**: Focus on specific document categories
 - **Export Options**: Export Q&A results in multiple formats
 
+## 🎨 Vision & Image Generation
+
+### Image Analysis (`/vision`)
+Advanced image analysis with multi-modal AI vision models.
+
+**Key Features:**
+- **Multi-modal Vision**: Upload and analyze images with AI models
+- **Detailed Descriptions**: Get comprehensive image descriptions and analysis
+- **Object Recognition**: Identify objects, people, scenes, and visual elements
+- **Text Extraction**: Extract and analyze text within images (OCR)
+- **Comparative Analysis**: Compare vision models side-by-side
+- **Custom Prompts**: Use custom analysis prompts for specific insights
+- **Sample Images**: Pre-loaded sample images for quick testing
+- **Drag & Drop**: Easy image upload with drag and drop support
+- **Clipboard Paste**: Paste images directly from clipboard (Ctrl+V)
+
+### Image Generation (`/vision`)
+High-quality image generation from text prompts with multiple providers.
+
+**Key Features:**
+- **Text-to-Image**: Generate images from detailed text prompts
+- **Artistic Styles**: Choose from 14+ predefined artistic styles (Cinematic, Anime, Photorealistic, etc.)
+- **Local Generation**: Use Stable Diffusion via integrated diffusion service
+- **Cloud Generation**: High-quality generation via OpenAI DALL-E and Anthropic Claude
+- **Flexible Sizing**: Multiple resolution options (512x512 to 1024x1024)
+- **Quality Control**: Standard and HD quality options
+- **Batch Generation**: Generate multiple images at once (1-4 images)
+- **Real-time Progress**: Visual progress indicators during generation
+- **Model Status**: Automatic detection of local model availability
+- **Download Support**: Direct download of generated images
+
+### Storyboard Generation (`/vision`)
+Create multi-panel storyboards from story prompts with AI-generated images.
+
+**Key Features:**
+- **Smart Model Loading**: Intelligent progressive loading system that allows image generation to begin while models are still loading into memory, providing faster response times and better user experience
+- **Multi-Panel Generation**: Create storyboards with 1-6 panels
+- **Story Prompts**: Convert narrative prompts into visual storyboards
+- **Cinematic Styles**: Multiple visual styles (Cinematic, Anime, Photorealistic, etc.)
+- **Panel-by-Panel**: Each panel generated with context-aware prompts
+- **Gallery Integration**: Storyboard images automatically added to gallery
+- **Download Support**: Download individual panels or complete storyboards
+- **Progress Tracking**: Real-time progress with phase indicators
+- **Smart Prompting**: Automatic panel-specific prompt enhancement
+- **High-Quality Output**: 384x384 resolution panels optimized for storyboards
+
+### Image Gallery (`/vision`)
+Centralized gallery for all generated images with management features.
+
+**Key Features:**
+- **Unified Storage**: All generated images (single images and storyboards) in one place
+- **Chronological Order**: Images organized by generation time
+- **Download Support**: Download any image with custom filenames
+- **Source Tracking**: Shows generation prompt and model used
+- **Batch Operations**: Download multiple images at once
+- **Visual Preview**: Thumbnail previews for easy browsing
+- **Metadata Display**: Shows generation details and timestamps
+
+### Supported Models
+- **Vision Models**: GPT-5, GPT-4 Vision, Claude Sonnet 4, Claude Opus 4, LLaVA, Gemma 3
+- **Local Image Generation**: Stable Diffusion XL Base 1.0 (integrated)
+- **Cloud Image Generation**: DALL-E 3, Claude Sonnet 4 (image generation)
+
+### Local Setup Options
+- **Integrated Diffusion Service**: Built-in Stable Diffusion with automatic model management
+- **Privacy-First**: All local generation keeps data on your machine
+- **Automatic Model Loading**: Seamless model detection and loading
+- **Health Monitoring**: Real-time service health checks
+
 ## 🎤 Voice Features
 
 ### Voice Input (Speech-to-Text)
@@ -84,35 +153,6 @@ Advanced document question answering with intelligent retrieval and comprehensiv
 - **Firefox**: Full support for text-to-speech, limited speech recognition
 - **Safari**: Full support for text-to-speech, limited speech recognition
 - **Mobile Browsers**: Limited support, varies by platform
-
-## 🎨 Vision & Image Generation
-
-### Image Analysis
-- **Multi-modal Vision**: Upload and analyze images with AI models
-- **Detailed Descriptions**: Get comprehensive image descriptions
-- **Object Recognition**: Identify objects, people, and scenes
-- **Text Extraction**: Extract and analyze text within images
-- **Comparative Analysis**: Compare vision models side-by-side
-
-### Image Generation
-- **Text-to-Image**: Generate images from detailed text prompts
-- **Artistic Styles**: Choose from 14+ predefined artistic styles
-- **Local Generation**: Use Stable Diffusion via AUTOMATIC1111 WebUI or OllamaDiffuser
-- **Cloud Generation**: High-quality generation via OpenAI DALL-E
-- **Flexible Sizing**: Multiple resolution options (512x512 to 1024x1024)
-- **Quality Control**: Standard and HD quality options
-- **Batch Generation**: Generate multiple images at once
-
-### Supported Models
-- **Vision Models**: GPT-5, GPT-4 Vision, Claude Sonnet 4, Claude Opus 4, LLaVA, Gemma 3
-- **Local Image Generation**: Stable Diffusion 1.5, 2.1, XL, FLUX.1 models
-- **Cloud Image Generation**: DALL-E 2, DALL-E 3
-
-### Local Setup Options
-- **AUTOMATIC1111 WebUI**: Full-featured Stable Diffusion interface (port 7860)
-- **OllamaDiffuser**: Lightweight local image generation (port 8000)
-- **ComfyUI**: Node-based workflow system for advanced users
-- **Privacy-First**: All local generation keeps data on your machine
 
 ## 📊 Analytics & Export
 
