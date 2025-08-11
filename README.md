@@ -1,260 +1,175 @@
 # GenAI Lab 🧠
 
-A full-stack web application for experimenting with different GenAI use cases using large language models (LLMs). Supports both local models (via Ollama) and cloud-hosted models (GPT-5, GPT-4, Claude-3, etc.).
+**Your complete AI playground for text, images, documents, and more - all in one place!**
 
-## 🚀 Quick Start
+A full-stack web application that lets you experiment with cutting-edge AI models. Generate text, create images, analyze documents, build storyboards, and compare AI models - all with both local and cloud AI models.
+
+## 🚀 Get Started in 30 Seconds
 
 ```bash
 # Clone and start the application
 git clone <repository-url>
 cd genai-labs
-./quickstart.sh  # Installs all dependencies and starts the app
+./quickstart.sh  # Installs everything and starts the app
 ```
 
-**That's it!** The app will be running at http://localhost:3000
+**That's it!** Open http://localhost:3000 and start creating! 🎉
 
-## ✨ Features
+## ✨ What Can You Do?
 
-### 🤖 Core GenAI Capabilities
-- **Text Generation** - Advanced text creation with 12+ writing styles and model comparison
-- **Text Summarization** - 7 summary types including Executive, Technical, and News summaries with analytics  
-- **Q&A over Documents** - RAG-powered document question answering with intelligent suggestions
-- **Model Comparison** - Side-by-side model performance analysis for generation and summarization
-- **Models Explorer** - Browse and manage 20+ open-source LLM models including GPT-OSS-20B, Mistral, and Qwen3
-- **Vision AI** - Image analysis and generation (Work in Progress)
+### 🤖 **Text Generation & Writing**
+- **Smart Writing**: Generate content in 12+ styles (Creative, Business, Academic, etc.)
+- **Real-time Streaming**: Watch your content being created live
+- **Multiple Variations**: Generate 1-5 different versions of your content
+- **Voice Features**: Speak your prompts and hear responses aloud
+- **Export Options**: Save as PDF, Word, Markdown, or other formats
 
-### 🛠️ Platform Features
-- **Voice Features** - Speech-to-text and text-to-speech
-- **Real-time Streaming** - Live output with token usage tracking
-- **Export Options** - PDF, Word, Markdown, HTML export
-- **Prompt History** - Local storage for session management
+### 📄 **Document Intelligence**
+- **Upload & Ask**: Drop PDFs, Word docs, or text files and ask questions
+- **Smart Search**: AI finds the most relevant information from your documents
+- **Collection Management**: Organize documents with tags and collections
+- **Confidence Scores**: See how confident the AI is in its answers
 
-## 🆕 Recent Updates
+### 🎨 **Image Creation & Analysis**
+- **Generate Images**: Create stunning visuals from text descriptions
+- **Multiple Styles**: Choose from 14+ artistic styles (Photorealistic, Anime, Oil Painting, etc.)
+- **Storyboard Creation**: Build multi-panel visual stories with AI
+- **Image Analysis**: Upload images and get detailed descriptions and insights
+- **Local Generation**: Create images privately on your own machine
 
-### Local Image Generation Support (Latest)
-- **🏆 Ollama + OllamaDiffuser Integration** - Consistent model management with pre-downloaded Stable Diffusion models
-- **🚀 Simplified Setup** - New integration with [diffusion-lab](https://github.com/arun-gupta/diffusion-lab) for instant local generation
-- **🎨 Stable Diffusion Integration** - Full support for AUTOMATIC1111 WebUI and OllamaDiffuser
-- **🏠 Privacy-First Generation** - Generate images locally without cloud dependencies
-- **🎭 14+ Artistic Styles** - Photorealistic, Oil Painting, Anime, Cyberpunk, and more
-- **⚡ No Download Delays** - Pre-pull models with `ollamadiffuser pull` for instant generation
-- **🔧 Multiple Local Options** - Choose between Ollama+OllamaDiffuser, WebUI, or direct integration
-- **📱 Enhanced Vision UI** - Improved user experience with setup guidance and status indicators
+### 📊 **AI Model Comparison**
+- **Side-by-Side Testing**: Compare different AI models for the same task
+- **Performance Metrics**: See response times, quality scores, and token usage
+- **20+ Local Models**: Test GPT-OSS-20B, Mistral, Llama, and many more
+- **Cloud Models**: Access GPT-5, Claude Sonnet 4, and other cutting-edge models
 
-> **📋 [Stable Diffusion Setup Guide](docs/STABLE_DIFFUSION_SETUP.md)** - Complete instructions for local image generation setup  
-> **🎯 [Ollama + OllamaDiffuser Guide](docs/OLLAMA_DIFFUSION_SETUP.md)** - Recommended setup for consistent model serving
+## 🛠️ Quick Setup Options
 
-### Model Updates
-- **🚀 GPT-5 Support** - Latest OpenAI model with advanced reasoning capabilities
-- **🧠 Claude Sonnet 4 & Opus 4** - Latest Anthropic models with hybrid reasoning and 200K context
-- **🔄 Updated Quick Combinations** - Enhanced model comparison with latest models
-
-### Summary Types Enhancement
-- **📊 Executive Summary** - High-level summaries for decision-makers with recommendations and actionable takeaways
-- **🔧 Technical Summary** - Technical details, specifications, and methodologies for technical content
-- **📰 News Summary** - News-style summaries following 5W1H format for journalistic content
-- **🎯 Enhanced Summary Types** - Now 7 total types: General, Bullet Points, Key Points, Extractive, Executive, Technical, News
-
-### Homepage & Model Updates
-- **🌟 Featured Models** - Highlight GPT-OSS-20B, Mistral 7B, and Qwen3:8B as key models
-- **📈 Model Categories** - Updated to reflect latest 20+ open-source models
-- **🎨 UI Consistency** - Unified design across Generate, Summarize, and RAG pages
-- **⚡ Quick Combinations** - Pre-built model combinations for easy comparison setup
-
-### Q&A System Enhancements
-- **✨ Intelligent Question Suggestions** - AI-powered suggestions based on document content analysis
-- **🏷️ Document Tagging System** - Add custom tags to organize and filter documents
-- **📁 Collection Management** - Create, manage, and delete document collections
-- **🎯 Multi-Collection Queries** - Target questions at specific collections or query across multiple
-- **🔍 Smart Retrieval** - Improved similarity matching with fallback thresholds
-- **📊 Enhanced Source Tracking** - Detailed citations with similarity scores and metadata
-- **🎨 Improved UI/UX** - Better question suggestion interface with confidence scores and categories
-- **🎯 Answer Confidence Scores** - AI-generated confidence ratings with detailed breakdowns
-- **📈 Document Analytics** - Comprehensive analysis of uploaded documents (topics, entities, readability)
-- **⚡ Performance Metrics** - Response time, accuracy tracking, and processing statistics
-- **🔄 Quick Model Combinations** - Pre-built model combinations for easy comparison setup
-- **🎨 Consistent UI Design** - Unified button layout and tab structure across all pages
-
-### Technical Improvements
-- **⚡ Performance Optimization** - Faster document processing and retrieval
-- **🛡️ Error Handling** - Better error messages and fallback mechanisms
-- **🔧 API Enhancements** - New endpoints for collection and suggestion management
-- **📱 Responsive Design** - Improved mobile and tablet experience
-
-## 🛠️ Alternative Setup Options
-
-### 🔧 Development Setup
+### 🚀 **Super Quick Start** (Recommended)
 ```bash
-./dev-setup.sh   # Quick dev environment setup (creates venv, installs deps)
-./quickstart.sh  # Start the app (skips dependency installation)
+./quickstart.sh  # Everything in one command
 ```
 
-### 🐍 Virtual Environment Management
-
-**All Python dependencies are automatically installed in virtual environments** to ensure isolation and consistency.
-
-#### Available Scripts:
-- **`./setup.sh`** - Complete setup with virtual environment creation
-- **`./quickstart.sh`** - Start the app (uses virtual environment)
-- **`./dev-setup.sh`** - Development setup with virtual environment
-- **`./activate_venv.sh`** - Manually activate the virtual environment
-- **`./verify_env.sh`** - Verify virtual environment and dependencies
-
-#### Manual Virtual Environment Usage:
+### 🔧 **Development Setup**
 ```bash
-# Activate virtual environment
-cd backend
-source venv/bin/activate
-
-# Start backend server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Deactivate when done
-deactivate
+./dev-setup.sh   # For developers who want more control
+./quickstart.sh  # Start the app
 ```
 
-#### Virtual Environment Location:
-- **Backend**: `backend/venv/`
-- **Frontend**: Uses npm packages (no virtual environment needed)
-
-
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Backend** (`backend/.env`):
-```env
-OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
-OLLAMA_BASE_URL=http://localhost:11434
+### 🐍 **Manual Setup**
+```bash
+./setup.sh       # Complete setup with virtual environment
+./activate_venv.sh  # Activate the environment
+cd backend && python main.py  # Start backend
+cd frontend && npm run dev     # Start frontend
 ```
 
-**Frontend** (`frontend/.env`):
-```env
-VITE_API_BASE_URL=http://localhost:8000
-```
+## 🎯 Key Features
+
+### 🌟 **What Makes This Special**
+- **All-in-One Platform**: Text, images, documents, and more in one interface
+- **Local + Cloud**: Use AI models on your machine or in the cloud
+- **Privacy-First**: Keep sensitive data local with local models
+- **Real-time Streaming**: Watch AI responses being generated live
+- **Smart Analytics**: Get insights into your AI interactions
+- **Modern UI**: Clean, responsive interface that works on all devices
+
+### 🤖 **Supported AI Models**
+
+**Cloud Models (Require API Keys)**
+- **OpenAI**: GPT-5, GPT-4, GPT-3.5-turbo
+- **Anthropic**: Claude Sonnet 4, Claude Opus 4, Claude 3.5 Sonnet
+
+**Local Models (Free, Private)**
+- **GPT-OSS-20B**: OpenAI's open-weight model with advanced reasoning
+- **Mistral**: High-performance 7B model with excellent reasoning
+- **Llama 2**: Meta's foundational models (3B, 7B, 13B variants)
+- **Code Llama**: Specialized coding models
+- **And 15+ more**: Including Phi-3, Qwen 2.5, Gemma 2, and others
+
+### 🎨 **Image Generation**
+- **Local Generation**: Stable Diffusion XL, 1.5, 2.1, and 3.5 Large
+- **Cloud Generation**: DALL-E 3, Claude Sonnet 4
+- **Smart Loading**: Models load progressively for faster startup
+- **Dynamic Storyboards**: Create multi-panel visual stories with story progression
 
 ## 📚 Documentation
 
-- **[Features Guide](docs/FEATURES.md)** - Detailed feature documentation
-- **[Setup Guide](docs/SETUP.md)** - Complete setup instructions
+- **[Features Guide](docs/FEATURES.md)** - Complete feature overview
 - **[Models Guide](docs/MODELS.md)** - Supported models and usage
 - **[Stable Diffusion Setup](docs/STABLE_DIFFUSION_SETUP.md)** - Local image generation setup
-- **[Ollama + OllamaDiffuser Guide](docs/OLLAMA_DIFFUSION_SETUP.md)** - Recommended setup for image generation
+- **[Integrated Diffusion Guide](docs/INTEGRATED_DIFFUSION_SETUP.md)** - Recommended setup for built-in image generation
 - **[Voice Features](docs/VOICE.md)** - Speech-to-text and text-to-speech
 - **[API Reference](docs/API.md)** - Backend API documentation
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
-## 🎯 Usage
+## 🆕 Recent Updates
 
-### Text Generation
-1. Navigate to `/generate`
-2. Choose writing style and configure settings
-3. Enter prompts (voice input supported)
-4. Generate text with real-time streaming
-5. Export in multiple formats
+### 🎬 **Dynamic Storyboard Generation** (Latest)
+- **Story Progression**: Each panel has unique prompts for natural story flow
+- **Smart Loading**: Images generate while models are still loading
+- **Multiple Styles**: Cinematic, Anime, Oil Painting, and more
+- **Panel Management**: Clear old storyboards when starting new ones
+- **Better UX**: No more cropped images, improved visual presentation
 
-### Text Summarization  
-1. Navigate to `/summarize`
-2. Input text, URL, or upload files
-3. Choose from 7 summary types:
-   - **General Summary** - Standard summary of main points
-   - **Bullet Points** - Key points in bullet format
-   - **Key Points** - Extract main ideas and key points
-   - **Extractive** - Select important sentences from text
-   - **Executive Summary** - High-level summary for decision-makers
-   - **Technical Summary** - Technical details and specifications
-   - **News Summary** - News-style 5W1H format
-4. Configure length, creativity, and output format
-5. Get summaries with detailed analytics
-6. Export results in multiple formats
+### 🎨 **Enhanced Image Generation**
+- **Integrated Diffusion Service**: Direct Stable Diffusion with automatic model management
+- **Smart Model Loading**: Progressive loading system for faster startup
+- **Multiple Model Support**: Stable Diffusion 1.5, 2.1, XL, and 3.5 Large
+- **14+ Artistic Styles**: Photorealistic, Oil Painting, Anime, Cyberpunk, and more
 
-### Models Explorer
-1. Navigate to `/models`
-2. Browse 20+ open-source models including:
-   - **GPT-OSS-20B** - OpenAI's open-weight model (20B parameters)
-   - **Mistral 7B** - High-performance reasoning model
-   - **Qwen3:8B** - Alibaba's multilingual model
-   - **Llama 3.1** - Meta's latest compact model
-   - **DeepSeek Coder** - Specialized coding model
-   - **Phi-3** - Microsoft's reasoning model
-   - And many more...
-3. Check availability status
-4. Copy download commands for Ollama
+### 🤖 **Latest AI Models**
+- **GPT-5 Support**: Latest OpenAI model with advanced reasoning
+- **Claude Sonnet 4 & Opus 4**: Latest Anthropic models with 200K context
+- **GPT-OSS-20B**: OpenAI's open-weight model with agentic capabilities
 
-### Q&A over Documents (RAG)
-1. Navigate to `/rag`
-2. Upload documents (PDF, DOCX, TXT, MD, CSV)
-3. **Tag documents** for better organization and filtering
-4. **Create and manage collections** to organize related documents
-5. **Get intelligent question suggestions** based on document content
-6. **Ask questions** about your documents with multi-collection support
-7. **Filter by tags** to focus on specific document categories
-8. **View source citations** with similarity scores and document references
-9. **Export results** in multiple formats
+### 📄 **Document Intelligence**
+- **Intelligent Question Suggestions**: AI-powered suggestions based on document content
+- **Document Tagging**: Organize documents with custom tags
+- **Multi-Collection Queries**: Target specific document collections
+- **Enhanced Analytics**: Comprehensive document analysis and insights
 
-**Advanced Features:**
-- **Document Tagging**: Add custom tags to categorize and filter documents
-- **Collection Management**: Create multiple collections, add documents to existing collections, delete collections
-- **Multi-Collection Queries**: Target questions at specific collections or query across multiple collections
-- **Intelligent Question Suggestions**: AI-powered suggestions based on document content, topics, and actions
-- **Smart Retrieval**: Advanced similarity matching with fallback thresholds for better answer quality
-- **Source Tracking**: Detailed source citations with document names, chunk indices, and similarity scores
-- **Answer Confidence Scores**: AI-generated confidence ratings with detailed breakdowns
-- **Document Analytics**: Comprehensive analysis of uploaded documents (topics, entities, readability, insights)
-- **Performance Metrics**: Response time, accuracy tracking, and processing statistics
-- **Quick Model Combinations**: Pre-built model combinations for easy comparison setup
+## 🛠️ Technical Details
 
-### Model Comparison
-**For Text Generation:**
-1. Navigate to `/generate`
-2. Select 2+ models in the Model Comparison section
-3. Enter your prompt
-4. Click "Compare Models" to see side-by-side analysis
+### Architecture
+- **Frontend**: React + TypeScript + Tailwind CSS
+- **Backend**: FastAPI + Python
+- **AI Models**: Ollama (local) + OpenAI/Anthropic APIs (cloud)
+- **Image Generation**: Integrated Stable Diffusion + Cloud APIs
+- **Database**: ChromaDB for document storage and vector search
 
-**For Text Summarization:**
-1. Navigate to `/summarize`
-2. Select 2+ models in the Model Comparison section
-3. Enter text to summarize
-4. Click "Compare Models" to see side-by-side analysis
+### System Requirements
+- **OS**: macOS, Linux, Windows (WSL)
+- **Python**: 3.8+
+- **Node.js**: 16+
+- **RAM**: 8GB+ (16GB+ recommended for local models)
+- **Storage**: 10GB+ free space for models
 
-**For Q&A over Documents:**
-1. Navigate to `/rag`
-2. Upload documents and ask a question
-3. Select 2+ models in the Model Comparison section
-4. Click "Compare Models" to see how different models answer the same question
+### Virtual Environment
+All Python dependencies are automatically installed in virtual environments for isolation and consistency.
 
-**Quick Combinations:**
-- **Compare All Local Models**: Compare all available Ollama models
-- **Local vs Cloud**: Compare local Ollama models with cloud models
-- **Efficient Models**: Compare lightweight models for speed
-- **High Performance**: Compare high-quality models for accuracy
-- **Reasoning & Analysis**: Compare models with advanced reasoning capabilities
+## 🗺️ Roadmap
 
-## 🏗️ Tech Stack
+🎬 **Video & Animation** - Local video generation and animated storyboards
 
-- **Frontend**: React + TypeScript + Tailwind CSS + Vite
-- **Backend**: FastAPI (Python) + LangChain + Pydantic
-- **Vector Database**: ChromaDB for document embeddings and RAG
-- **Text Processing**: NLTK, TextStat for analysis and metrics
-- **Embeddings**: HuggingFace Sentence Transformers
-- **APIs**: Web Speech API, OpenAI API, Anthropic API, Ollama API
+🤖 **AI Agents & Automation** - Multi-step reasoning agents and workflow automation
 
-## 🔮 Roadmap
+🎨 **Creative Suite** - Music generation, audio processing, and code generation
 
-- **🖼️ Vision AI** - Image analysis and generation (currently in development)
-- **🤖 Chatbot Builder** - Build custom chatbots with knowledge base training
-- **📊 Data Analysis & Visualization** - Natural language to SQL, chart generation, report automation
-- **🔍 Advanced Content Analysis** - SEO optimization, readability scoring, sentiment analysis, plagiarism detection
-- **🌐 Multi-language Content Hub** - Translation memory, cultural adaptation, multi-language generation
-- **🎯 Personalized Content Engine** - AI-powered content personalization with user profiling
-- **🔄 Workflow Automation & Templates** - Custom workflows, template library, batch processing
-- **💻 Code Generation** - Specialized coding features and code analysis
-- **🌍 Translation Services** - Multi-language support and localization
-- **📋 Structured Data Extraction** - Data processing and form extraction capabilities
-- **📈 Advanced Analytics** - Enhanced performance metrics and business intelligence
+🌐 **Advanced Features** - Multi-language support, personalization, and data extraction
+
+🔮 **Future Vision** - Chatbot builder, advanced analytics, and business intelligence
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our contributing guidelines and feel free to submit issues or pull requests.
 
 ## 📄 License
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details. 
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+
+---
+
+**Ready to start creating? Run `./quickstart.sh` and let your imagination run wild! 🚀** 
