@@ -107,11 +107,11 @@ export const VisionPage: React.FC = () => {
       color: '#4F46E5', // Indigo
       image: businessMeetingImage,
       analysisPrompts: [
-        'Describe the main elements and composition of this image',
-        'What is the overall mood and atmosphere?',
-        'Analyze the colors, lighting, and visual style',
-        'Extract any text or readable content from this image',
-        'Provide a comprehensive technical analysis of this image'
+        'Analyze the business meeting dynamics and professional setting',
+        'Describe the corporate environment and team interaction',
+        'Identify any presentation materials or business documents visible',
+        'Assess the professional atmosphere and workplace culture',
+        'Examine the meeting room setup and technology used'
       ],
       generationPrompts: [
         'A professional business meeting with diverse team members',
@@ -125,11 +125,11 @@ export const VisionPage: React.FC = () => {
       color: '#059669', // Emerald
       image: natureSceneImage,
       analysisPrompts: [
-        'Describe the main elements and composition of this image',
-        'What is the overall mood and atmosphere?',
-        'Analyze the colors, lighting, and visual style',
-        'Extract any text or readable content from this image',
-        'Provide a comprehensive technical analysis of this image'
+        'Analyze the natural landscape and environmental elements',
+        'Describe the seasonal characteristics and weather conditions',
+        'Identify the types of vegetation and geological features',
+        'Assess the natural lighting and atmospheric conditions',
+        'Examine the composition and depth of the landscape'
       ],
       generationPrompts: [
         'Serene mountain landscape with trees and a lake',
@@ -143,11 +143,11 @@ export const VisionPage: React.FC = () => {
       color: '#DC2626', // Red
       image: technologyImage,
       analysisPrompts: [
-        'Describe the main elements and composition of this image',
-        'What is the overall mood and atmosphere?',
-        'Analyze the colors, lighting, and visual style',
-        'Extract any text or readable content from this image',
-        'Provide a comprehensive technical analysis of this image'
+        'Analyze the technological devices and digital interface elements',
+        'Describe the modern workspace and equipment setup',
+        'Identify the types of technology and software interfaces visible',
+        'Assess the digital environment and connectivity features',
+        'Examine the technological aesthetics and user interface design'
       ],
       generationPrompts: [
         'Futuristic technology interface with glowing screens',
