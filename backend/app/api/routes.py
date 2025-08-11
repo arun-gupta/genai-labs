@@ -518,25 +518,84 @@ async def get_available_models():
     # Get Ollama models with availability status
     ollama_models_data = await model_availability_service.get_models_with_availability()
     
+    # Check if API keys are configured
+    from app.core.config import settings
+    
+    def is_api_key_configured(provider: str) -> bool:
+        """Check if API key is configured for a provider."""
+        if provider == "openai":
+            return bool(settings.openai_api_key and settings.openai_api_key.strip())
+        elif provider == "anthropic":
+            return bool(settings.anthropic_api_key and settings.anthropic_api_key.strip())
+        elif provider == "google":
+            # Add Google API key check when implemented
+            return False
+        elif provider == "mistral":
+            # Add Mistral API key check when implemented
+            return False
+        return False
+    
+    def get_configured_models(provider: str) -> list:
+        """Get the list of models for a provider, highlighting the configured one."""
+        if provider == "openai":
+            # Current OpenAI models with the configured one first
+            all_models = ["gpt-5", "gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"]
+            configured_model = settings.openai_model
+            # Move configured model to front if it exists
+            if configured_model in all_models:
+                all_models.remove(configured_model)
+                all_models.insert(0, configured_model)
+            return all_models
+        elif provider == "anthropic":
+            # Current Anthropic models with the configured one first
+            all_models = ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"]
+            configured_model = settings.anthropic_model
+            # Move configured model to front if it exists
+            if configured_model in all_models:
+                all_models.remove(configured_model)
+                all_models.insert(0, configured_model)
+            return all_models
+        elif provider == "google":
+            return ["gemini-pro", "gemini-flash", "gemini-ultra"]
+        elif provider == "mistral":
+            return ["mistral-large", "mistral-medium", "mistral-small"]
+        return []
+    
     return {
         "providers": [
             {
-                "id": "ollama",
-                "name": "Ollama (Local)",
-                "models": [model["name"] for model in ollama_models_data["models"] if model["is_available"]],
-                "requires_api_key": False
-            },
-            {
                 "id": "openai",
                 "name": "OpenAI",
-                "models": ["gpt-5", "gpt-4", "gpt-3.5-turbo", "gpt-4-turbo"],
-                "requires_api_key": True
+                "models": get_configured_models("openai"),
+                "requires_api_key": True,
+                "api_key_configured": is_api_key_configured("openai"),
+                "configured_model": settings.openai_model,
+                "description": "Leading AI research company with state-of-the-art language models"
             },
             {
                 "id": "anthropic",
                 "name": "Anthropic",
-                "models": ["claude-sonnet-4", "claude-opus-4", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
-                "requires_api_key": True
+                "models": get_configured_models("anthropic"),
+                "requires_api_key": True,
+                "api_key_configured": is_api_key_configured("anthropic"),
+                "configured_model": settings.anthropic_model,
+                "description": "AI safety-focused company with Claude models"
+            },
+            {
+                "id": "google",
+                "name": "Google AI",
+                "models": ["gemini-pro", "gemini-flash", "gemini-ultra"],
+                "requires_api_key": True,
+                "api_key_configured": is_api_key_configured("google"),
+                "description": "Google's advanced multimodal AI models"
+            },
+            {
+                "id": "mistral",
+                "name": "Mistral AI",
+                "models": ["mistral-large", "mistral-medium", "mistral-small"],
+                "requires_api_key": True,
+                "api_key_configured": is_api_key_configured("mistral"),
+                "description": "European AI company with efficient language models"
             }
         ],
         "ollama_models": ollama_models_data,

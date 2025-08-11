@@ -76,7 +76,7 @@ export const VisionPage: React.FC = () => {
   // Storyboard State
   const [storyPrompt, setStoryPrompt] = useState('');
   const [storyStyle, setStoryStyle] = useState('cinematic');
-  const [numPanels, setNumPanels] = useState(5);
+  const [numPanels, setNumPanels] = useState(3);
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [storyProgress, setStoryProgress] = useState<number>(0);
   const [storyPhase, setStoryPhase] = useState<'download' | 'load' | 'generate' | 'complete'>('download');
@@ -578,6 +578,24 @@ export const VisionPage: React.FC = () => {
       return;
     }
 
+    // Warn user about long generation time for storyboards
+    if (numPanels > 3) {
+      const confirmed = confirm(`🎬 Storyboard Generation Notice:\n\n• ${numPanels} panels will be generated\n• Estimated time: 10-15 minutes\n• Each panel takes 2-3 minutes to generate\n• The process cannot be interrupted\n• You can leave this page open and check back\n\nThis is normal for AI image generation. Continue?`);
+      if (!confirmed) {
+        return;
+      }
+    } else if (numPanels > 1) {
+      const confirmed = confirm(`🎬 Storyboard Generation Notice:\n\n• ${numPanels} panels will be generated\n• Estimated time: 5-10 minutes\n• Each panel takes 2-3 minutes to generate\n• The process cannot be interrupted\n• You can leave this page open and check back\n\nThis is normal for AI image generation. Continue?`);
+      if (!confirmed) {
+        return;
+      }
+    } else {
+      const confirmed = confirm(`🎬 Storyboard Generation Notice:\n\n• 1 panel will be generated\n• Estimated time: 2-3 minutes\n• The process cannot be interrupted\n• You can leave this page open and check back\n\nThis is normal for AI image generation. Continue?`);
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setIsGeneratingStory(true);
     setStoryProgress(0);
     setStoryDownloadProgress(0);
@@ -590,7 +608,7 @@ export const VisionPage: React.FC = () => {
       // Check actual model status from backend for Stable Diffusion
       try {
         const healthCheck = await apiService.getDiffusionHealth();
-        const actualModelStatus = healthCheck.status;
+        const actualModelStatus = healthCheck.model_loaded ? 'downloaded' : 'not_downloaded';
         startPhase = actualModelStatus === 'downloaded' ? 'load' : 'download';
       } catch (error) {
         // Fallback to current model status if health check fails
@@ -692,9 +710,9 @@ export const VisionPage: React.FC = () => {
     };
 
     try {
-      // Add a timeout to prevent indefinite waiting
+      // Add a longer timeout for storyboard generation since it generates multiple images
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Storyboard generation timed out')), 300000); // 5 minutes timeout
+        setTimeout(() => reject(new Error('Storyboard generation timed out - this can take 10+ minutes for multiple images')), 900000); // 15 minutes timeout
       });
       
       const result = await Promise.race([
@@ -721,7 +739,20 @@ export const VisionPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Storyboard generation failed:', error);
-      alert('Failed to generate storyboard. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to generate storyboard. Please try again.';
+      if (error instanceof Error) {
+        if (error.message.includes('timed out')) {
+          errorMessage = `⏰ Storyboard Generation Timeout:\n\n• The generation took longer than 15 minutes\n• This can happen with ${numPanels} panels\n• The images may still be generating in the background\n• Try with fewer panels (1-2) for faster results\n• Check back in a few minutes to see if it completed`;
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = '🌐 Network Error:\n\n• Connection lost during storyboard generation\n• Please check your internet connection\n• Try again when connection is stable';
+        } else {
+          errorMessage = `❌ Storyboard Generation Failed:\n\n• Error: ${error.message}\n• Please try again\n• If the problem persists, try with fewer panels`;
+        }
+      }
+      
+      alert(errorMessage);
     } finally {
       if (downloadInterval) clearInterval(downloadInterval);
       if (loadInterval) clearInterval(loadInterval);
@@ -1236,41 +1267,218 @@ export const VisionPage: React.FC = () => {
 
                   {/* Analytics Tab */}
                   {resultsTab === 'analytics' && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <span className="text-gray-500">Model:</span>
-                          <p className="font-medium">{analysisResult.model_name}</p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <span className="text-gray-500">Provider:</span>
-                          <p className="font-medium">{analysisResult.model_provider}</p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <span className="text-gray-500">Analysis Type:</span>
-                          <p className="font-medium capitalize">{analysisResult.analysis_type}</p>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
-                          <span className="text-gray-500">Response Time:</span>
-                          <p className="font-medium">{analysisResult.latency_ms.toFixed(0)}ms</p>
+                    <div className="space-y-6">
+                      {/* Performance Metrics */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                        <h3 className="font-medium text-blue-900 mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Performance Metrics
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Model</span>
+                            <p className="font-medium text-blue-900">{analysisResult.model_name}</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Provider</span>
+                            <p className="font-medium text-blue-900 capitalize">{analysisResult.model_provider}</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Analysis Type</span>
+                            <p className="font-medium text-blue-900 capitalize">{analysisResult.analysis_type}</p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Response Time</span>
+                            <p className="font-medium text-blue-900">
+                              {analysisResult.latency_ms > 1000 
+                                ? `${(analysisResult.latency_ms / 1000).toFixed(1)}s` 
+                                : `${analysisResult.latency_ms.toFixed(0)}ms`}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      
-                      {analysisResult.analysis.description && (
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <h3 className="font-medium text-blue-900 mb-2">Content Analysis</h3>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-blue-700">Word Count:</span>
-                              <p className="font-medium">{analysisResult.analysis.description.word_count}</p>
-                            </div>
-                            <div>
-                              <span className="text-blue-700">Sentence Count:</span>
-                              <p className="font-medium">{analysisResult.analysis.description.sentence_count}</p>
-                            </div>
+
+                      {/* Image Technical Analysis - For Stable Diffusion */}
+                      {analysisResult.model_provider === 'integrated_diffusion' && analysisResult.analysis && (
+                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4">
+                          <h3 className="font-medium text-green-900 mb-3 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                            </svg>
+                            Image Technical Analysis
+                          </h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Format & Size</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/\((\d+x\d+)\s+pixels/)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Orientation</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/(landscape|portrait|square)/i)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Color Profile</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/(colorful|muted)/i)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Brightness</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/(bright|dark|moderate)/i)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Contrast Level</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/(high|moderate|low)\s+contrast/i)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.analysis?.content_description && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Image Type</span>
+                                <p className="font-medium text-green-900 text-xs">
+                                  {analysisResult.analysis.analysis.content_description.match(/Image analysis reveals.*?(\w+)\s+format/i)?.[1] || 'Unknown'}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
+
+                      {/* Content Analysis - For OpenAI */}
+                      {analysisResult.model_provider === 'openai' && analysisResult.analysis && (
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+                          <h3 className="font-medium text-purple-900 mb-3 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                            </svg>
+                            Content Analysis
+                          </h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            {analysisResult.analysis.description?.word_count && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Word Count</span>
+                                <p className="font-medium text-purple-900">{analysisResult.analysis.description.word_count}</p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.description?.sentence_count && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Sentence Count</span>
+                                <p className="font-medium text-purple-900">{analysisResult.analysis.description.sentence_count}</p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.description?.readability_score && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Readability</span>
+                                <p className="font-medium text-purple-900">{analysisResult.analysis.description.readability_score}</p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.description?.sentiment && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Sentiment</span>
+                                <p className="font-medium text-purple-900 capitalize">{analysisResult.analysis.description.sentiment}</p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.description?.key_topics && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Key Topics</span>
+                                <p className="font-medium text-purple-900 text-xs">
+                                  {Array.isArray(analysisResult.analysis.description.key_topics) 
+                                    ? analysisResult.analysis.description.key_topics.slice(0, 3).join(', ')
+                                    : analysisResult.analysis.description.key_topics}
+                                </p>
+                              </div>
+                            )}
+                            {analysisResult.analysis.description?.language && (
+                              <div className="bg-white rounded-lg p-3 shadow-sm">
+                                <span className="text-gray-500 text-xs">Language</span>
+                                <p className="font-medium text-purple-900">{analysisResult.analysis.description.language}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Dominant Colors - For Stable Diffusion */}
+                      {analysisResult.model_provider === 'integrated_diffusion' && analysisResult.analysis?.analysis?.dominant_colors && (
+                        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-4">
+                          <h3 className="font-medium text-orange-900 mb-3 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                            </svg>
+                            Dominant Colors
+                          </h3>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {analysisResult.analysis.analysis.dominant_colors.slice(0, 8).map((color: any, index: number) => (
+                              <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <div 
+                                    className="w-4 h-4 rounded border border-gray-300"
+                                    style={{ backgroundColor: color.hex }}
+                                  ></div>
+                                  <span className="text-xs font-medium text-orange-900">{color.name}</span>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {color.hex} ({color.percentage}%)
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Analysis Quality Metrics */}
+                      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-4">
+                        <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
+                          </svg>
+                          Analysis Quality
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Analysis Depth</span>
+                            <p className="font-medium text-gray-900">
+                              {analysisResult.model_provider === 'openai' ? 'High' : 'Technical'}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Processing Speed</span>
+                            <p className="font-medium text-gray-900">
+                              {analysisResult.latency_ms < 2000 ? 'Fast' : analysisResult.latency_ms < 5000 ? 'Medium' : 'Slow'}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Model Capability</span>
+                            <p className="font-medium text-gray-900">
+                              {analysisResult.model_name.includes('gpt-4') ? 'Advanced' : 'Specialized'}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <span className="text-gray-500 text-xs">Analysis Type</span>
+                            <p className="font-medium text-gray-900 capitalize">
+                              {analysisResult.analysis_type === 'describe' ? 'Comprehensive' : analysisResult.analysis_type}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1948,6 +2156,27 @@ export const VisionPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Generation Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-start space-x-2">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">⏱️ Generation Time Expectations:</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• <strong>1 panel:</strong> 2-3 minutes</li>
+                        <li>• <strong>3 panels:</strong> 6-9 minutes</li>
+                        <li>• <strong>5 panels:</strong> 10-15 minutes</li>
+                        <li>• You can leave this page open and check back</li>
+                        <li>• The process cannot be interrupted once started</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Generate Button */}
                 <button
                   onClick={handleStoryboardGeneration}
@@ -2042,10 +2271,10 @@ export const VisionPage: React.FC = () => {
                         <span>Downloading Stable Diffusion model (~4GB)...</span>
                       )}
                       {storyPhase === 'load' && storyboardProvider === 'integrated_diffusion' && (
-                        <span>Loading model into memory...</span>
+                        <span>Loading model into memory... (This may be skipped if model is already loaded from previous operations)</span>
                       )}
                       {storyPhase === 'generate' && (
-                        <span>Generating storyboard panels...</span>
+                        <span>🎬 Generating {numPanels} storyboard panels... Each panel takes 2-3 minutes. Please be patient!</span>
                       )}
                       {storyPhase === 'complete' && (
                         <span>✅ Storyboard generation complete!</span>

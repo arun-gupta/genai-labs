@@ -285,11 +285,12 @@ class IntegratedDiffusionService:
             panels = []
             
             for i in range(num_panels):
+                logger.info(f"Generating storyboard panel {i+1}/{num_panels}")
                 # Create panel-specific prompt
                 panel_prompt = f"Panel {i+1} of {num_panels}: {story_prompt}"
                 
-                # Generate image for this panel
-                image = await self._generate_image(panel_prompt, style, width=512, height=512)
+                # Generate image for this panel (use smaller size for faster generation)
+                image = await self._generate_image(panel_prompt, style, width=384, height=384)
                 
                 # Convert to base64
                 buffer = io.BytesIO()
