@@ -25,6 +25,7 @@ from app.services.question_suggestion_service import question_suggestion_service
 from app.services.document_analytics_service import document_analytics_service
 from app.services.image_analysis_service import image_analysis_service
 from app.services.image_generation_service import image_generation_service
+from app.services.integrated_diffusion_service import integrated_diffusion_service
 import json
 import time
 import datetime
@@ -536,13 +537,6 @@ async def get_available_models():
                 "name": "Anthropic",
                 "models": ["claude-sonnet-4", "claude-opus-4", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
                 "requires_api_key": True
-            },
-            {
-                "id": "stable_diffusion",
-                "name": "Stable Diffusion (Local)",
-                "models": ["stable-diffusion-1.5", "stable-diffusion-2.1", "stable-diffusion-xl", "flux.1-schnell", "flux.1-dev"],
-                "requires_api_key": False,
-                "description": "Local image generation via Stable Diffusion WebUI or OllamaDiffuser"
             }
         ],
         "ollama_models": ollama_models_data,
@@ -561,6 +555,36 @@ async def get_available_models():
             {"extension": "docx", "name": "Word Document", "description": "Microsoft Word documents"},
             {"extension": "xlsx", "name": "Excel Spreadsheet", "description": "Microsoft Excel files"},
             {"extension": "md", "name": "Markdown", "description": "Markdown files"}
+        ]
+    }
+
+
+@router.get("/models/image-generation")
+async def get_image_generation_providers():
+    """Get available providers specifically for image generation."""
+    return {
+        "providers": [
+            {
+                "id": "integrated_diffusion",
+                "name": "OllamaDiffuser (Local)",
+                "models": ["stable-diffusion-xl-base-1.0", "stable-diffusion-v1-5", "stable-diffusion-2-1"],
+                "requires_api_key": False,
+                "description": "Local image generation using OllamaDiffuser with pre-downloaded models"
+            },
+            {
+                "id": "stable_diffusion", 
+                "name": "Stable Diffusion WebUI",
+                "models": ["stable-diffusion-1.5", "stable-diffusion-2.1", "stable-diffusion-xl", "flux.1-schnell", "flux.1-dev"],
+                "requires_api_key": False,
+                "description": "Local image generation via AUTOMATIC1111 Stable Diffusion WebUI"
+            },
+            {
+                "id": "openai",
+                "name": "OpenAI DALL-E",
+                "models": ["dall-e-3", "dall-e-2"],
+                "requires_api_key": True,
+                "description": "OpenAI's DALL-E models for high-quality image generation"
+            }
         ]
     }
 
@@ -881,14 +905,23 @@ async def analyze_image(
         # Read image bytes
         image_bytes = await image.read()
         
-        result = await image_analysis_service.analyze_image(
-            image_bytes=image_bytes,
-            analysis_type=analysis_type,
-            model_provider=model_provider,
-            model_name=model_name,
-            custom_prompt=custom_prompt,
-            temperature=temperature
-        )
+        # Route to appropriate service based on provider
+        if model_provider == "openai":
+            result = await image_analysis_service.analyze_image(
+                image_bytes=image_bytes,
+                analysis_type=analysis_type,
+                model_provider=model_provider,
+                model_name=model_name or "gpt-4-vision-preview",
+                custom_prompt=custom_prompt,
+                temperature=temperature
+            )
+        elif model_provider == "integrated_diffusion":
+            result = await integrated_diffusion_service.analyze_image_content(
+                image_data=image_bytes,
+                analysis_type=analysis_type
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported model provider: {model_provider}")
         
         return ImageAnalysisResponse(**result)
         
@@ -1011,4 +1044,79 @@ async def edit_image(
         
     except Exception as e:
         logger.error(f"Error in image editing: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Integrated Diffusion Endpoints
+@router.get("/diffusion/health")
+async def diffusion_health_check():
+    """Check integrated diffusion service health."""
+    try:
+        health = await integrated_diffusion_service.health_check()
+        return health
+        
+    except Exception as e:
+        logger.error(f"Error in diffusion health check: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+@router.post("/generate/storyboard")
+async def generate_storyboard(request: dict):
+    """Generate a multi-panel storyboard from a story prompt."""
+    try:
+        story_prompt = request.get("story_prompt", "")
+        style = request.get("style", "cinematic")
+        num_panels = request.get("num_panels", 5)
+        provider = request.get("provider", "integrated_diffusion")  # Default to integrated_diffusion for backwards compatibility
+        
+        if not story_prompt:
+            raise HTTPException(status_code=400, detail="Story prompt is required")
+        
+        # For storyboard, we need to generate multiple images, so we'll use the image generation service
+        # and create panels individually
+        if provider == "openai":
+            panels = []
+            for i in range(num_panels):
+                panel_prompt = f"Panel {i+1}: {story_prompt}, {style} style"
+                
+                # Use the existing image generation service
+                from app.services.image_generation_service import ImageGenerationService
+                image_service = ImageGenerationService()
+                panel_result = await image_service.generate_image(
+                    prompt=panel_prompt,
+                    model_provider="openai",
+                    model_name="dall-e-3",
+                    size="1024x1024",
+                    style=style
+                )
+                
+                panels.append({
+                    "panel_number": i + 1,
+                    "prompt": panel_prompt,
+                    "image_data": panel_result.get("image_data"),
+                    "url": panel_result.get("url")
+                })
+            
+            result = {
+                "type": "storyboard",
+                "story_prompt": story_prompt,
+                "style": style,
+                "num_panels": num_panels,
+                "provider": provider,
+                "panels": panels
+            }
+        else:
+            # Use integrated_diffusion_service for other providers
+            result = await integrated_diffusion_service.generate_storyboard(
+                story_prompt=story_prompt,
+                style=style,
+                num_panels=num_panels
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in storyboard generation: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 

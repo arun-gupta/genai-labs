@@ -10,6 +10,7 @@ import aiohttp
 import json
 
 from app.core.config import settings
+from app.services.integrated_diffusion_service import integrated_diffusion_service
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,10 @@ class ImageGenerationService:
                 )
             elif model_provider == "stable_diffusion":
                 return await self._generate_stable_diffusion_image(
+                    prompt, model_name, size, quality, style, num_images
+                )
+            elif model_provider == "integrated_diffusion":
+                return await self._generate_integrated_diffusion_image(
                     prompt, model_name, size, quality, style, num_images
                 )
             else:
@@ -415,6 +420,41 @@ class ImageGenerationService:
                     
             except aiohttp.ClientError as e:
                 raise Exception(f"Failed to connect to OllamaDiffuser at {diffuser_url}: {str(e)}")
+
+    async def _generate_integrated_diffusion_image(
+        self,
+        prompt: str,
+        model_name: Optional[str],
+        size: str,
+        quality: str,
+        style: Optional[str],
+        num_images: int
+    ) -> Dict[str, Any]:
+        """Generate image using integrated diffusion service (diffusion-lab approach)."""
+        
+        # Parse size
+        width, height = self._parse_image_size(size, default="1024x1024")
+        
+        # Map quality to inference steps
+        num_inference_steps = 30 if quality == "hd" else 20
+        
+        # Use integrated diffusion service
+        try:
+            result = await integrated_diffusion_service.generate_text_to_image(
+                prompt=prompt,
+                style=style or "",
+                width=width,
+                height=height,
+                num_images=num_images,
+                num_inference_steps=num_inference_steps,
+                model_name=model_name or "stabilityai/stable-diffusion-xl-base-1.0"
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Integrated diffusion generation failed: {e}")
+            raise Exception(f"Integrated diffusion generation failed: {str(e)}")
 
     def _parse_image_size(self, size: str, default: str = "512x512") -> tuple[int, int]:
         """Parse image size string into width and height."""

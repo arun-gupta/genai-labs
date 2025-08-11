@@ -88,6 +88,10 @@ class ApiService {
     return this.request<AvailableModels>('/models');
   }
 
+  async getImageGenerationProviders(): Promise<AvailableModels> {
+    return this.request<AvailableModels>('/models/image-generation');
+  }
+
   async analyzeSummary(request: AnalyticsRequest): Promise<AnalyticsResponse> {
     return this.request<AnalyticsResponse>('/analytics', {
       method: 'POST',
@@ -164,13 +168,7 @@ class ApiService {
     return this.request<SupportedLanguages>('/languages');
   }
 
-  async getQuestionSuggestions(collectionName: string): Promise<{ suggestions: any[] }> {
-    return this.request<{ suggestions: any[] }>(`/rag/suggestions/${collectionName}`);
-  }
 
-  async getDocumentQuestionSuggestions(collectionName: string, documentId: string): Promise<{ suggestions: any[] }> {
-    return this.request<{ suggestions: any[] }>(`/rag/suggestions/${collectionName}/document/${documentId}`);
-  }
 
   async generateTextStream(
     request: GenerateRequest,
@@ -541,6 +539,9 @@ class ApiService {
     if (request.model_name) formData.append('model_name', request.model_name);
     if (request.custom_prompt) formData.append('custom_prompt', request.custom_prompt);
     if (request.temperature !== undefined) formData.append('temperature', request.temperature.toString());
+    
+    // Add cache-busting parameter
+    formData.append('_timestamp', Date.now().toString());
 
     const response = await fetch(`${this.baseUrl}/vision/analyze`, {
       method: 'POST',
@@ -596,6 +597,24 @@ class ApiService {
     return this.request('/generate/image', {
       method: 'POST',
       body: JSON.stringify(request),
+    });
+  }
+
+  async generateStoryboard(request: {
+    story_prompt: string;
+    style?: string;
+    num_panels?: number;
+    provider?: string;
+  }): Promise<any> {
+    return this.request('/generate/storyboard', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async getDiffusionHealth(): Promise<any> {
+    return this.request('/diffusion/health', {
+      method: 'GET',
     });
   }
 

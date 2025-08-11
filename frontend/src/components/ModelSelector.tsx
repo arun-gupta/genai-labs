@@ -9,6 +9,7 @@ interface ModelSelectorProps {
   onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
   disabled?: boolean;
+  externalModels?: AvailableModels | null;  // Optional external data
 }
 
 const providerIcons = {
@@ -23,14 +24,23 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   onProviderChange,
   onModelChange,
   disabled = false,
+  externalModels = null,
 }) => {
   const [availableModels, setAvailableModels] = useState<AvailableModels | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadAvailableModels();
-  }, []);
+    if (externalModels) {
+      // Use external data if provided
+      setAvailableModels(externalModels);
+      setIsLoading(false);
+      setError(null);
+    } else {
+      // Otherwise load data from API
+      loadAvailableModels();
+    }
+  }, [externalModels]);
 
   const loadAvailableModels = async () => {
     try {

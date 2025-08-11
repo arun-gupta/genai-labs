@@ -32,12 +32,17 @@ cd genai-labs
 ## 🆕 Recent Updates
 
 ### Local Image Generation Support (Latest)
+- **🏆 Ollama + OllamaDiffuser Integration** - Consistent model management with pre-downloaded Stable Diffusion models
+- **🚀 Simplified Setup** - New integration with [diffusion-lab](https://github.com/arun-gupta/diffusion-lab) for instant local generation
 - **🎨 Stable Diffusion Integration** - Full support for AUTOMATIC1111 WebUI and OllamaDiffuser
 - **🏠 Privacy-First Generation** - Generate images locally without cloud dependencies
 - **🎭 14+ Artistic Styles** - Photorealistic, Oil Painting, Anime, Cyberpunk, and more
-- **⚡ Ollama Image Support** - Use Ollama provider for both vision analysis AND image generation
-- **🔧 Multiple Local Options** - Choose between WebUI (port 7860) or OllamaDiffuser (port 8000)
+- **⚡ No Download Delays** - Pre-pull models with `ollamadiffuser pull` for instant generation
+- **🔧 Multiple Local Options** - Choose between Ollama+OllamaDiffuser, WebUI, or direct integration
 - **📱 Enhanced Vision UI** - Improved user experience with setup guidance and status indicators
+
+> **📋 [Stable Diffusion Setup Guide](docs/STABLE_DIFFUSION_SETUP.md)** - Complete instructions for local image generation setup  
+> **🎯 [Ollama + OllamaDiffuser Guide](docs/OLLAMA_DIFFUSION_SETUP.md)** - Recommended setup for consistent model serving
 
 ### Model Updates
 - **🚀 GPT-5 Support** - Latest OpenAI model with advanced reasoning capabilities
@@ -135,6 +140,8 @@ VITE_API_BASE_URL=http://localhost:8000
 - **[Features Guide](docs/FEATURES.md)** - Detailed feature documentation
 - **[Setup Guide](docs/SETUP.md)** - Complete setup instructions
 - **[Models Guide](docs/MODELS.md)** - Supported models and usage
+- **[Stable Diffusion Setup](docs/STABLE_DIFFUSION_SETUP.md)** - Local image generation setup
+- **[Ollama + OllamaDiffuser Guide](docs/OLLAMA_DIFFUSION_SETUP.md)** - Recommended setup for image generation
 - **[Voice Features](docs/VOICE.md)** - Speech-to-text and text-to-speech
 - **[API Reference](docs/API.md)** - Backend API documentation
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions

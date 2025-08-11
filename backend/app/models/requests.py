@@ -20,6 +20,8 @@ class ModelProvider(str, Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     OLLAMA = "ollama"
+    STABLE_DIFFUSION = "stable_diffusion"
+    INTEGRATED_DIFFUSION = "integrated_diffusion"
 
 
 class GenerateRequest(BaseModel):

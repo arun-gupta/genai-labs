@@ -206,6 +206,26 @@ start_frontend() {
     npm run dev
 }
 
+# Function to open browser
+open_browser() {
+    local url=$1
+    echo -e "${BLUE}🌐 Opening browser...${NC}"
+    
+    # Detect OS and open browser accordingly
+    if command -v open > /dev/null; then
+        # macOS
+        open "$url"
+    elif command -v xdg-open > /dev/null; then
+        # Linux
+        xdg-open "$url"
+    elif command -v start > /dev/null; then
+        # Windows
+        start "$url"
+    else
+        echo -e "${YELLOW}⚠️  Please open $url manually in your browser${NC}"
+    fi
+}
+
 # Start backend in background
 echo -e "${BLUE}🔄 Starting services...${NC}"
 start_backend &
@@ -245,6 +265,9 @@ if [ $BACKEND_READY -eq 0 ] && [ $FRONTEND_READY -eq 0 ]; then
     echo -e "${GREEN}📚 API Documentation: http://localhost:8000/docs${NC}"
     echo -e "${BLUE}=============================================${NC}"
     echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
+    
+    # Open the frontend page in browser
+    open_browser "http://localhost:3000"
     
     # Keep the script running
     wait

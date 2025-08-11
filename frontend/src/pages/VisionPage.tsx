@@ -4,6 +4,12 @@ import { apiService } from '../services/api';
 import { ModelSelector } from '../components/ModelSelector';
 import { ExportOptions } from '../components/ExportOptions';
 
+// Static sample image URLs (from public directory) with cache busting
+const timestamp = Date.now();
+const businessMeetingImage = `/sample-images/business-meeting.png?t=${timestamp}`;
+const natureSceneImage = `/sample-images/nature-scene.png?t=${timestamp}`;
+const technologyImage = `/sample-images/technology.png?t=${timestamp}`;
+
 interface ImageAnalysisResult {
   analysis_type: string;
   analysis: any;
@@ -29,27 +35,59 @@ interface ImageGenerationResult {
 }
 
 export const VisionPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'analysis' | 'generation' | 'gallery'>('analysis');
-  const [selectedProvider, setSelectedProvider] = useState('openai');
-  const [selectedModel, setSelectedModel] = useState('gpt-5');
-  const [availableModels, setAvailableModels] = useState<any>(null);
+    const [activeTab, setActiveTab] = useState<'analysis' | 'generation' | 'storyboard' | 'gallery'>('analysis');
+
+  // Analysis provider state
+  const [analysisProvider, setAnalysisProvider] = useState('integrated_diffusion');
+  
+  // Generation provider state
+  const [generationProvider, setGenerationProvider] = useState('integrated_diffusion');
+  
+  // Storyboard provider state
+  const [storyboardProvider, setStoryboardProvider] = useState('integrated_diffusion');
+
+  
+
   
   // Image Analysis State
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [analysisType, setAnalysisType] = useState<'describe' | 'extract' | 'analyze' | 'compare'>('describe');
   const [customPrompt, setCustomPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<ImageAnalysisResult | null>(null);
   
   // Image Generation State
   const [generationPrompt, setGenerationPrompt] = useState('');
-  const [imageSize, setImageSize] = useState('1024x1024');
+  const [imageSize, setImageSize] = useState('512x512');
   const [imageQuality, setImageQuality] = useState('standard');
   const [artisticStyle, setArtisticStyle] = useState('');
   const [numImages, setNumImages] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [generationPhase, setGenerationPhase] = useState<'download' | 'load' | 'generate' | 'complete'>('download');
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [loadProgress, setLoadProgress] = useState<number>(0);
+  const [generateProgress, setGenerateProgress] = useState<number>(0);
   const [generationResult, setGenerationResult] = useState<ImageGenerationResult | null>(null);
+  
+  // Integrated Diffusion State
+  const [diffusionHealth, setDiffusionHealth] = useState<any>(null);
+  
+  // Storyboard State
+  const [storyPrompt, setStoryPrompt] = useState('');
+  const [storyStyle, setStoryStyle] = useState('cinematic');
+  const [numPanels, setNumPanels] = useState(5);
+  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
+  const [storyProgress, setStoryProgress] = useState<number>(0);
+  const [storyPhase, setStoryPhase] = useState<'download' | 'load' | 'generate' | 'complete'>('download');
+  const [storyDownloadProgress, setStoryDownloadProgress] = useState<number>(0);
+  const [storyLoadProgress, setStoryLoadProgress] = useState<number>(0);
+  const [storyGenerateProgress, setStoryGenerateProgress] = useState<number>(0);
+  const [storyResult, setStoryResult] = useState<any>(null);
+  const [modelStatus, setModelStatus] = useState<'checking' | 'downloaded' | 'not_downloaded' | 'error'>('checking');
+  const [showAllPrompts, setShowAllPrompts] = useState(false);
+  const [showQuickSettings, setShowQuickSettings] = useState(false);
+  const [showAllStoryPrompts, setShowAllStoryPrompts] = useState(false);
   
   // Gallery State
   const [generatedImages, setGeneratedImages] = useState<ImageGenerationResult[]>([]);
@@ -61,16 +99,19 @@ export const VisionPage: React.FC = () => {
   // Results tab state
   const [resultsTab, setResultsTab] = useState<'response' | 'analytics' | 'comparison'>('response');
 
-  // Sample data
+  // Sample data with static images
   const sampleImages = [
     {
       name: 'Business Meeting',
       description: 'A professional business meeting scene',
       color: '#4F46E5', // Indigo
+      image: businessMeetingImage,
       analysisPrompts: [
-        'Describe the people and setting in this business meeting',
-        'What type of business activity is taking place?',
-        'Analyze the professional environment and atmosphere'
+        'Describe the main elements and composition of this image',
+        'What is the overall mood and atmosphere?',
+        'Analyze the colors, lighting, and visual style',
+        'Extract any text or readable content from this image',
+        'Provide a comprehensive technical analysis of this image'
       ],
       generationPrompts: [
         'A professional business meeting with diverse team members',
@@ -82,10 +123,13 @@ export const VisionPage: React.FC = () => {
       name: 'Nature Scene',
       description: 'A beautiful natural landscape',
       color: '#059669', // Emerald
+      image: natureSceneImage,
       analysisPrompts: [
-        'Describe the natural elements and landscape features',
-        'What type of environment is shown in this scene?',
-        'Analyze the colors and mood of this natural setting'
+        'Describe the main elements and composition of this image',
+        'What is the overall mood and atmosphere?',
+        'Analyze the colors, lighting, and visual style',
+        'Extract any text or readable content from this image',
+        'Provide a comprehensive technical analysis of this image'
       ],
       generationPrompts: [
         'Serene mountain landscape with trees and a lake',
@@ -97,10 +141,13 @@ export const VisionPage: React.FC = () => {
       name: 'Technology',
       description: 'Modern technology and digital devices',
       color: '#DC2626', // Red
+      image: technologyImage,
       analysisPrompts: [
-        'Describe the technology and digital elements shown',
-        'What type of devices or systems are displayed?',
-        'Analyze the futuristic or modern aspects of this scene'
+        'Describe the main elements and composition of this image',
+        'What is the overall mood and atmosphere?',
+        'Analyze the colors, lighting, and visual style',
+        'Extract any text or readable content from this image',
+        'Provide a comprehensive technical analysis of this image'
       ],
       generationPrompts: [
         'Futuristic technology interface with glowing screens',
@@ -152,18 +199,29 @@ export const VisionPage: React.FC = () => {
     { value: 'film noir', label: 'Film Noir' }
   ];
 
-  // Load available models
+  // Load available models for both analysis and generation
   useEffect(() => {
-    const loadAvailableModels = async () => {
+    const loadModels = async () => {
       try {
-        const models = await apiService.getAvailableModels();
-        setAvailableModels(models);
+        // Check model status for image generation
+        try {
+          const healthResponse = await apiService.getDiffusionHealth();
+          console.log('Health response:', healthResponse);
+          if (healthResponse && healthResponse.model_loaded === true) {
+            setModelStatus('downloaded');
+          } else {
+            setModelStatus('not_downloaded');
+          }
+        } catch (error) {
+          console.error('Failed to check model status:', error);
+          setModelStatus('error');
+        }
       } catch (error) {
-        console.error('Failed to load available models:', error);
+        console.error('Failed to load models:', error);
       }
     };
     
-    loadAvailableModels();
+    loadModels();
   }, []);
 
   // Global paste event listener
@@ -213,6 +271,9 @@ export const VisionPage: React.FC = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Clear previous analysis results
+      setAnalysisResult(null);
+      
       setUploadedImage(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -244,6 +305,9 @@ export const VisionPage: React.FC = () => {
             return;
           }
           
+          // Clear previous analysis results
+          setAnalysisResult(null);
+          
           setUploadedImage(file);
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -271,6 +335,9 @@ export const VisionPage: React.FC = () => {
           alert('Image file is too large. Please use an image smaller than 20MB.');
           return;
         }
+        
+        // Clear previous analysis results
+        setAnalysisResult(null);
         
         setUploadedImage(file);
         const reader = new FileReader();
@@ -303,18 +370,30 @@ export const VisionPage: React.FC = () => {
 
     setIsAnalyzing(true);
     try {
+      console.log('Starting analysis for image:', uploadedImage.name, 'Size:', uploadedImage.size);
+      console.log('Analysis provider:', analysisProvider);
+      
       const imageBytes = await fileToBytes(uploadedImage);
+      console.log('Image bytes length:', imageBytes.length);
+      
       const result = await apiService.analyzeImage({
         image: imageBytes,
-        analysis_type: analysisType,
-        model_provider: selectedProvider,
-        model_name: selectedModel,
+        analysis_type: 'describe', // Default to describe since we removed the dropdown
+        model_provider: analysisProvider,
+        model_name: analysisProvider === 'openai' ? 'gpt-4o' : 'stable-diffusion-3.5-large',
         custom_prompt: customPrompt || undefined,
         temperature: 0.3
       });
       
+      console.log('Analysis result:', result);
       setAnalysisResult(result);
       setResultsTab('response'); // Switch to response tab when results are available
+      
+      // Update model status if analysis was successful with Stable Diffusion
+      if (analysisProvider === 'integrated_diffusion') {
+        console.log('Analysis successful with Stable Diffusion, updating model status to downloaded');
+        setModelStatus('downloaded');
+      }
     } catch (error) {
       console.error('Image analysis failed:', error);
       alert('Image analysis failed. Please try again.');
@@ -330,17 +409,130 @@ export const VisionPage: React.FC = () => {
       return;
     }
 
-    if (selectedProvider === 'ollama') {
-      alert('Ollama does not support image generation. Please switch to OpenAI or Anthropic.');
-      return;
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setDownloadProgress(0);
+    setLoadProgress(0);
+    setGenerateProgress(0);
+    
+    // Check actual model status from backend before deciding phases (only for Stable Diffusion)
+    let actualModelStatus = modelStatus;
+    if (generationProvider === 'integrated_diffusion') {
+      try {
+        const healthResponse = await apiService.getDiffusionHealth();
+        console.log('Backend health response:', healthResponse);
+        actualModelStatus = healthResponse.model_loaded ? 'downloaded' : 'not_downloaded';
+        console.log('Actual model status from backend:', actualModelStatus);
+      } catch (error) {
+        console.error('Failed to check backend model status:', error);
+      }
+    } else {
+      // For OpenAI and GPT-4 Vision, model is always "downloaded" (no local model)
+      actualModelStatus = 'downloaded';
+    }
+    
+    // Smart phase detection based on provider and actual model status
+    console.log('Generation provider:', generationProvider, 'Current model status:', modelStatus, 'Actual backend status:', actualModelStatus);
+    let startPhase: 'download' | 'generate';
+    if (generationProvider === 'openai' || generationProvider === 'gpt-vision') {
+      // OpenAI and GPT-4 Vision don't need download/load phases
+      startPhase = 'generate';
+    } else {
+      // Stable Diffusion needs download/load phases
+      startPhase = actualModelStatus === 'downloaded' ? 'generate' : 'download';
+    }
+    console.log('Starting generation phase:', startPhase);
+    setGenerationPhase(startPhase);
+    
+    // Track completion with local variables
+    let downloadComplete = false;
+    let loadComplete = false;
+    
+    // Phase 1: Model Download (0-100%) - skip if model already loaded
+    let downloadInterval: number | null = null;
+    if (startPhase === 'download') {
+      downloadInterval = setInterval(() => {
+        setDownloadProgress(prev => {
+          const newProgress = Math.min(prev + Math.random() * 3, 100);
+          if (newProgress >= 100) {
+            clearInterval(downloadInterval!);
+            downloadComplete = true;
+            setGenerationPhase('load');
+            // Start load phase immediately after download completes
+            setTimeout(() => startLoadPhase(), 100);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 200);
+    } else {
+      // Model already loaded or using OpenAI, skip both download and load phases
+      setDownloadProgress(100);
+      setLoadProgress(100);
+      downloadComplete = true;
+      loadComplete = true;
+      setGenerationPhase('generate');
+      // Start generate phase immediately
+      setTimeout(() => startGeneratePhase(), 100);
     }
 
-    setIsGenerating(true);
+    // Phase 2: Model Loading (0-100%) - only start after download is complete
+    let loadInterval: number | null = null;
+    const startLoadPhase = () => {
+      loadInterval = setInterval(() => {
+        setLoadProgress(prev => {
+          const newProgress = Math.min(prev + Math.random() * 2, 100);
+          if (newProgress >= 100) {
+            clearInterval(loadInterval!);
+            loadComplete = true;
+            setGenerationPhase('generate');
+            // Start generate phase immediately after load completes
+            setTimeout(() => startGeneratePhase(), 100);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 300);
+    };
+
+    // Phase 3: Image Generation (0-100%) - only start after load is complete
+    let generateInterval: number | null = null;
+    const startGeneratePhase = () => {
+      // Start with a much slower progress to better simulate actual generation time
+      generateInterval = setInterval(() => {
+        setGenerateProgress(prev => {
+          // Much slower progress that better reflects real Stable Diffusion generation time
+          // Start very slow, then slightly faster in the middle, then slow again at the end
+          let increment;
+          if (prev < 30) {
+            // Very slow at the beginning (model initialization)
+            increment = 0.1;
+          } else if (prev < 70) {
+            // Slightly faster in the middle (actual generation)
+            increment = 0.3;
+          } else {
+            // Slow again at the end (final processing)
+            increment = 0.15;
+          }
+          const newProgress = Math.min(prev + increment, 85); // Cap at 85% instead of 95%
+          return newProgress;
+        });
+      }, 500); // Slower interval (500ms instead of 200ms)
+    };
+
+    // Start generate phase after load completes
+    const checkLoadComplete = setInterval(() => {
+      if (loadComplete) {
+        clearInterval(checkLoadComplete);
+        startGeneratePhase();
+      }
+    }, 100);
+
     try {
       const result = await apiService.generateImage({
         prompt: generationPrompt,
-        model_provider: selectedProvider,
-        model_name: selectedModel,
+        model_provider: generationProvider,
+        model_name: generationProvider === 'openai' ? 'dall-e-3' : generationProvider === 'gpt-vision' ? 'gpt-4o' : 'stable-diffusion-3.5-large',
         size: imageSize,
         quality: imageQuality,
         style: artisticStyle || undefined,
@@ -348,9 +540,17 @@ export const VisionPage: React.FC = () => {
         temperature: 0.7
       });
       
+      // Complete the generation progress when API actually finishes
+      if (generateInterval) clearInterval(generateInterval);
+      setGenerateProgress(100);
+      setGenerationPhase('complete');
       setGenerationResult(result);
       setGeneratedImages(prev => [result, ...prev]);
       setResultsTab('response'); // Switch to response tab when results are available
+      
+      // Update model status since generation was successful
+      setModelStatus('downloaded');
+      console.log('Generation successful, model status updated to downloaded');
     } catch (error) {
       console.error('Image generation failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -360,7 +560,178 @@ export const VisionPage: React.FC = () => {
         alert(`Image generation failed: ${errorMessage}. Please try again.`);
       }
     } finally {
+      if (downloadInterval) clearInterval(downloadInterval);
+      if (loadInterval) clearInterval(loadInterval);
+      if (generateInterval) clearInterval(generateInterval);
       setIsGenerating(false);
+      setGenerationProgress(0);
+      setDownloadProgress(0);
+      setLoadProgress(0);
+      setGenerateProgress(0);
+      setGenerationPhase('download');
+    }
+  };
+
+  const handleStoryboardGeneration = async () => {
+    if (!storyPrompt.trim()) {
+      alert('Please enter a story prompt for storyboard generation');
+      return;
+    }
+
+    setIsGeneratingStory(true);
+    setStoryProgress(0);
+    setStoryDownloadProgress(0);
+    setStoryLoadProgress(0);
+    setStoryGenerateProgress(0);
+    
+    // Smart phase detection based on model status and provider
+    let startPhase: 'download' | 'load' | 'generate';
+    if (storyboardProvider === 'integrated_diffusion') {
+      // Check actual model status from backend for Stable Diffusion
+      try {
+        const healthCheck = await apiService.getDiffusionHealth();
+        const actualModelStatus = healthCheck.status;
+        startPhase = actualModelStatus === 'downloaded' ? 'load' : 'download';
+      } catch (error) {
+        // Fallback to current model status if health check fails
+        startPhase = modelStatus === 'downloaded' ? 'load' : 'download';
+      }
+    } else {
+      // Skip download/load for cloud providers
+      startPhase = 'generate';
+    }
+    setStoryPhase(startPhase);
+    
+    // Track completion with local variables
+    let downloadComplete = false;
+    let loadComplete = false;
+    
+    // Phase 1: Model Download (0-100%) - skip if model already loaded or cloud provider
+    let downloadInterval: number | null = null;
+    if (startPhase === 'download' && storyboardProvider === 'integrated_diffusion') {
+      downloadInterval = setInterval(() => {
+        setStoryDownloadProgress(prev => {
+          const newProgress = Math.min(prev + Math.random() * 2, 100);
+          if (newProgress >= 100) {
+            clearInterval(downloadInterval!);
+            downloadComplete = true;
+            setStoryPhase('load');
+            // Start load phase immediately after download completes
+            setTimeout(() => startLoadPhase(), 100);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 500);
+    } else {
+      // Model already loaded or cloud provider, skip download phase
+      setStoryDownloadProgress(100);
+      downloadComplete = true;
+      if (storyboardProvider === 'integrated_diffusion') {
+        setStoryPhase('load');
+        // Start load phase immediately
+        setTimeout(() => startLoadPhase(), 100);
+      } else {
+        setStoryPhase('generate');
+        // Start generate phase immediately for cloud providers
+        setTimeout(() => startGeneratePhase(), 100);
+      }
+    }
+
+    // Phase 2: Model Loading (0-100%) - only start after download is complete and only for local models
+    let loadInterval: number | null = null;
+    const startLoadPhase = () => {
+      if (storyboardProvider !== 'integrated_diffusion') {
+        // Skip load phase for cloud providers
+        setStoryLoadProgress(100);
+        loadComplete = true;
+        setStoryPhase('generate');
+        setTimeout(() => startGeneratePhase(), 100);
+        return;
+      }
+      
+      loadInterval = setInterval(() => {
+        setStoryLoadProgress(prev => {
+          const newProgress = Math.min(prev + Math.random() * 1.5, 100);
+          if (newProgress >= 100) {
+            clearInterval(loadInterval!);
+            loadComplete = true;
+            setStoryPhase('generate');
+            // Start generate phase immediately after load completes
+            setTimeout(() => startGeneratePhase(), 100);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 700);
+    };
+
+    // Phase 3: Storyboard Generation (0-100%) - only start after load is complete
+    let generateInterval: number | null = null;
+    const startGeneratePhase = () => {
+      // Start with a much slower progress to better simulate actual generation time
+      generateInterval = setInterval(() => {
+        setStoryGenerateProgress(prev => {
+          // Much slower progress that better reflects real Stable Diffusion generation time
+          // Start very slow, then slightly faster in the middle, then slow again at the end
+          let increment;
+          if (prev < 30) {
+            // Very slow at the beginning (model initialization)
+            increment = 0.15;
+          } else if (prev < 70) {
+            // Slightly faster in the middle (actual generation)
+            increment = 0.3;
+          } else {
+            // Slow again at the end (final processing)
+            increment = 0.2;
+          }
+          const newProgress = Math.min(prev + increment, 90); // Cap at 90% to leave room for completion
+          return newProgress;
+        });
+      }, 500); // Slightly faster interval for better responsiveness
+    };
+
+    try {
+      // Add a timeout to prevent indefinite waiting
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Storyboard generation timed out')), 300000); // 5 minutes timeout
+      });
+      
+      const result = await Promise.race([
+        apiService.generateStoryboard({
+          story_prompt: storyPrompt,
+          style: storyStyle || undefined,
+          num_panels: numPanels,
+          provider: storyboardProvider
+        }),
+        timeoutPromise
+      ]);
+      
+      // Complete the generation progress when API actually finishes
+      if (generateInterval) clearInterval(generateInterval);
+      setStoryGenerateProgress(100);
+      setStoryPhase('complete');
+      setStoryResult(result);
+      setResultsTab('response'); // Switch to response tab when results are available
+      
+      // Update model status if using Stable Diffusion
+      if (result.provider === 'integrated_diffusion') {
+        setModelStatus('downloaded');
+        console.log('Storyboard generation successful, model status updated to downloaded');
+      }
+    } catch (error) {
+      console.error('Storyboard generation failed:', error);
+      alert('Failed to generate storyboard. Please try again.');
+    } finally {
+      if (downloadInterval) clearInterval(downloadInterval);
+      if (loadInterval) clearInterval(loadInterval);
+      if (generateInterval) clearInterval(generateInterval);
+      setIsGeneratingStory(false);
+      setStoryProgress(0);
+      setStoryDownloadProgress(0);
+      setStoryLoadProgress(0);
+      setStoryGenerateProgress(0);
+      setStoryPhase('download');
     }
   };
 
@@ -377,52 +748,36 @@ export const VisionPage: React.FC = () => {
     link.click();
   };
 
-  // Generate a simple colored image
-  const generateSampleImage = (name: string, color: string) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 300;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      // Fill background
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, 400, 300);
-      
-      // Add some visual elements
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.fillRect(50, 50, 300, 200);
-      
-      // Add text
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 24px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(name, 200, 150);
-      
-      // Add a border
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(10, 10, 380, 280);
-    }
-    return canvas.toDataURL('image/png', 1.0);
+  // Helper function to adjust color brightness (for fallback)
+  const adjustBrightness = (hex: string, percent: number) => {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = (num >> 16) + amt;
+    const G = (num >> 8 & 0x00FF) + amt;
+    const B = (num & 0x0000FF) + amt;
+    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
   };
 
   // Handle sample image selection
   const handleSampleImageSelect = (sampleImage: any) => {
-    // Generate the image data
-    const imageDataUrl = generateSampleImage(sampleImage.name, sampleImage.color);
+    // Clear previous analysis results
+    setAnalysisResult(null);
     
-    // Convert base64 PNG to a File object
-    const base64Data = imageDataUrl.split(',')[1];
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const file = new File([byteArray], `${sampleImage.name.toLowerCase().replace(' ', '-')}.png`, { type: 'image/png' });
+    // Use the static image
+    setImagePreview(sampleImage.image);
     
-    setUploadedImage(file);
-    setImagePreview(imageDataUrl);
+    // Convert the image URL to a File object for analysis
+    fetch(sampleImage.image)
+      .then(response => response.blob())
+      .then(blob => {
+        const file = new File([blob], `${sampleImage.name.toLowerCase().replace(' ', '-')}.png`, { type: 'image/png' });
+        setUploadedImage(file);
+      })
+      .catch(error => {
+        console.error('Error loading sample image:', error);
+      });
   };
 
   // Handle sample prompt selection
@@ -478,6 +833,17 @@ export const VisionPage: React.FC = () => {
             <span>Image Generation</span>
           </button>
           <button
+            onClick={() => setActiveTab('storyboard')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'storyboard'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <FileText size={16} />
+            <span>Storyboard</span>
+          </button>
+          <button
             onClick={() => setActiveTab('gallery')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'gallery'
@@ -517,11 +883,12 @@ export const VisionPage: React.FC = () => {
                       onClick={() => handleSampleImageSelect(sampleImage)}
                       className="border border-gray-200 rounded-lg p-3 hover:border-blue-400 hover:bg-blue-50 transition-colors text-left"
                     >
-                      <div 
-                        className="w-full h-20 rounded mb-2 flex items-center justify-center"
-                        style={{ backgroundColor: sampleImage.color }}
-                      >
-                        <span className="text-white font-medium text-sm">{sampleImage.name}</span>
+                      <div className="w-full h-20 rounded mb-2 overflow-hidden">
+                        <img
+                          src={sampleImage.image}
+                          alt={sampleImage.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <p className="text-xs font-medium text-gray-900">{sampleImage.name}</p>
                       <p className="text-xs text-gray-500">{sampleImage.description}</p>
@@ -600,7 +967,7 @@ export const VisionPage: React.FC = () => {
               {uploadedImage && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sample Analysis Prompts
+                    Image-Specific Analysis Prompts
                   </label>
                   <div className="space-y-2">
                     {sampleImages.find(img => img.name === uploadedImage.name?.replace('.png', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))?.analysisPrompts?.map((prompt, index) => (
@@ -620,21 +987,30 @@ export const VisionPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Analysis Type */}
+
+
+              {/* General Sample Analysis Prompts */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Analysis Type
+                  Sample Prompts
                 </label>
-                <select
-                  value={analysisType}
-                  onChange={(e) => setAnalysisType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="describe">Describe Image</option>
-                  <option value="extract">Extract Text</option>
-                  <option value="analyze">Comprehensive Analysis</option>
-                  <option value="compare">Compare Images</option>
-                </select>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    'Describe the main elements and composition of this image',
+                    'What is the overall mood and atmosphere?',
+                    'Analyze the colors, lighting, and visual style',
+                    'Extract any text or readable content from this image',
+                    'Provide a comprehensive technical analysis of this image'
+                  ].map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCustomPrompt(prompt)}
+                      className="w-full text-left p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                    >
+                      <p className="text-sm text-gray-900">{prompt}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Custom Prompt */}
@@ -651,14 +1027,84 @@ export const VisionPage: React.FC = () => {
                 />
               </div>
 
-              {/* Model Selection */}
+              {/* Analysis Model Selection */}
               <div className="mb-6">
-                <ModelSelector
-                  selectedProvider={selectedProvider}
-                  onProviderChange={setSelectedProvider}
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Pick a Model
+                </label>
+                <div className="space-y-3">
+                  {/* GPT-4 Vision Option */}
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      analysisProvider === 'openai' 
+                        ? 'border-blue-300 bg-blue-50' 
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                    onClick={() => setAnalysisProvider('openai')}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            GPT-4 Vision
+                          </h4>
+                          {analysisProvider === 'openai' && (
+                            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Best for text extraction, detailed descriptions, and complex reasoning.
+                        </p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          <strong>Model:</strong> gpt-4o
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stable Diffusion Option */}
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      analysisProvider === 'integrated_diffusion' 
+                        ? 'border-green-300 bg-green-50' 
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                    onClick={() => setAnalysisProvider('integrated_diffusion')}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Stable Diffusion
+                          </h4>
+                          {analysisProvider === 'integrated_diffusion' && (
+                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Best for style analysis, visual composition, and artistic characteristics.
+                        </p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          <strong>Model:</strong> stable-diffusion-3.5-large
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Analyze Button */}
@@ -731,6 +1177,32 @@ export const VisionPage: React.FC = () => {
                         <h3 className="font-medium text-gray-900 mb-2">Analysis Summary</h3>
                         <p className="text-gray-700">{analysisResult.raw_response}</p>
                       </div>
+                      
+                      {/* Dominant Colors Section */}
+                      {analysisResult.analysis.dominant_colors && analysisResult.analysis.dominant_colors.length > 0 && (
+                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                          <h3 className="font-medium text-gray-900 mb-3">Dominant Colors</h3>
+                          <div className="flex flex-wrap gap-3">
+                            {analysisResult.analysis.dominant_colors.map((color: any, index: number) => (
+                              <div key={index} className={`flex items-center space-x-2 bg-white rounded-lg p-2 shadow-sm ${color.significant ? 'ring-2 ring-yellow-300' : ''}`}>
+                                <div 
+                                  className="w-8 h-8 rounded border border-gray-200"
+                                  style={{ backgroundColor: color.hex }}
+                                  title={`${color.name} (${color.hex}) - ${color.percentage.toFixed(1)}%`}
+                                ></div>
+                                <div className="text-xs">
+                                  <div className="font-medium text-gray-900">{color.name}</div>
+                                  <div className="font-mono text-gray-600">{color.hex}</div>
+                                  <div className="text-gray-500">{color.percentage.toFixed(1)}%</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-2">
+                            Top {analysisResult.analysis.dominant_colors.length} colors extracted from the image
+                          </p>
+                        </div>
+                      )}
                       
                       {analysisResult.analysis_type === 'extract' && analysisResult.analysis.extracted_text && (
                         <div className="bg-blue-50 rounded-lg p-4">
@@ -828,25 +1300,7 @@ export const VisionPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Image Generation</h2>
               
-              {/* Sample Prompts */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sample Prompts
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {samplePrompts.map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSamplePromptSelect(prompt)}
-                      className="text-left p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
-                    >
-                      <p className="text-sm text-gray-900 line-clamp-2">{prompt}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Prompt Input */}
+              {/* Prompt Input - Moved to top */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Generation Prompt
@@ -860,125 +1314,202 @@ export const VisionPage: React.FC = () => {
                 />
               </div>
 
-              {/* Generation Options */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image Size
+
+
+              {/* Sample Prompts - Moved after prompt input */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Sample Prompts
                   </label>
-                  <select
-                    value={imageSize}
-                    onChange={(e) => setImageSize(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <button
+                    onClick={() => setShowAllPrompts(!showAllPrompts)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    <option value="1024x1024">1024x1024</option>
-                    <option value="1792x1024">1792x1024</option>
-                    <option value="1024x1792">1024x1792</option>
-                  </select>
+                    {showAllPrompts ? 'Show Less' : 'Show More'}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quality
-                  </label>
-                  <select
-                    value={imageQuality}
-                    onChange={(e) => setImageQuality(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="standard">Standard</option>
-                    <option value="hd">HD</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-2">
+                  {(showAllPrompts ? samplePrompts : samplePrompts.slice(0, 6)).map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSamplePromptSelect(prompt)}
+                      className="text-left p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                    >
+                      <p className="text-sm text-gray-900 line-clamp-2">{prompt}</p>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Images
+              {/* Quick Settings */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Quick Settings
                   </label>
-                  <select
-                    value={numImages}
-                    onChange={(e) => setNumImages(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <button
+                    onClick={() => setShowQuickSettings(!showQuickSettings)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                  </select>
+                    {showQuickSettings ? 'Hide Settings' : 'Show Settings'}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Artistic Style
-                  </label>
-                  <select
-                    value={artisticStyle}
-                    onChange={(e) => setArtisticStyle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {artisticStyles.map((style) => (
-                      <option key={style.value} value={style.value}>
-                        {style.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                
+                {showQuickSettings && (
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Image Size
+                        </label>
+                        <select
+                          value={imageSize}
+                          onChange={(e) => setImageSize(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="512x512">512x512 (Recommended)</option>
+                          <option value="768x768">768x768</option>
+                          <option value="1024x1024">1024x1024</option>
+                          <option value="1792x1024">1792x1024</option>
+                          <option value="1024x1792">1024x1792</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Quality
+                        </label>
+                        <select
+                          value={imageQuality}
+                          onChange={(e) => setImageQuality(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="standard">Standard</option>
+                          <option value="hd">HD</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Number of Images
+                        </label>
+                        <select
+                          value={numImages}
+                          onChange={(e) => setNumImages(Number(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value={1}>1</option>
+                          <option value={2}>2</option>
+                          <option value={3}>3</option>
+                          <option value={4}>4</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Artistic Style
+                        </label>
+                        <select
+                          value={artisticStyle}
+                          onChange={(e) => setArtisticStyle(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {artisticStyles.map((style) => (
+                            <option key={style.value} value={style.value}>
+                              {style.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Model Selection */}
               <div className="mb-6">
-                <ModelSelector
-                  selectedProvider={selectedProvider}
-                  onProviderChange={setSelectedProvider}
-                  selectedModel={selectedModel}
-                  onModelChange={setSelectedModel}
-                />
-                
-                {/* Info about local image generation */}
-                {selectedProvider === 'ollama' && (
-                  <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Pick a Model
+                </label>
+                <div className="space-y-3">
+                  {/* GPT-4 Vision Option */}
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      generationProvider === 'gpt-vision' 
+                        ? 'border-blue-300 bg-blue-50' 
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                    onClick={() => setGenerationProvider('gpt-vision')}
+                  >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
                         <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-blue-900 mb-1">
-                          Local Image Generation via Stable Diffusion
-                        </h4>
-                        <p className="text-sm text-blue-700">
-                          Ollama will use your local Stable Diffusion WebUI (port 7860) or OllamaDiffuser (port 8000) for image generation. Make sure one of these services is running.
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            GPT-4 Vision
+                          </h4>
+                          {generationProvider === 'gpt-vision' && (
+                            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Best for creative image generation with excellent prompt understanding.
                         </p>
-                        <div className="mt-2 text-xs text-blue-600">
-                          <strong>Setup Required:</strong> Install AUTOMATIC1111 WebUI or OllamaDiffuser to enable local image generation
+                        <div className="mt-2 text-xs text-gray-500">
+                          <strong>Model:</strong> gpt-4o
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
-                
-                {/* Info about Stable Diffusion provider */}
-                {selectedProvider === 'stable_diffusion' && (
-                  <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+
+                  {/* Stable Diffusion Option */}
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      generationProvider === 'integrated_diffusion' 
+                        ? 'border-green-300 bg-green-50' 
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                    onClick={() => setGenerationProvider('integrated_diffusion')}
+                  >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
                         <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-medium text-green-900 mb-1">
-                          Direct Stable Diffusion Connection
-                        </h4>
-                        <p className="text-sm text-green-700">
-                          Connects directly to your local Stable Diffusion WebUI or OllamaDiffuser for high-quality, private image generation.
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Stable Diffusion
+                          </h4>
+                          {generationProvider === 'integrated_diffusion' && (
+                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Best for style analysis, visual composition, and artistic characteristics.
                         </p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          <strong>Model:</strong> stable-diffusion-3.5-large
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
+
+
+
+
 
               {/* Generate Button */}
               <button
@@ -998,6 +1529,89 @@ export const VisionPage: React.FC = () => {
                   </>
                 )}
               </button>
+              
+              {/* Progress Bars */}
+              {isGenerating && (
+                <div className="mt-4 space-y-4">
+                  {/* Phase Indicators */}
+                  <div className="flex justify-between text-xs text-gray-500">
+                    {generationProvider === 'integrated_diffusion' && (
+                      <>
+                        <div className={`flex items-center space-x-1 ${generationPhase === 'download' ? 'text-purple-600 font-medium' : ''}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationPhase === 'download' ? 'bg-purple-600' : 'bg-gray-300'}`}></div>
+                          <span>Download</span>
+                        </div>
+                        <div className={`flex items-center space-x-1 ${generationPhase === 'load' ? 'text-purple-600 font-medium' : ''}`}>
+                          <div className={`w-2 h-2 rounded-full ${generationPhase === 'load' ? 'bg-purple-600' : 'bg-gray-300'}`}></div>
+                          <span>Load</span>
+                        </div>
+                      </>
+                    )}
+                    <div className={`flex items-center space-x-1 ${generationPhase === 'generate' ? 'text-purple-600 font-medium' : ''}`}>
+                      <div className={`w-2 h-2 rounded-full ${generationPhase === 'generate' ? 'bg-purple-600' : 'bg-gray-300'}`}></div>
+                      <span>Generate</span>
+                    </div>
+                  </div>
+                  
+                  {/* Download Progress Bar */}
+                  <div className={`transition-opacity duration-300 ${generationPhase === 'download' ? 'opacity-100' : 'opacity-60'}`}>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>📥 Downloading Model</span>
+                      <span>{Math.round(downloadProgress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${downloadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Load Progress Bar */}
+                  <div className={`transition-opacity duration-300 ${generationPhase === 'load' ? 'opacity-100' : 'opacity-60'}`}>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>⚙️ Loading Model</span>
+                      <span>{Math.round(loadProgress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${loadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Generate Progress Bar */}
+                  <div className={`transition-opacity duration-300 ${generationPhase === 'generate' ? 'opacity-100' : 'opacity-60'}`}>
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>🎨 Generating Image</span>
+                      <span>{Math.round(generateProgress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${generateProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  {/* Phase Description */}
+                  <div className="text-xs text-gray-500">
+                    {generationPhase === 'download' && (
+                      <span>Downloading Stable Diffusion model (~4GB)...</span>
+                    )}
+                    {generationPhase === 'load' && (
+                      <span>Loading model into memory...</span>
+                    )}
+                    {generationPhase === 'generate' && (
+                      <span>Generating your image...</span>
+                    )}
+                    {generationPhase === 'complete' && (
+                      <span>✅ Image generation complete!</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Results Section */}
@@ -1128,6 +1742,349 @@ export const VisionPage: React.FC = () => {
                   <p>Enter a prompt and click "Generate Image" to create new images</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Storyboard Tab */}
+        {activeTab === 'storyboard' && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-4">Storyboard Generation</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Input Section */}
+              <div className="space-y-6">
+                {/* Story Prompt */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Story Prompt
+                  </label>
+                  <textarea
+                    value={storyPrompt}
+                    onChange={(e) => setStoryPrompt(e.target.value)}
+                    placeholder="Describe your story... e.g., 'A detective investigates a mysterious case in a neon-lit city'"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={4}
+                  />
+                </div>
+
+                {/* Sample Story Prompts */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Sample Prompts
+                    </label>
+                    <button
+                      onClick={() => setShowAllStoryPrompts(!showAllStoryPrompts)}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      {showAllStoryPrompts ? 'Show Less' : 'Show More'}
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      "A detective investigates a mysterious case in a neon-lit city",
+                      "A young wizard discovers their magical powers in an ancient forest",
+                      "A space explorer encounters an alien civilization on a distant planet",
+                      "A chef creates a masterpiece dish in a bustling kitchen"
+                    ].slice(0, showAllStoryPrompts ? undefined : 4).map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setStoryPrompt(prompt)}
+                        className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm text-gray-700 transition-colors"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                    {!showAllStoryPrompts && (
+                      <div className="text-xs text-gray-500 text-center py-2">
+                        + 4 more prompts available
+                      </div>
+                    )}
+                    {showAllStoryPrompts && (
+                      <>
+                        <button
+                          onClick={() => setStoryPrompt("A robot learns to paint in a post-apocalyptic art studio")}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm text-gray-700 transition-colors"
+                        >
+                          A robot learns to paint in a post-apocalyptic art studio
+                        </button>
+                        <button
+                          onClick={() => setStoryPrompt("A time traveler visits different historical periods")}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm text-gray-700 transition-colors"
+                        >
+                          A time traveler visits different historical periods
+                        </button>
+                        <button
+                          onClick={() => setStoryPrompt("A musician finds inspiration in a magical music shop")}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm text-gray-700 transition-colors"
+                        >
+                          A musician finds inspiration in a magical music shop
+                        </button>
+                        <button
+                          onClick={() => setStoryPrompt("A superhero's origin story in a modern metropolis")}
+                          className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm text-gray-700 transition-colors"
+                        >
+                          A superhero's origin story in a modern metropolis
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Story Style */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Story Style
+                  </label>
+                  <select
+                    value={storyStyle}
+                    onChange={(e) => setStoryStyle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="cinematic">Cinematic</option>
+                    <option value="anime">Anime</option>
+                    <option value="cartoon">Cartoon</option>
+                    <option value="photorealistic">Photorealistic</option>
+                    <option value="oil_painting">Oil Painting</option>
+                    <option value="digital_art">Digital Art</option>
+                  </select>
+                </div>
+
+                {/* Number of Panels */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Panels
+                  </label>
+                  <select
+                    value={numPanels}
+                    onChange={(e) => setNumPanels(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={3}>3 Panels</option>
+                    <option value={4}>4 Panels</option>
+                    <option value={5}>5 Panels</option>
+                    <option value={6}>6 Panels</option>
+                  </select>
+                </div>
+
+                {/* Pick a Model */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Pick a Model
+                  </label>
+                  <div className="space-y-3">
+                    {/* GPT-4 Vision Option */}
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        storyboardProvider === 'gpt-vision' 
+                          ? 'border-blue-300 bg-blue-50' 
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                      onClick={() => setStoryboardProvider('gpt-vision')}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              GPT-4 Vision
+                            </h4>
+                            {storyboardProvider === 'gpt-vision' && (
+                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Best for creative storyboard generation with excellent prompt understanding.
+                          </p>
+                          <div className="mt-2 text-xs text-gray-500">
+                            <strong>Model:</strong> gpt-4o
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stable Diffusion Option */}
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        storyboardProvider === 'integrated_diffusion' 
+                          ? 'border-green-300 bg-green-50' 
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                      onClick={() => setStoryboardProvider('integrated_diffusion')}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              Stable Diffusion
+                            </h4>
+                            {storyboardProvider === 'integrated_diffusion' && (
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Best for style analysis, visual composition, and artistic characteristics.
+                          </p>
+                          <div className="mt-2 text-xs text-gray-500">
+                            <strong>Model:</strong> stable-diffusion-3.5-large
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Generate Button */}
+                <button
+                  onClick={handleStoryboardGeneration}
+                  disabled={isGeneratingStory || !storyPrompt.trim()}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingStory ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Generating Storyboard...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText size={16} />
+                      <span>Generate Storyboard</span>
+                    </>
+                  )}
+                </button>
+                
+                {/* Storyboard Progress Bars */}
+                {isGeneratingStory && (
+                  <div className="mt-4 space-y-4">
+                    {/* Phase Indicators */}
+                    <div className="flex justify-between text-xs text-gray-500">
+                      {storyboardProvider === 'integrated_diffusion' && (
+                        <>
+                          <div className={`flex items-center space-x-1 ${storyPhase === 'download' ? 'text-indigo-600 font-medium' : ''}`}>
+                            <div className={`w-2 h-2 rounded-full ${storyPhase === 'download' ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                            <span>Download</span>
+                          </div>
+                          <div className={`flex items-center space-x-1 ${storyPhase === 'load' ? 'text-indigo-600 font-medium' : ''}`}>
+                            <div className={`w-2 h-2 rounded-full ${storyPhase === 'load' ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                            <span>Load</span>
+                          </div>
+                        </>
+                      )}
+                      <div className={`flex items-center space-x-1 ${storyPhase === 'generate' ? 'text-indigo-600 font-medium' : ''}`}>
+                        <div className={`w-2 h-2 rounded-full ${storyPhase === 'generate' ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                        <span>Generate</span>
+                      </div>
+                    </div>
+                    
+                    {/* Download Progress Bar - Only for Stable Diffusion */}
+                    {storyboardProvider === 'integrated_diffusion' && (
+                      <div className={`transition-opacity duration-300 ${storyPhase === 'download' ? 'opacity-100' : 'opacity-60'}`}>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>📥 Downloading Model</span>
+                          <span>{Math.round(storyDownloadProgress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${storyDownloadProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Load Progress Bar - Only for Stable Diffusion */}
+                    {storyboardProvider === 'integrated_diffusion' && (
+                      <div className={`transition-opacity duration-300 ${storyPhase === 'load' ? 'opacity-100' : 'opacity-60'}`}>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>⚙️ Loading Model</span>
+                          <span>{Math.round(storyLoadProgress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${storyLoadProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Generate Progress Bar */}
+                    <div className={`transition-opacity duration-300 ${storyPhase === 'generate' ? 'opacity-100' : 'opacity-60'}`}>
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>🎬 Generating Storyboard</span>
+                        <span>{Math.round(storyGenerateProgress)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${storyGenerateProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    {/* Phase Description */}
+                    <div className="text-xs text-gray-500">
+                      {storyPhase === 'download' && storyboardProvider === 'integrated_diffusion' && (
+                        <span>Downloading Stable Diffusion model (~4GB)...</span>
+                      )}
+                      {storyPhase === 'load' && storyboardProvider === 'integrated_diffusion' && (
+                        <span>Loading model into memory...</span>
+                      )}
+                      {storyPhase === 'generate' && (
+                        <span>Generating storyboard panels...</span>
+                      )}
+                      {storyPhase === 'complete' && (
+                        <span>✅ Storyboard generation complete!</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Results Section */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-900">Storyboard Preview</h3>
+                
+                {storyResult ? (
+                  <div className="space-y-4">
+                    {storyResult.panels?.map((panel: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
+                            Panel {panel.panel_number}
+                          </span>
+                        </div>
+                        <img
+                          src={`data:image/png;base64,${panel.image.base64}`}
+                          alt={`Panel ${panel.panel_number}`}
+                          className="w-full h-40 object-cover rounded mb-2"
+                        />
+                        <p className="text-sm text-gray-600">{panel.prompt}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <FileText className="mx-auto h-12 w-12 mb-4" />
+                    <p>Enter a story prompt and click "Generate Storyboard" to create a visual narrative</p>
+                    <p className="text-sm mt-2">Perfect for storytelling, concept development, and visual planning</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
