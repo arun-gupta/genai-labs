@@ -4,7 +4,7 @@
 
 ### Open Source Models (via Ollama)
 
-The application includes a comprehensive **Models Explorer** page that showcases 12+ open-source language models:
+The application includes a comprehensive **Models Explorer** page that showcases 20+ open-source language models:
 
 #### Available Models:
 
@@ -20,6 +20,7 @@ The application includes a comprehensive **Models Explorer** page that showcases
 - **Neural Chat (3B)** - Intel's conversational model
 - **Orca Mini (3B)** - Microsoft's high-quality model
 - **Llama 2 (3B)** - Meta's foundational model
+- **GPT-OSS-20B** - OpenAI's open-weight model with advanced reasoning
 
 #### Model Features:
 
@@ -36,6 +37,7 @@ The application includes a comprehensive **Models Explorer** page that showcases
 - **GPT-4** - Advanced reasoning and analysis
 - **GPT-3.5 Turbo** - Fast and cost-effective generation
 - **GPT-4 Turbo** - Enhanced performance with larger context
+- **GPT-4 Vision** - Multi-modal vision capabilities
 
 ### Anthropic Models
 - **Claude Sonnet 4** - Latest flagship model with hybrid reasoning and 200K context
@@ -56,6 +58,7 @@ The application includes a comprehensive **Models Explorer** page that showcases
 | **GPT-4** | Large | Medium | High | Complex reasoning |
 | **Claude 3.5 Sonnet** | Large | Fast | High | Enhanced coding and analysis |
 | **Claude 3.5 Haiku** | Medium | Very Fast | Good | Fast responses and simple tasks |
+| **GPT-OSS-20B** | Large | Medium | Very High | Advanced reasoning and agentic capabilities |
 | **Mistral 7B** | Medium | Fast | Good | General purpose |
 | **Llama 3.1** | Small | Very Fast | Good | Quick responses |
 | **Code Llama** | Medium | Fast | Good | Programming |
@@ -66,6 +69,7 @@ The application includes a comprehensive **Models Explorer** page that showcases
 |-------|-----|---------|-----|----------|
 | **3B Models** | 4GB | 2GB | Optional | Development |
 | **7B Models** | 8GB | 4GB | Recommended | Production |
+| **20B Models** | 16GB | 8GB | Recommended | Advanced reasoning |
 | **Cloud Models** | N/A | N/A | N/A | All users |
 
 ## 🔧 Model Installation
@@ -96,6 +100,9 @@ ollama pull neural-chat:3b
 # Multilingual models
 ollama pull bloom:3b
 ollama pull qwen2.5:3b
+
+# Advanced reasoning
+ollama pull gpt-oss-20b
 ```
 
 ## 🎯 Model Selection Guide
@@ -115,11 +122,17 @@ ollama pull qwen2.5:3b
 - **Code Review**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
 - **Documentation**: Claude Opus 4, Claude Sonnet 4, GPT-5, GPT-4
 
+### For Advanced Reasoning
+- **Complex Analysis**: GPT-OSS-20B, Claude Opus 4, Claude Sonnet 4
+- **Agentic Tasks**: GPT-OSS-20B, Claude Opus 4
+- **Multi-step Reasoning**: GPT-OSS-20B, Claude Sonnet 4, GPT-5
+
 ## ⚡ Performance Tips
 
 ### Local Models
 - **Use 3B models** for development and testing
 - **Use 7B models** for production quality
+- **Use 20B models** for advanced reasoning tasks
 - **Enable GPU acceleration** for better performance
 - **Close other applications** to free up RAM
 
@@ -128,6 +141,7 @@ ollama pull qwen2.5:3b
 - **Use Claude Sonnet 4** for balanced performance and advanced reasoning
 - **Use Claude Opus 4** for the most sophisticated and autonomous tasks
 - **Use GPT-5** for the latest OpenAI reasoning capabilities
+- **Use GPT-OSS-20B** for advanced reasoning and agentic capabilities
 - **Monitor API usage** to avoid rate limits
 - **Cache responses** when possible
 - **Use hybrid reasoning mode** with Claude Sonnet 4 for complex analysis
@@ -169,6 +183,7 @@ curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive
 curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'
 curl http://localhost:11434/api/generate -d '{"model": "codellama:3b", "keep_alive": -1}'
 curl http://localhost:11434/api/generate -d '{"model": "qwen2.5:3b", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "gpt-oss-20b", "keep_alive": -1}'
 ```
 
 **Benefits of keeping models loaded:**
@@ -177,7 +192,7 @@ curl http://localhost:11434/api/generate -d '{"model": "qwen2.5:3b", "keep_alive
 - 🏭 **Production ready** - Ideal for server deployments and high-traffic applications
 
 **Memory considerations:**
-- Each loaded model consumes RAM based on its size (3B ≈ 4GB, 7B ≈ 8GB)
+- Each loaded model consumes RAM based on its size (3B ≈ 4GB, 7B ≈ 8GB, 20B ≈ 16GB)
 - Monitor system resources when keeping multiple models loaded
 - Use `ollama ps` to check which models are currently running
 
@@ -195,95 +210,60 @@ curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive
 
 #### OpenAI DALL-E
 - **DALL-E 3** - Latest, highest quality image generation
-- **DALL-E 2** - Previous generation, good quality and speed
 - **Features**: Natural language prompts, high resolution, style variations
 - **API Key Required**: Yes (OpenAI account)
 
+#### Anthropic Claude
+- **Claude Sonnet 4** - Advanced image generation capabilities
+- **Features**: High-quality image generation with natural language prompts
+- **API Key Required**: Yes (Anthropic account)
+
 ### Local Image Generation
 
-#### Stable Diffusion (via AUTOMATIC1111 WebUI)
-```bash
-# Installation (Linux/macOS)
-git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-cd stable-diffusion-webui
-./webui.sh --api
-
-# Windows
-git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-cd stable-diffusion-webui
-webui-user.bat
-```
-
-**Supported Models:**
-- **Stable Diffusion 1.5** - Fast, good quality baseline model
-- **Stable Diffusion 2.1** - Improved version with better composition
-- **Stable Diffusion XL** - Higher resolution, more detailed images
-- **Custom Models** - Community fine-tuned models from Civitai, Hugging Face
+#### Integrated Diffusion Service
+The application includes a built-in **Integrated Diffusion Service** that provides seamless local image generation:
 
 **Features:**
-- Full control over generation parameters
-- Custom model support
-- Advanced samplers and schedulers
-- ControlNet integration
-- Upscaling and post-processing
-
-#### OllamaDiffuser
-```bash
-# Installation
-pip install ollamadiffuser
-
-# Pull and run models
-ollamadiffuser pull flux.1-schnell
-ollamadiffuser run flux.1-schnell
-
-# Generate images via API
-curl -X POST http://localhost:8000/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "A beautiful sunset over mountains"}' \
-  --output image.png
-```
+- **Automatic Model Management**: Downloads and manages Stable Diffusion models automatically
+- **Health Monitoring**: Real-time service health checks and status reporting
+- **Multiple Generation Types**: Text-to-image, image-to-image, and storyboard generation
+- **Smart Prompt Enhancement**: Automatic prompt optimization for better results
+- **Privacy-First**: All generation happens locally on your machine
+- **No External Dependencies**: Self-contained service with minimal setup
 
 **Supported Models:**
-- **FLUX.1 Schnell** - Fast, high-quality generation
-- **FLUX.1 Dev** - Development version with enhanced capabilities
-- **Stable Diffusion 3.5** - Latest Stability AI model
-- **Stable Diffusion 1.5** - Classic baseline model
+- **Stable Diffusion XL Base 1.0** - High-quality, detailed image generation
+- **Automatic Model Detection**: Service automatically detects and loads available models
 
-**Features:**
-- Ollama-style model management
-- Simple API interface
-- Lightweight deployment
-- Cross-platform support
-
-### Integration with Ollama
-
-When using Ollama for image generation, the system automatically:
-1. **Tries AUTOMATIC1111 WebUI** (http://localhost:7860) first
-2. **Falls back to OllamaDiffuser** (http://localhost:8000) if WebUI unavailable
-3. **Provides clear error messages** if neither service is running
+**Generation Capabilities:**
+- **Text-to-Image**: Generate images from text prompts
+- **Image-to-Image**: Transform existing images with new prompts
+- **Storyboard Generation**: Create multi-panel storyboards from narrative prompts
+- **Style Control**: Multiple artistic styles (Cinematic, Anime, Photorealistic, etc.)
+- **Resolution Options**: Flexible sizing from 384x384 to 1024x1024
 
 ### Model Selection Guide
 
 | Use Case | Recommended Model | Setup Complexity | Quality | Speed |
 |----------|------------------|------------------|---------|-------|
 | **Quick Testing** | DALL-E 3 | Low (API key) | Excellent | Fast |
-| **Privacy/Local** | Stable Diffusion 1.5 | Medium | Good | Medium |
-| **High Quality** | Stable Diffusion XL | Medium | Excellent | Slow |
-| **Experimental** | FLUX.1 models | Medium | Very Good | Fast |
-| **Production** | AUTOMATIC1111 + Custom | High | Excellent | Variable |
+| **Privacy/Local** | Integrated Diffusion | Low (automatic) | Very Good | Medium |
+| **High Quality** | Claude Sonnet 4 | Low (API key) | Excellent | Fast |
+| **Storyboards** | Integrated Diffusion | Low (automatic) | Very Good | Medium |
+| **Production** | Integrated Diffusion | Low (automatic) | Very Good | Variable |
 
 ### Performance Considerations
 
 #### Hardware Requirements
-- **Minimum**: 8GB RAM, 4GB VRAM (for SD 1.5)
-- **Recommended**: 16GB RAM, 8GB VRAM (for SD XL)
-- **Optimal**: 32GB RAM, 12GB+ VRAM (for multiple models)
+- **Minimum**: 8GB RAM, 4GB VRAM (for local generation)
+- **Recommended**: 16GB RAM, 8GB VRAM (for optimal performance)
+- **Optimal**: 32GB RAM, 12GB+ VRAM (for multiple concurrent generations)
 
 #### Generation Speed
 - **DALL-E 3**: ~10-30 seconds (cloud latency)
-- **SD 1.5**: ~5-15 seconds (local, depends on hardware)
-- **SD XL**: ~15-45 seconds (local, higher quality)
-- **FLUX.1**: ~10-25 seconds (local, optimized)
+- **Claude Sonnet 4**: ~15-45 seconds (cloud latency)
+- **Integrated Diffusion**: ~30-120 seconds (local, depends on hardware and image size)
+- **Storyboard Generation**: ~2-3 minutes per panel (local)
 
 ## 🛠️ Troubleshooting
 
@@ -312,4 +292,13 @@ ollama pull llama3.1:3b  # Instead of 7B model
 # Solution: Reinstall the model
 ollama rm modelname
 ollama pull modelname
+```
+
+#### Image Generation Issues
+```bash
+# Check integrated diffusion service health
+curl http://localhost:8000/api/v1/diffusion/health
+
+# Restart the backend service if needed
+cd backend && python main.py
 ``` 

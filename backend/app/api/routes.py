@@ -548,7 +548,7 @@ async def get_available_models():
             return all_models
         elif provider == "anthropic":
             # Current Anthropic models with the configured one first
-            all_models = ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"]
+            all_models = ["claude-sonnet-4", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229"]
             configured_model = settings.anthropic_model
             # Move configured model to front if it exists
             if configured_model in all_models:
@@ -1178,4 +1178,88 @@ async def generate_storyboard(request: dict):
         
     except Exception as e:
         logger.error(f"Error in storyboard generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Video Generation Endpoints
+@router.post("/generate/video")
+async def generate_video(request: dict):
+    """Generate video from text prompt."""
+    try:
+        prompt = request.get("prompt", "")
+        style = request.get("style", "")
+        width = request.get("width", 512)
+        height = request.get("height", 512)
+        duration = request.get("duration", 3)
+        fps = request.get("fps", 24)
+        num_videos = request.get("num_videos", 1)
+        
+        if not prompt:
+            raise HTTPException(status_code=400, detail="Video prompt is required")
+        
+        result = await integrated_diffusion_service.generate_text_to_video(
+            prompt=prompt,
+            style=style,
+            width=width,
+            height=height,
+            duration=duration,
+            fps=fps,
+            num_videos=num_videos
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Video generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate/animation")
+async def generate_animation(request: dict):
+    """Generate animation from text prompt."""
+    try:
+        prompt = request.get("prompt", "")
+        style = request.get("style", "")
+        width = request.get("width", 512)
+        height = request.get("height", 512)
+        num_frames = request.get("num_frames", 24)
+        fps = request.get("fps", 24)
+        
+        if not prompt:
+            raise HTTPException(status_code=400, detail="Animation prompt is required")
+        
+        result = await integrated_diffusion_service.generate_animation(
+            prompt=prompt,
+            style=style,
+            width=width,
+            height=height,
+            num_frames=num_frames,
+            fps=fps
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Animation generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/enhance/video")
+async def enhance_video(
+    video: UploadFile = File(...),
+    enhancement_type: str = Form("upscale")
+):
+    """Enhance video with various effects."""
+    try:
+        video_data = await video.read()
+        
+        result = await integrated_diffusion_service.enhance_video(
+            video_data=video_data,
+            enhancement_type=enhancement_type
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Video enhancement failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 

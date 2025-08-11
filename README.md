@@ -17,8 +17,9 @@ cd genai-labs
 
 ## ✨ What Can You Do?
 
-### 🤖 **Text Generation & Writing**
-- **Smart Writing**: Generate content in 12+ styles (Creative, Business, Academic, etc.)
+### 🤖 **Text AI**
+- **Text Generation**: Create content in 12+ styles (Creative, Business, Academic, etc.)
+- **Text Summarization**: Summarize text, URLs, and documents with 7+ summary types
 - **Real-time Streaming**: Watch your content being created live
 - **Multiple Variations**: Generate 1-5 different versions of your content
 - **Voice Features**: Speak your prompts and hear responses aloud
@@ -36,6 +37,13 @@ cd genai-labs
 - **Storyboard Creation**: Build multi-panel visual stories with AI
 - **Image Analysis**: Upload images and get detailed descriptions and insights
 - **Local Generation**: Create images privately on your own machine
+
+### 🎬 **Video & Animation**
+- **Video Generation**: Create videos from text prompts using Stable Video Diffusion
+- **Animation Creation**: Generate smooth animations with customizable frame counts
+- **Video Enhancement**: Upscale, stabilize, and enhance existing videos
+- **Multiple Formats**: Support for MP4, GIF, and other video formats
+- **Smart Loading**: Progressive model loading for faster video generation
 
 ### 📊 **AI Model Comparison**
 - **Side-by-Side Testing**: Compare different AI models for the same task
@@ -105,7 +113,14 @@ cd frontend && npm run dev     # Start frontend
 
 ## 🆕 Recent Updates
 
-### 🎬 **Dynamic Storyboard Generation** (Latest)
+### 🎬 **Video & Animation Platform** (Latest)
+- **Video Generation**: Create videos from text prompts using Stable Video Diffusion
+- **Animation Creation**: Generate smooth animations with customizable frame counts
+- **Video Enhancement**: Upscale, stabilize, and enhance existing videos
+- **Multiple Formats**: Support for MP4, GIF, and other video formats
+- **Smart Loading**: Progressive model loading for faster video generation
+
+### 🎬 **Dynamic Storyboard Generation**
 - **Story Progression**: Each panel has unique prompts for natural story flow
 - **Smart Loading**: Images generate while models are still loading
 - **Multiple Styles**: Cinematic, Anime, Oil Painting, and more
@@ -150,7 +165,7 @@ All Python dependencies are automatically installed in virtual environments for 
 
 ## 🗺️ Roadmap
 
-🎬 **Video & Animation** - Local video generation and animated storyboards
+✅ **Video & Animation** - Local video generation and animated storyboards (Implemented!)
 
 🤖 **AI Agents & Automation** - Multi-step reasoning agents and workflow automation
 

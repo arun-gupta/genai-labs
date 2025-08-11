@@ -671,6 +671,56 @@ class ApiService {
 
     return response.json();
   }
+
+  // Video Generation Methods
+  async generateVideo(request: {
+    prompt: string;
+    style?: string;
+    width?: number;
+    height?: number;
+    duration?: number;
+    fps?: number;
+    num_videos?: number;
+  }): Promise<any> {
+    return this.request<any>('/generate/video', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async generateAnimation(request: {
+    prompt: string;
+    style?: string;
+    width?: number;
+    height?: number;
+    num_frames?: number;
+    fps?: number;
+  }): Promise<any> {
+    return this.request<any>('/generate/animation', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async enhanceVideo(request: {
+    video: File;
+    enhancement_type?: string;
+  }): Promise<any> {
+    const formData = new FormData();
+    formData.append('video', request.video);
+    formData.append('enhancement_type', request.enhancement_type || 'upscale');
+
+    const response = await fetch(`${this.baseUrl}/enhance/video`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Video enhancement failed: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService(); 
