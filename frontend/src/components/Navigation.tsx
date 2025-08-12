@@ -27,6 +27,11 @@ export const Navigation: React.FC = () => {
       icon: Eye,
     },
     {
+      path: '/audio',
+      label: 'Audio',
+      icon: Zap,
+    },
+    {
       path: '/video',
       label: 'Video',
       icon: Video,

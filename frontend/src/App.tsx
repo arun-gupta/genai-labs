@@ -7,6 +7,7 @@ import { RAGPage } from './pages/RAGPage';
 import { ModelsPage } from './pages/ModelsPage';
 import { VisionPage } from './pages/VisionPage';
 import { VideoPage } from './pages/VideoPage';
+import { AudioPage } from './pages/AudioPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/rag" element={<RAGPage />} />
           <Route path="/vision" element={<VisionPage />} />
           <Route path="/video" element={<VideoPage />} />
+          <Route path="/audio" element={<AudioPage />} />
           <Route path="/models" element={<ModelsPage />} />
         </Routes>
       </main>
