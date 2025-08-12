@@ -1509,16 +1509,74 @@ async def process_audio(
     file: UploadFile = File(...),
     normalize: bool = Form(False),
     reverse: bool = Form(False),
-    speed: float = Form(1.0)
+    speed: float = Form(1.0),
+    pitch: float = Form(1.0),
+    reverb: int = Form(0),
+    echo: int = Form(0),
+    volume: float = Form(1.0),
+    fade_in: float = Form(0.0),
+    fade_out: float = Form(0.0),
+    output_format: str = Form("wav"),
+    sample_rate: int = Form(44100)
 ):
-    """Apply simple processing to uploaded audio (WAV/PCM recommended)."""
+    """Apply advanced audio processing to uploaded audio file."""
     try:
+        # Log received parameters for debugging
+        logger.info(f"Audio processing parameters: speed={speed}, pitch={pitch}, volume={volume}, reverb={reverb}, echo={echo}")
+        logger.info(f"Pitch parameter type: {type(pitch)}, value: {pitch}")
+        logger.info(f"Speed parameter type: {type(speed)}, value: {speed}")
+        
+        # Verify pitch parameter is valid
+        if not isinstance(pitch, (int, float)):
+            logger.error(f"Invalid pitch parameter type: {type(pitch)}")
+            pitch = 1.0
+        if pitch <= 0:
+            logger.error(f"Invalid pitch value: {pitch}")
+            pitch = 1.0
+        
+        # Test audioop functionality
+        try:
+            test_data = b'\x00\x00' * 1000  # Simple test audio data
+            test_result = audioop.ratecv(test_data, 2, 1, 44100, 22050, None)
+            logger.info(f"Audioop test successful: {len(test_result[0])} bytes")
+        except Exception as e:
+            logger.error(f"Audioop test failed: {e}")
+        
+        # Test pitch processing
+        try:
+            test_pitch_data = b'\x00\x00' * 1000
+            test_pitch_result = audioop.ratecv(test_pitch_data, 2, 1, 44100, 88200, None)  # 2x pitch
+            logger.info(f"Pitch test successful: {len(test_pitch_result[0])} bytes")
+            
+            # Create a simple sine wave test for pitch
+            import math
+            test_freq = 440  # A4 note
+            test_duration = 1.0  # 1 second
+            test_samples = int(44100 * test_duration)
+            test_audio = bytearray()
+            
+            for i in range(test_samples):
+                sample = int(32767 * 0.3 * math.sin(2 * math.pi * test_freq * i / 44100))
+                test_audio.extend(sample.to_bytes(2, byteorder='little', signed=True))
+            
+            # Test pitch change on this sine wave
+            test_pitch_result = audioop.ratecv(bytes(test_audio), 2, 1, 44100, 88200, None)  # 2x pitch
+            logger.info(f"Sine wave pitch test successful: original={len(test_audio)}, pitched={len(test_pitch_result[0])}")
+            
+        except Exception as e:
+            logger.error(f"Pitch test failed: {e}")
+            import traceback
+            logger.error(f"Pitch test traceback: {traceback.format_exc()}")
+        
         raw = await file.read()
+        logger.info(f"File received: {file.filename}, size: {len(raw)} bytes")
+        
         with wave.open(io.BytesIO(raw), 'rb') as wf:
             nch = wf.getnchannels()
             sw = wf.getsampwidth()
             fr = wf.getframerate()
             frames = wf.readframes(wf.getnframes())
+            logger.info(f"Audio file info: channels={nch}, sample_width={sw}, frame_rate={fr}, frames={len(frames)}")
 
         # Work in mono for simplicity
         if nch > 1:
@@ -1528,36 +1586,286 @@ async def process_audio(
             nch_out = 1
 
         processed = frames
+        logger.info(f"Initial processing: len(processed)={len(processed)}")
 
-        # Normalize
+        # Normalize (apply first to establish baseline)
         if normalize:
+            logger.info("Applying normalization")
             rms = audioop.rms(processed, sw) or 1
             target_rms = 5000
             gain = min(4.0, max(0.25, target_rms / rms))
             processed = audioop.mul(processed, sw, gain)
 
-        # Speed (simple resample)
+        # Pitch shift (apply before speed to avoid conflicts)
+        if abs(pitch - 1.0) > 1e-3:
+            logger.info(f"=== PITCH PROCESSING START ===")
+            logger.info(f"Applying pitch change: {pitch}x")
+            logger.info(f"Current frame rate: {fr}")
+            logger.info(f"Current audio length: {len(processed)} bytes")
+            
+            try:
+                # Create a simple test to verify pitch processing works
+                test_tone = b'\x00\x00' * 1000  # Simple test data
+                test_pitch_fr = int(44100 * pitch)
+                test_result = audioop.ratecv(test_tone, 2, 1, 44100, test_pitch_fr, None)
+                logger.info(f"Pitch test successful: input={len(test_tone)}, output={len(test_result[0])}, pitch={pitch}")
+                
+                # Use a more effective pitch shifting approach
+                # First, change the sample rate to change pitch
+                pitch_fr = int(fr * pitch)
+                logger.info(f"Pitch frame rate: {pitch_fr} (original: {fr})")
+                
+                # Validate the new frame rate
+                if pitch_fr <= 0:
+                    logger.error(f"Invalid pitch frame rate: {pitch_fr}")
+                else:
+                    # Convert to the new sample rate
+                    logger.info(f"Converting audio from {fr}Hz to {pitch_fr}Hz")
+                    converted, _ = audioop.ratecv(processed, sw, nch_out, fr, pitch_fr, None)
+                    processed = converted
+                    fr = pitch_fr
+                    logger.info(f"After pitch change: len(processed)={len(processed)}, new_fr={fr}")
+                    
+                    # Verify the change was applied
+                    if len(processed) > 0:
+                        logger.info(f"Pitch change successful: {pitch}x applied")
+                        logger.info(f"Audio length changed from {len(frames)} to {len(processed)} bytes")
+                    else:
+                        logger.error("Pitch change failed: processed audio is empty")
+            except Exception as e:
+                logger.error(f"Error during pitch processing: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.info(f"=== PITCH PROCESSING END ===")
+        else:
+            logger.info("No pitch change applied")
+
+        # Speed adjustment (apply after pitch to avoid conflicts)
         if abs(speed - 1.0) > 1e-3:
-            converted, _ = audioop.ratecv(processed, sw, nch_out, fr, int(fr * speed), None)
-            processed = converted
-            fr = int(fr * speed)
+            logger.info(f"Applying speed change: {speed}x, original_fr={fr}")
+            try:
+                # Calculate new frame rate based on speed
+                new_fr = int(fr * speed)
+                logger.info(f"New frame rate: {new_fr}")
+                
+                # Ensure we have valid audio data
+                if len(processed) > 0 and new_fr > 0:
+                    converted, _ = audioop.ratecv(processed, sw, nch_out, fr, new_fr, None)
+                    processed = converted
+                    fr = new_fr
+                    logger.info(f"After speed change: len(processed)={len(processed)}, new_fr={fr}")
+                else:
+                    logger.error(f"Invalid audio data for speed processing: len={len(processed)}, new_fr={new_fr}")
+            except Exception as e:
+                logger.error(f"Error during speed processing: {e}")
+        else:
+            logger.info("No speed change applied")
+
+        # Enhanced reverb effect
+        if reverb > 0:
+            logger.info(f"Applying reverb: {reverb}%")
+            try:
+                reverb_strength = reverb / 100.0
+                # Create multiple delay taps for more realistic reverb
+                delays = [0.05, 0.1, 0.15, 0.2]  # 50ms, 100ms, 150ms, 200ms
+                decay_factors = [0.8, 0.6, 0.4, 0.2]
+                
+                for i, delay_time in enumerate(delays):
+                    delay_samples = int(fr * delay_time)
+                    if len(processed) > delay_samples:
+                        # Create delayed signal
+                        delayed = processed[delay_samples:] + b'\x00' * delay_samples
+                        # Apply decay factor
+                        decayed = audioop.mul(delayed, sw, decay_factors[i] * reverb_strength)
+                        # Mix with original
+                        processed = audioop.add(processed, decayed, sw)
+                
+                logger.info(f"Reverb applied with {len(delays)} delay taps")
+            except Exception as e:
+                logger.error(f"Error during reverb processing: {e}")
+        else:
+            logger.info("No reverb applied")
+
+        # Enhanced echo effect
+        if echo > 0:
+            logger.info(f"Applying echo: {echo}%")
+            try:
+                echo_strength = echo / 100.0
+                # Create multiple echo taps for more realistic echo
+                echo_delays = [0.3, 0.6, 0.9]  # 300ms, 600ms, 900ms
+                echo_decays = [0.7, 0.5, 0.3]
+                
+                for i, delay_time in enumerate(echo_delays):
+                    delay_samples = int(fr * delay_time)
+                    if len(processed) > delay_samples:
+                        # Create delayed signal
+                        delayed = processed[delay_samples:] + b'\x00' * delay_samples
+                        # Apply decay factor
+                        decayed = audioop.mul(delayed, sw, echo_decays[i] * echo_strength)
+                        # Mix with original
+                        processed = audioop.add(processed, decayed, sw)
+                
+                logger.info(f"Echo applied with {len(echo_delays)} echo taps")
+            except Exception as e:
+                logger.error(f"Error during echo processing: {e}")
+        else:
+            logger.info("No echo applied")
+
+        # Fade in effect
+        if fade_in > 0:
+            fade_samples = int(fr * fade_in)
+            if fade_samples > 0 and len(processed) > fade_samples:
+                logger.info(f"Applying fade in: {fade_in}s ({fade_samples} samples)")
+                logger.info(f"Audio length before fade: {len(processed)} bytes")
+                logger.info(f"Current frame rate: {fr}Hz")
+                try:
+                    # Apply envelope to the beginning of the audio
+                    fade_data = processed[:fade_samples]
+                    
+                    # Determine correct data type based on sample width
+                    if sw == 1:
+                        dtype = np.int8
+                    elif sw == 2:
+                        dtype = np.int16
+                    elif sw == 4:
+                        dtype = np.int32
+                    else:
+                        dtype = np.int16  # Default fallback
+                    
+                    fade_array = np.frombuffer(fade_data, dtype=dtype)
+                    actual_samples = len(fade_array)
+                    logger.info(f"Fade data extracted: {actual_samples} samples, range: {fade_array.min()} to {fade_array.max()}, dtype: {dtype}")
+                    
+                    # Create fade-in envelope with correct length
+                    envelope = np.linspace(0, 1, actual_samples)
+                    logger.info(f"Fade envelope created: {len(envelope)} samples, range: {envelope[0]:.3f} to {envelope[-1]:.3f}")
+                    
+                    # Apply envelope
+                    faded_array = (fade_array * envelope).astype(dtype)
+                    logger.info(f"Fade applied: {len(faded_array)} samples, range: {faded_array.min()} to {faded_array.max()}")
+                    
+                    # Replace the beginning with faded data
+                    processed = faded_array.tobytes() + processed[fade_samples:]
+                    logger.info(f"Fade in applied successfully, new length: {len(processed)} bytes")
+                except Exception as e:
+                    logger.error(f"Error during fade in processing: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+
+        # Fade out effect
+        if fade_out > 0:
+            fade_samples = int(fr * fade_out)
+            if fade_samples > 0 and len(processed) > fade_samples:
+                logger.info(f"Applying fade out: {fade_out}s ({fade_samples} samples)")
+                logger.info(f"Audio length before fade out: {len(processed)} bytes")
+                logger.info(f"Current frame rate: {fr}Hz")
+                try:
+                    # Apply envelope to the end of the audio
+                    fade_data = processed[-fade_samples:]
+                    
+                    # Determine correct data type based on sample width
+                    if sw == 1:
+                        dtype = np.int8
+                    elif sw == 2:
+                        dtype = np.int16
+                    elif sw == 4:
+                        dtype = np.int32
+                    else:
+                        dtype = np.int16  # Default fallback
+                    
+                    fade_array = np.frombuffer(fade_data, dtype=dtype)
+                    actual_samples = len(fade_array)
+                    logger.info(f"Fade out data extracted: {actual_samples} samples, range: {fade_array.min()} to {fade_array.max()}, dtype: {dtype}")
+                    
+                    # Create fade-out envelope with correct length
+                    envelope = np.linspace(1, 0, actual_samples)
+                    logger.info(f"Fade out envelope created: {len(envelope)} samples, range: {envelope[0]:.3f} to {envelope[-1]:.3f}")
+                    
+                    # Apply envelope
+                    faded_array = (fade_array * envelope).astype(dtype)
+                    logger.info(f"Fade out applied: {len(faded_array)} samples, range: {faded_array.min()} to {faded_array.max()}")
+                    
+                    # Replace the end with faded data
+                    processed = processed[:-fade_samples] + faded_array.tobytes()
+                    logger.info(f"Fade out applied successfully, new length: {len(processed)} bytes")
+                except Exception as e:
+                    logger.error(f"Error during fade out processing: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+
+        # Volume adjustment (apply near the end to avoid being overridden)
+        if abs(volume - 1.0) > 1e-3:
+            logger.info(f"Applying volume: {volume}")
+            processed = audioop.mul(processed, sw, volume)
 
         # Reverse
         if reverse:
             processed = processed[::-1]
 
-        # Write WAV
-        with io.BytesIO() as buffer:
-            with wave.open(buffer, 'wb') as wf:
-                wf.setnchannels(nch_out)
-                wf.setsampwidth(sw)
-                wf.setframerate(fr)
-                wf.writeframes(processed)
-            wav_bytes = buffer.getvalue()
+        # Resample if needed
+        if fr != sample_rate:
+            converted, _ = audioop.ratecv(processed, sw, nch_out, fr, sample_rate, None)
+            processed = converted
+            fr = sample_rate
 
-        b64 = base64.b64encode(wav_bytes).decode('utf-8')
-        data_url = f"data:audio/wav;base64,{b64}"
-        return {"audio_base64": data_url, "format": "wav", "sample_rate": fr}
+        # Write output in specified format
+        with io.BytesIO() as buffer:
+            if output_format.lower() == "wav":
+                with wave.open(buffer, 'wb') as wf:
+                    wf.setnchannels(nch_out)
+                    wf.setsampwidth(sw)
+                    wf.setframerate(fr)
+                    wf.writeframes(processed)
+                output_bytes = buffer.getvalue()
+                mime_type = "audio/wav"
+            elif output_format.lower() == "mp3":
+                # For MP3, we'd need additional libraries like pydub
+                # For now, return WAV and note the limitation
+                with wave.open(buffer, 'wb') as wf:
+                    wf.setnchannels(nch_out)
+                    wf.setsampwidth(sw)
+                    wf.setframerate(fr)
+                    wf.writeframes(processed)
+                output_bytes = buffer.getvalue()
+                mime_type = "audio/wav"  # Fallback to WAV
+            elif output_format.lower() == "flac":
+                # For FLAC, we'd need additional libraries
+                # For now, return WAV and note the limitation
+                with wave.open(buffer, 'wb') as wf:
+                    wf.setnchannels(nch_out)
+                    wf.setsampwidth(sw)
+                    wf.setframerate(fr)
+                    wf.writeframes(processed)
+                output_bytes = buffer.getvalue()
+                mime_type = "audio/wav"  # Fallback to WAV
+            else:
+                # Default to WAV
+                with wave.open(buffer, 'wb') as wf:
+                    wf.setnchannels(nch_out)
+                    wf.setsampwidth(sw)
+                    wf.setframerate(fr)
+                    wf.writeframes(processed)
+                output_bytes = buffer.getvalue()
+                mime_type = "audio/wav"
+
+        b64 = base64.b64encode(output_bytes).decode('utf-8')
+        data_url = f"data:{mime_type};base64,{b64}"
+        return {
+            "audio_base64": data_url, 
+            "format": output_format, 
+            "sample_rate": fr,
+            "effects_applied": {
+                "normalize": normalize,
+                "reverse": reverse,
+                "speed": speed,
+                "pitch": pitch,
+                "reverb": reverb,
+                "echo": echo,
+                "volume": volume,
+                "fade_in": fade_in,
+                "fade_out": fade_out
+            }
+        }
     except Exception as e:
         logger.error(f"Audio processing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 

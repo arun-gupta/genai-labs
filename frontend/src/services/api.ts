@@ -821,16 +821,10 @@ class ApiService {
     return res.json();
   }
 
-  async processAudio(file: File, options: { normalize?: boolean; reverse?: boolean; speed?: number } = {}) {
-    const form = new FormData();
-    form.append('file', file);
-    form.append('normalize', String(!!options.normalize));
-    form.append('reverse', String(!!options.reverse));
-    form.append('speed', String(options.speed ?? 1.0));
-
+  async processAudio(formData: FormData) {
     const res = await fetch(`${this.baseUrl}/audio/process`, {
       method: 'POST',
-      body: form,
+      body: formData,
     });
     if (!res.ok) throw new Error('Audio processing failed');
     return res.json();
