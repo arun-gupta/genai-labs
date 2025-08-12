@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe, Github, Eye, GitCompare } from 'lucide-react';
+import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, Mic, Download, Code, Globe, Github, Eye, GitCompare, Video as VideoIcon } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const features = [
@@ -401,18 +401,11 @@ export const HomePage: React.FC = () => {
           </p>
           <div className="flex items-center justify-center space-x-4 flex-wrap">
             <Link
-              to="/generate"
+              to="/text"
               className="btn-primary flex items-center space-x-2"
             >
               <Zap size={16} />
-              <span>Text Generation</span>
-            </Link>
-            <Link
-              to="/summarize"
-              className="btn-secondary flex items-center space-x-2"
-            >
-              <FileText size={16} />
-              <span>Text Summarization</span>
+              <span>Text</span>
             </Link>
             <Link
               to="/rag"
@@ -427,6 +420,14 @@ export const HomePage: React.FC = () => {
             >
               <Eye size={16} />
               <span>Vision AI</span>
+            </Link>
+            <Link
+              to="/video"
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <VideoIcon size={16} />
+              <span>Video & Animation</span>
+              <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200">WIP</span>
             </Link>
           </div>
         </div>
