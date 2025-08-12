@@ -596,6 +596,14 @@ async def get_available_models():
                 "requires_api_key": True,
                 "api_key_configured": is_api_key_configured("mistral"),
                 "description": "European AI company with efficient language models"
+            },
+            {
+                "id": "ollama",
+                "name": "Ollama (Local)",
+                "models": [model["name"] for model in ollama_models_data.get("models", []) if model.get("is_available", False)],
+                "requires_api_key": False,
+                "api_key_configured": True,
+                "description": "Local AI models running on your machine"
             }
         ],
         "ollama_models": ollama_models_data,
@@ -1212,6 +1220,98 @@ async def generate_video(request: dict):
     except Exception as e:
         logger.error(f"Video generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate/video/stream")
+async def generate_video_stream(request: dict):
+    """Generate video from text prompt with progress streaming."""
+    async def generate():
+        try:
+            prompt = request.get("prompt", "")
+            style = request.get("style", "")
+            width = request.get("width", 512)
+            height = request.get("height", 512)
+            duration = request.get("duration", 3)
+            fps = request.get("fps", 24)
+            num_videos = request.get("num_videos", 1)
+            
+            if not prompt:
+                yield {
+                    "event": "error",
+                    "data": json.dumps({"error": "Video prompt is required"})
+                }
+                return
+            
+            # Progress tracking variables
+            progress_data = {
+                "download_progress": 0,
+                "load_progress": 0,
+                "generate_progress": 0
+            }
+            
+            def progress_callback(phase: str, progress: float):
+                if phase == "download":
+                    progress_data["download_progress"] = progress
+                elif phase == "load":
+                    progress_data["load_progress"] = progress
+                elif phase == "generate":
+                    progress_data["generate_progress"] = progress
+            
+            # Send initial progress
+            yield {
+                "event": "progress",
+                "data": json.dumps(progress_data)
+            }
+            
+            # Create a task for video generation
+            import asyncio
+            task = asyncio.create_task(
+                integrated_diffusion_service.generate_text_to_video(
+                    prompt=prompt,
+                    style=style,
+                    width=width,
+                    height=height,
+                    duration=duration,
+                    fps=fps,
+                    num_videos=num_videos,
+                    progress_callback=progress_callback
+                )
+            )
+            
+            # Monitor progress and send updates
+            while not task.done():
+                yield {
+                    "event": "progress",
+                    "data": json.dumps(progress_data)
+                }
+                await asyncio.sleep(0.5)  # Send progress every 500ms
+            
+            # Get the result
+            result = await task
+            
+            # Send final progress update
+            progress_data["download_progress"] = 100
+            progress_data["load_progress"] = 100
+            progress_data["generate_progress"] = 100
+            yield {
+                "event": "progress",
+                "data": json.dumps(progress_data)
+            }
+            
+            # Send final result
+            yield {
+                "event": "complete",
+                "data": json.dumps(result)
+            }
+            
+        except Exception as e:
+            logger.error(f"Video generation failed: {e}")
+            yield {
+                "event": "error",
+                "data": json.dumps({"error": str(e)})
+            }
+    
+    return EventSourceResponse(generate())
 
 
 @router.post("/generate/animation")

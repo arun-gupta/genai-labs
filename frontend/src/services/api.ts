@@ -688,6 +688,85 @@ class ApiService {
     });
   }
 
+  async generateVideoStream(request: {
+    prompt: string;
+    style?: string;
+    width?: number;
+    height?: number;
+    duration?: number;
+    fps?: number;
+    num_videos?: number;
+  }, onProgress?: (progress: { download_progress: number; load_progress: number; generate_progress: number }) => void): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/generate/video/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Video generation failed: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    return new Promise((resolve, reject) => {
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        reject(new Error('Video generation timed out. Please try again.'));
+      }, 300000); // 5 minutes timeout
+
+      const processStream = async () => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              break;
+            }
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data.trim()) {
+                  try {
+                    const parsed = JSON.parse(data);
+                    
+                    if (parsed.event === 'progress' && onProgress) {
+                      onProgress(parsed);
+                    } else if (parsed.event === 'complete') {
+                      clearTimeout(timeout);
+                      resolve(parsed);
+                    } else if (parsed.event === 'error') {
+                      clearTimeout(timeout);
+                      reject(new Error(parsed.error));
+                    }
+                  } catch (e) {
+                    // Ignore parsing errors for incomplete chunks
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          clearTimeout(timeout);
+          reject(error);
+        }
+      };
+
+      processStream();
+    });
+  }
+
   async generateAnimation(request: {
     prompt: string;
     style?: string;

@@ -49,5 +49,5 @@ transformers>=4.25.0
 accelerate>=0.20.0
 safetensors>=0.3.0
 controlnet-aux>=0.0.6
-xformers>=0.0.20
+# xformers>=0.0.20  # Commented out - causes compilation issues on macOS
 compel>=2.0.0 

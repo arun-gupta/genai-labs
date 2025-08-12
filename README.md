@@ -38,12 +38,13 @@ cd genai-labs
 - **Image Analysis**: Upload images and get detailed descriptions and insights
 - **Local Generation**: Create images privately on your own machine
 
-### 🎬 **Video & Animation**
-- **Video Generation**: Create videos from text prompts using Stable Video Diffusion
+### 🎬 **Video & Animation** (Work in Progress)
+- **Video Generation**: Create videos from text prompts using Stable Video Diffusion (Memory optimization in progress)
 - **Animation Creation**: Generate smooth animations with customizable frame counts
 - **Video Enhancement**: Upscale, stabilize, and enhance existing videos
 - **Multiple Formats**: Support for MP4, GIF, and other video formats
 - **Smart Loading**: Progressive model loading for faster video generation
+- **⚠️ Note**: Currently optimizing memory usage for stable video generation
 
 ### 📊 **AI Model Comparison**
 - **Side-by-Side Testing**: Compare different AI models for the same task
@@ -113,12 +114,13 @@ cd frontend && npm run dev     # Start frontend
 
 ## 🆕 Recent Updates
 
-### 🎬 **Video & Animation Platform** (Latest)
-- **Video Generation**: Create videos from text prompts using Stable Video Diffusion
+### 🎬 **Video & Animation Platform** (Work in Progress)
+- **Video Generation**: Create videos from text prompts using Stable Video Diffusion (Memory optimization in progress)
 - **Animation Creation**: Generate smooth animations with customizable frame counts
 - **Video Enhancement**: Upscale, stabilize, and enhance existing videos
 - **Multiple Formats**: Support for MP4, GIF, and other video formats
 - **Smart Loading**: Progressive model loading for faster video generation
+- **⚠️ Note**: Currently optimizing memory usage for stable video generation
 
 ### 🎬 **Dynamic Storyboard Generation**
 - **Story Progression**: Each panel has unique prompts for natural story flow
@@ -165,7 +167,7 @@ All Python dependencies are automatically installed in virtual environments for 
 
 ## 🗺️ Roadmap
 
-✅ **Video & Animation** - Local video generation and animated storyboards (Implemented!)
+🔄 **Video & Animation** - Local video generation and animated storyboards (Work in Progress - Memory optimization in progress)
 
 🤖 **AI Agents & Automation** - Multi-step reasoning agents and workflow automation
 

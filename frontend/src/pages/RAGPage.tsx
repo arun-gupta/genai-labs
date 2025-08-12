@@ -101,7 +101,7 @@ export const RAGPage: React.FC = () => {
       description: "Compare local Ollama model with cloud models",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
@@ -110,7 +110,7 @@ export const RAGPage: React.FC = () => {
       description: "Compare lightweight models for speed",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "openai", model: "gpt-4o" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
@@ -127,7 +127,7 @@ export const RAGPage: React.FC = () => {
       name: "Reasoning & Analysis",
       description: "Compare models with advanced reasoning and analysis capabilities",
       models: [
-        { provider: "ollama", model: "gpt-oss:20b" },
+        { provider: "ollama", model: "mistral:7b" },
         { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-sonnet-4" }
       ]
@@ -238,22 +238,33 @@ export const RAGPage: React.FC = () => {
     const ollamaProvider = availableModels.providers.find((p: any) => p.id === 'ollama');
     const hasOllamaModels = ollamaProvider && ollamaProvider.models && ollamaProvider.models.length > 0;
 
+    // Get configured providers (those with API keys or available models)
+    const configuredProviders = availableModels.providers.filter((provider: any) => {
+      if (provider.id === 'ollama') {
+        return provider.models.length > 0;
+      }
+      return provider.api_key_configured;
+    });
+
     return defaultModelCombinations.map(combination => {
-      // For "Compare All Local Models", always show but disable if no models
+      // For "Compare All Local Models", populate with actual available models
       if (combination.name === "Compare All Local Models") {
         return {
           ...combination,
+          models: getAllLocalModels,
           disabled: !hasOllamaModels,
           disabledReason: hasOllamaModels ? null : "No Ollama models running"
         };
       }
 
-      // For other combinations, filter out unavailable Ollama models but keep cloud models
+      // For other combinations, filter out unavailable models
       const availableModelsInCombination = combination.models.filter((model: any) => {
         if (model.provider === 'ollama') {
           return hasOllamaModels;
         }
-        return true; // Keep cloud models
+        // Check if the provider is configured
+        const provider = availableModels.providers.find((p: any) => p.id === model.provider);
+        return provider && provider.api_key_configured;
       });
 
       // Only disable if ALL models in the combination are unavailable
@@ -261,10 +272,11 @@ export const RAGPage: React.FC = () => {
       const hasCloudInCombination = combination.models.some((model: any) => model.provider !== 'ollama');
       const isDisabled = hasOllamaInCombination && !hasOllamaModels && !hasCloudInCombination;
 
-      // Update description if some Ollama models were filtered out
+      // Update description if some models were filtered out
       let updatedDescription = combination.description;
-      if (hasOllamaInCombination && !hasOllamaModels && hasCloudInCombination) {
-        updatedDescription = `${combination.description} (cloud models only)`;
+      if (availableModelsInCombination.length < combination.models.length) {
+        const filteredCount = combination.models.length - availableModelsInCombination.length;
+        updatedDescription = `${combination.description} (${availableModelsInCombination.length} of ${combination.models.length} models available)`;
       }
 
       return {
@@ -789,7 +801,16 @@ export const RAGPage: React.FC = () => {
 
               <p className="text-sm text-gray-600 mb-3">Or select models manually:</p>
               
-              {availableModels?.providers?.map((provider: any) => (
+              {availableModels?.providers
+                ?.filter((provider: any) => {
+                  // Show Ollama if it has models or if it's the only provider
+                  if (provider.id === 'ollama') {
+                    return provider.models.length > 0 || availableModels.providers.length === 1;
+                  }
+                  // Show other providers only if they have API keys configured
+                  return provider.api_key_configured;
+                })
+                .map((provider: any) => (
                 <div key={provider.id} className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
                   <div className="space-y-1">

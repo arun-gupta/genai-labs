@@ -1178,7 +1178,7 @@ export const VisionPage: React.FC = () => {
 
             {/* Results Section */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-                              <h2 className="text-xl font-semibold mb-4">Output</h2>
+                              <h2 className="text-xl font-semibold mb-4">Response</h2>
               
               {analysisResult ? (
                 <>
@@ -1842,7 +1842,7 @@ export const VisionPage: React.FC = () => {
 
             {/* Results Section */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-                              <h2 className="text-xl font-semibold mb-4">Output</h2>
+                              <h2 className="text-xl font-semibold mb-4">Response</h2>
               
               {generationResult ? (
                 <>
@@ -2304,7 +2304,7 @@ export const VisionPage: React.FC = () => {
 
               {/* Results Section */}
               <div className="space-y-6">
-                                  <h3 className="text-lg font-medium text-gray-900">Output</h3>
+                                  <h3 className="text-lg font-medium text-gray-900">Response</h3>
                 
                 {storyResult ? (
                   <div className="space-y-4">
@@ -2351,7 +2351,7 @@ export const VisionPage: React.FC = () => {
         {/* Gallery Tab */}
         {activeTab === 'gallery' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-xl font-semibold mb-4">Output Gallery</h2>
+                            <h2 className="text-xl font-semibold mb-4">Response Gallery</h2>
             
             {generatedImages.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -114,18 +114,27 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             disabled={disabled}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white disabled:bg-gray-50 disabled:cursor-not-allowed appearance-none"
           >
-            {availableModels?.providers.map((provider) => {
-              const Icon = providerIcons[provider.id as keyof typeof providerIcons] || Server;
-              const hasModels = provider.models.length > 0;
-              const displayName = provider.id === 'ollama' && !hasModels 
-                ? `${provider.name} (No models running)` 
-                : provider.name;
-              return (
-                <option key={provider.id} value={provider.id}>
-                  {displayName}
-                </option>
-              );
-            })}
+            {availableModels?.providers
+              .filter(provider => {
+                // Show Ollama if it has models or if it's the only provider
+                if (provider.id === 'ollama') {
+                  return provider.models.length > 0 || availableModels.providers.length === 1;
+                }
+                // Show other providers only if they have API keys configured
+                return provider.api_key_configured;
+              })
+              .map((provider) => {
+                const Icon = providerIcons[provider.id as keyof typeof providerIcons] || Server;
+                const hasModels = provider.models.length > 0;
+                const displayName = provider.id === 'ollama' && !hasModels 
+                  ? `${provider.name} (No models running)` 
+                  : provider.name;
+                return (
+                  <option key={provider.id} value={provider.id}>
+                    {displayName}
+                  </option>
+                );
+              })}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>

@@ -5,20 +5,12 @@ import { Zap, FileText, Brain, Server, ArrowRight, Sparkles, Search, BarChart3, 
 export const HomePage: React.FC = () => {
   const features = [
     {
-      title: 'Text Generation',
-      description: 'Generate creative and informative text using various LLM models with custom prompts.',
-      icon: Zap,
-      path: '/generate',
-      color: 'bg-blue-500',
-      highlights: ['12+ Writing Styles', 'Model Comparison', 'Real-time Streaming']
-    },
-    {
-      title: 'Text Summarization',
-      description: 'Summarize text, URLs, and documents with multiple input methods and summary styles.',
+      title: 'Text AI',
+      description: 'Generate creative text and summarize content using various LLM models with advanced features.',
       icon: FileText,
-      path: '/summarize',
-      color: 'bg-green-500',
-      highlights: ['Model Comparison', 'Analytics', 'Multi-language Support']
+      path: '/text',
+      color: 'bg-blue-500',
+      highlights: ['Text Generation', 'Text Summarization', 'Model Comparison']
     },
     {
       title: 'Q&A over Documents',
@@ -35,6 +27,14 @@ export const HomePage: React.FC = () => {
       path: '/vision',
       color: 'bg-orange-500',
       highlights: ['Image Analysis', 'Text-to-Image', 'Image Gallery']
+    },
+    {
+      title: 'Video & Animation',
+      description: 'Create videos and animations from text prompts using AI video generation models.',
+      icon: Zap,
+      path: '/video',
+      color: 'bg-indigo-500',
+      highlights: ['Video Generation', 'Animation Creation', 'WIP - Memory Optimization']
     },
   ];
 
@@ -143,7 +143,7 @@ export const HomePage: React.FC = () => {
         </p>
         <div className="flex items-center justify-center space-x-4">
           <Link
-            to="/generate"
+            to="/text"
             className="btn-primary flex items-center space-x-2"
           >
             <Zap size={16} />
@@ -183,9 +183,16 @@ export const HomePage: React.FC = () => {
                     <Icon size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
-                      {feature.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                        {feature.title}
+                      </h3>
+                      {feature.title === 'Video & Animation' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          WIP
+                        </span>
+                      )}
+                    </div>
                     <p className="text-gray-600 mt-1 mb-2 text-sm">{feature.description}</p>
                     <div className="space-y-1">
                       {feature.highlights.map((highlight, index) => (

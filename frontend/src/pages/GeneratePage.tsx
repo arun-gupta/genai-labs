@@ -71,7 +71,7 @@ export const GeneratePage: React.FC = () => {
       description: "Compare local Ollama model with cloud models",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
@@ -80,7 +80,7 @@ export const GeneratePage: React.FC = () => {
       description: "Compare lightweight models for speed",
       models: [
         { provider: "ollama", model: "mistral:7b" },
-        { provider: "openai", model: "gpt-3.5-turbo" },
+        { provider: "openai", model: "gpt-4o" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
     },
@@ -97,7 +97,7 @@ export const GeneratePage: React.FC = () => {
       name: "Reasoning & Analysis",
       description: "Compare models with advanced reasoning and analysis capabilities",
       models: [
-        { provider: "ollama", model: "gpt-oss:20b" },
+        { provider: "ollama", model: "mistral:7b" },
         { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-sonnet-4" }
       ]
@@ -117,6 +117,17 @@ export const GeneratePage: React.FC = () => {
     
     loadAvailableModels();
   }, []);
+
+  // Ensure Ollama is the default provider when available
+  useEffect(() => {
+    if (availableModels?.providers) {
+      const ollamaProvider = availableModels.providers.find((p: any) => p.id === 'ollama');
+      if (ollamaProvider && ollamaProvider.models.length > 0 && selectedProvider !== 'ollama') {
+        setSelectedProvider('ollama');
+        setSelectedModel(ollamaProvider.models[0]);
+      }
+    }
+  }, [availableModels, selectedProvider]);
 
   // Get all available Ollama models for the "Compare All Local Models" preset
   const getAllLocalModels = useMemo(() => {
@@ -151,22 +162,33 @@ export const GeneratePage: React.FC = () => {
     const ollamaProvider = availableModels.providers.find((p: any) => p.id === 'ollama');
     const hasOllamaModels = ollamaProvider && ollamaProvider.models && ollamaProvider.models.length > 0;
 
+    // Get configured providers (those with API keys or available models)
+    const configuredProviders = availableModels.providers.filter((provider: any) => {
+      if (provider.id === 'ollama') {
+        return provider.models.length > 0;
+      }
+      return provider.api_key_configured;
+    });
+
     return defaultModelCombinations.map(combination => {
-      // For "Compare All Local Models", always show but disable if no models
+      // For "Compare All Local Models", populate with actual available models
       if (combination.name === "Compare All Local Models") {
         return {
           ...combination,
+          models: getAllLocalModels,
           disabled: !hasOllamaModels,
           disabledReason: hasOllamaModels ? null : "No Ollama models running"
         };
       }
 
-      // For other combinations, filter out unavailable Ollama models but keep cloud models
+      // For other combinations, filter out unavailable models
       const availableModelsInCombination = combination.models.filter((model: any) => {
         if (model.provider === 'ollama') {
           return hasOllamaModels;
         }
-        return true; // Keep cloud models
+        // Check if the provider is configured
+        const provider = availableModels.providers.find((p: any) => p.id === model.provider);
+        return provider && provider.api_key_configured;
       });
 
       // Only disable if ALL models in the combination are unavailable
@@ -174,10 +196,11 @@ export const GeneratePage: React.FC = () => {
       const hasCloudInCombination = combination.models.some((model: any) => model.provider !== 'ollama');
       const isDisabled = hasOllamaInCombination && !hasOllamaModels && !hasCloudInCombination;
 
-      // Update description if some Ollama models were filtered out
+      // Update description if some models were filtered out
       let updatedDescription = combination.description;
-      if (hasOllamaInCombination && !hasOllamaModels && hasCloudInCombination) {
-        updatedDescription = `${combination.description} (cloud models only)`;
+      if (availableModelsInCombination.length < combination.models.length) {
+        const filteredCount = combination.models.length - availableModelsInCombination.length;
+        updatedDescription = `${combination.description} (${availableModelsInCombination.length} of ${combination.models.length} models available)`;
       }
 
       return {
@@ -629,47 +652,129 @@ export const GeneratePage: React.FC = () => {
           
           {showComparison && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Models to Compare
-                </label>
+              <p className="text-sm text-gray-600 mb-3">
+                Select models to compare for text generation performance
+              </p>
+              
+              {/* Default Model Combinations */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Combinations</h4>
                 <div className="space-y-2">
-                  {defaultModelCombinations.map((combination, index) => (
+                  {getAvailableCombinations.map((combination, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedModels(combination.models)}
                       disabled={combination.disabled}
-                      className={`w-full text-left p-3 border rounded-lg transition-colors ${
-                        combination.disabled
-                          ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                          : 'border-gray-200 hover:border-purple-400 hover:bg-purple-50'
+                      className={`w-full text-left p-2 rounded-lg border transition-colors ${
+                        combination.disabled 
+                          ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
+                          : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50'
                       }`}
-                      title={combination.disabledReason || combination.description}
                     >
-                      <div className="font-medium text-sm">{combination.name}</div>
-                      <div className="text-xs text-gray-500">{combination.description}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {combination.name}
+                        {getModelCount(combination) > 0 && !combination.disabled && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {getModelCount(combination)} models
+                          </span>
+                        )}
+                        {combination.disabled && (
+                          <span className="ml-2 text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                            Unavailable
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600">{combination.description}</div>
+                      {combination.disabled && combination.disabledReason && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {combination.disabledReason}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
+
+              <p className="text-sm text-gray-600 mb-3">Or select models manually:</p>
+              
+              {availableModels?.providers
+                ?.filter((provider: any) => {
+                  // Show Ollama if it has models or if it's the only provider
+                  if (provider.id === 'ollama') {
+                    return provider.models.length > 0 || availableModels.providers.length === 1;
+                  }
+                  // Show other providers only if they have API keys configured
+                  return provider.api_key_configured;
+                })
+                .map((provider: any) => (
+                <div key={provider.id} className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700">{provider.name}</h4>
+                  <div className="space-y-1">
+                    {provider.models?.slice(0, 3).map((model: string) => (
+                      <label key={model} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.some(m => m.provider === provider.id && m.model === model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels(prev => [...prev, { provider: provider.id, model }]);
+                            } else {
+                              setSelectedModels(prev => prev.filter(m => !(m.provider === provider.id && m.model === model)));
+                            }
+                          }}
+                          disabled={isGenerating}
+                          className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm text-gray-700">{model}</span>
+                      </label>
+                    ))}
+                    
+                    {/* Show helpful message when no models are available for Ollama */}
+                    {provider.id === 'ollama' && (!provider.models || provider.models.length === 0) && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-2">
+                          <div className="flex-shrink-0">
+                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">!</span>
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-blue-700 mb-2">
+                              No Ollama models are currently running. To use local models:
+                            </p>
+                            <div className="text-xs text-blue-600 space-y-1">
+                              <div>1. Start Ollama: <code className="bg-blue-100 px-1 rounded">ollama serve</code></div>
+                              <div>2. Download a model: <code className="bg-blue-100 px-1 rounded">ollama pull mistral:7b</code></div>
+                              <div>3. Run the model: <code className="bg-blue-100 px-1 rounded">ollama run mistral:7b</code></div>
+                            </div>
+                            <div className="mt-2">
+                              <a
+                                href="/models"
+                                className="text-xs text-blue-600 hover:text-blue-700 underline"
+                              >
+                                Browse available models →
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
               
               {selectedModels.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Selected Models ({selectedModels.length})
-                  </label>
-                  <div className="space-y-1">
-                    {selectedModels.map((model, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{model.provider}/{model.model}</span>
-                        <button
-                          onClick={() => setSelectedModels(selectedModels.filter((_, i) => i !== index))}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+                <div className="mt-3 p-2 bg-purple-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-purple-700">
+                      Selected: {selectedModels.length} model{selectedModels.length !== 1 ? 's' : ''}
+                    </p>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      className="text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 px-2 py-1 rounded transition-colors"
+                    >
+                      Clear
+                    </button>
                   </div>
                 </div>
               )}
