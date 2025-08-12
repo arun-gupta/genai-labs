@@ -139,3 +139,5 @@ backend/models/*/
 *.model
 *.ckpt
 *.pth 
+backend/.env.backup
+backend/.env*
