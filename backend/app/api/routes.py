@@ -31,6 +31,10 @@ import time
 import datetime
 import io
 import logging
+import base64
+import numpy as np
+import wave
+import audioop
 
 logger = logging.getLogger(__name__)
 
@@ -1362,4 +1366,198 @@ async def enhance_video(
         
     except Exception as e:
         logger.error(f"Video enhancement failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+
+# =================== Audio/Music Endpoints ===================
+
+def _wav_bytes_from_float32(mono_signal: np.ndarray, sample_rate: int = 44100) -> bytes:
+    # Clip and convert to 16-bit PCM
+    clipped = np.clip(mono_signal, -1.0, 1.0)
+    pcm16 = (clipped * 32767.0).astype(np.int16)
+    with io.BytesIO() as buffer:
+        with wave.open(buffer, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)  # 16-bit
+            wf.setframerate(sample_rate)
+            wf.writeframes(pcm16.tobytes())
+        return buffer.getvalue()
+
+
+@router.post("/audio/generate/music")
+async def generate_music(request: dict):
+    """Generate a simple WAV melody from a text prompt (demo)."""
+    try:
+        prompt = request.get("prompt", "")
+        duration = int(request.get("duration", 8))  # seconds
+        tempo_bpm = int(request.get("tempo", 100))
+        sample_rate = 44100
+
+        # Enhanced prompt analysis for musical characteristics
+        prompt_lower = prompt.lower()
+        
+        # Determine scale/mode based on mood keywords
+        if any(k in prompt_lower for k in ["sad", "minor", "melancholy", "dark", "somber", "gloomy"]):
+            scale = [0, 2, 3, 5, 7, 8, 10]  # natural minor intervals
+            root_hz = 220.0  # A3
+        elif any(k in prompt_lower for k in ["mysterious", "mystical", "ethereal", "ambient"]):
+            scale = [0, 2, 3, 5, 7, 8, 10]  # minor scale for mystery
+            root_hz = 196.0  # G3
+        elif any(k in prompt_lower for k in ["epic", "heroic", "triumphant", "orchestral"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 329.63  # E4 (higher for epic feel)
+        elif any(k in prompt_lower for k in ["chill", "lo-fi", "relaxed", "calm"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 174.61  # F3 (lower for chill)
+        elif any(k in prompt_lower for k in ["energetic", "fast", "upbeat", "dance"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 261.63  # C4
+        elif any(k in prompt_lower for k in ["latin", "salsa", "tropical"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 246.94  # B3
+        elif any(k in prompt_lower for k in ["electronic", "synth", "digital"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 261.63  # C4
+        elif any(k in prompt_lower for k in ["acoustic", "folk", "organic"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 220.0  # A3
+        elif any(k in prompt_lower for k in ["retro", "8-bit", "chiptune", "arcade"]):
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale
+            root_hz = 261.63  # C4
+        else:
+            # Default to major scale
+            scale = [0, 2, 4, 5, 7, 9, 11]  # major scale intervals
+            root_hz = 261.63  # C4
+
+        # Adjust tempo based on prompt
+        if any(k in prompt_lower for k in ["slow", "relaxed", "ambient", "chill"]):
+            tempo_bpm = max(60, tempo_bpm - 20)
+        elif any(k in prompt_lower for k in ["fast", "energetic", "dance", "upbeat"]):
+            tempo_bpm = min(160, tempo_bpm + 20)
+
+        # Note timing
+        beats_per_sec = tempo_bpm / 60.0
+        beat_len = 1.0 / beats_per_sec
+        
+        # Vary note length based on style
+        if any(k in prompt_lower for k in ["ambient", "drone", "atmospheric"]):
+            note_len = beat_len * 2  # longer notes
+        elif any(k in prompt_lower for k in ["fast", "energetic", "dance"]):
+            note_len = beat_len * 0.5  # shorter notes
+        else:
+            note_len = beat_len  # quarter notes
+
+        t = np.linspace(0, note_len, int(sample_rate * note_len), endpoint=False)
+
+        # Build melody with more variation based on prompt
+        num_notes = max(1, int(duration / note_len))
+        melody = []
+        
+        # Create more interesting note patterns based on prompt
+        if any(k in prompt_lower for k in ["ambient", "drone", "atmospheric"]):
+            # Long sustained notes
+            for i in range(num_notes):
+                degree = scale[i % len(scale)]
+                freq = root_hz * (2 ** (degree / 12.0))
+                tone = 0.4 * np.sin(2 * np.pi * freq * t)  # quieter
+                melody.append(tone)
+        elif any(k in prompt_lower for k in ["epic", "orchestral", "heroic"]):
+            # Ascending pattern
+            for i in range(num_notes):
+                degree = scale[min(i, len(scale) - 1)]
+                freq = root_hz * (2 ** (degree / 12.0))
+                tone = 0.7 * np.sin(2 * np.pi * freq * t)
+                melody.append(tone)
+        elif any(k in prompt_lower for k in ["latin", "salsa", "tropical"]):
+            # Rhythmic pattern
+            for i in range(num_notes):
+                degree = scale[(i * 2) % len(scale)]  # skip notes for rhythm
+                freq = root_hz * (2 ** (degree / 12.0))
+                tone = 0.6 * np.sin(2 * np.pi * freq * t)
+                melody.append(tone)
+        else:
+            # Standard pattern with some variation
+            for i in range(num_notes):
+                degree = scale[i % len(scale)]
+                freq = root_hz * (2 ** (degree / 12.0))
+                tone = 0.6 * np.sin(2 * np.pi * freq * t)
+                # Add some variation in envelope
+                env = np.minimum(1.0, np.linspace(0, 3, tone.size))
+                env = np.minimum(env, np.linspace(3, 0, tone.size))
+                tone *= env / 3.0
+                melody.append(tone)
+
+        signal = np.concatenate(melody)
+        # Ensure exact duration length
+        target_len = int(sample_rate * duration)
+        if signal.size < target_len:
+            signal = np.pad(signal, (0, target_len - signal.size))
+        else:
+            signal = signal[:target_len]
+
+        wav_bytes = _wav_bytes_from_float32(signal, sample_rate)
+        b64 = base64.b64encode(wav_bytes).decode('utf-8')
+        data_url = f"data:audio/wav;base64,{b64}"
+        return {"audio_base64": data_url, "format": "wav", "duration": duration, "tempo": tempo_bpm}
+    except Exception as e:
+        logger.error(f"Music generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/audio/process")
+async def process_audio(
+    file: UploadFile = File(...),
+    normalize: bool = Form(False),
+    reverse: bool = Form(False),
+    speed: float = Form(1.0)
+):
+    """Apply simple processing to uploaded audio (WAV/PCM recommended)."""
+    try:
+        raw = await file.read()
+        with wave.open(io.BytesIO(raw), 'rb') as wf:
+            nch = wf.getnchannels()
+            sw = wf.getsampwidth()
+            fr = wf.getframerate()
+            frames = wf.readframes(wf.getnframes())
+
+        # Work in mono for simplicity
+        if nch > 1:
+            frames = audioop.tomono(frames, sw, 0.5, 0.5)
+            nch_out = 1
+        else:
+            nch_out = 1
+
+        processed = frames
+
+        # Normalize
+        if normalize:
+            rms = audioop.rms(processed, sw) or 1
+            target_rms = 5000
+            gain = min(4.0, max(0.25, target_rms / rms))
+            processed = audioop.mul(processed, sw, gain)
+
+        # Speed (simple resample)
+        if abs(speed - 1.0) > 1e-3:
+            converted, _ = audioop.ratecv(processed, sw, nch_out, fr, int(fr * speed), None)
+            processed = converted
+            fr = int(fr * speed)
+
+        # Reverse
+        if reverse:
+            processed = processed[::-1]
+
+        # Write WAV
+        with io.BytesIO() as buffer:
+            with wave.open(buffer, 'wb') as wf:
+                wf.setnchannels(nch_out)
+                wf.setsampwidth(sw)
+                wf.setframerate(fr)
+                wf.writeframes(processed)
+            wav_bytes = buffer.getvalue()
+
+        b64 = base64.b64encode(wav_bytes).decode('utf-8')
+        data_url = f"data:audio/wav;base64,{b64}"
+        return {"audio_base64": data_url, "format": "wav", "sample_rate": fr}
+    except Exception as e:
+        logger.error(f"Audio processing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 

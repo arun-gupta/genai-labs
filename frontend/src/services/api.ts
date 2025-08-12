@@ -164,8 +164,18 @@ class ApiService {
     });
   }
 
-  async getSupportedLanguages(): Promise<SupportedLanguages> {
-    return this.request<SupportedLanguages>('/languages');
+  async getSupportedLanguages(timeoutMs: number = 6000): Promise<SupportedLanguages> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(`${this.baseUrl}/languages`, { signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
 
@@ -799,6 +809,31 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  async generateMusic(payload: { prompt: string; duration?: number; tempo?: number }) {
+    const res = await fetch(`${this.baseUrl}/audio/generate/music`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Music generation failed');
+    return res.json();
+  }
+
+  async processAudio(file: File, options: { normalize?: boolean; reverse?: boolean; speed?: number } = {}) {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('normalize', String(!!options.normalize));
+    form.append('reverse', String(!!options.reverse));
+    form.append('speed', String(options.speed ?? 1.0));
+
+    const res = await fetch(`${this.baseUrl}/audio/process`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) throw new Error('Audio processing failed');
+    return res.json();
   }
 }
 

@@ -10,6 +10,32 @@ interface LanguageSelectorProps {
   className?: string;
 }
 
+// Fallback languages so the UI remains usable if the API is slow/unavailable
+const buildFallbackLanguages = (): SupportedLanguages => {
+  const entries = [
+    ['en', { name: 'English', native: 'English' }],
+    ['es', { name: 'Spanish', native: 'Español' }],
+    ['fr', { name: 'French', native: 'Français' }],
+    ['de', { name: 'German', native: 'Deutsch' }],
+    ['it', { name: 'Italian', native: 'Italiano' }],
+    ['pt', { name: 'Portuguese', native: 'Português' }],
+    ['zh', { name: 'Chinese', native: '中文' }],
+    ['ja', { name: 'Japanese', native: '日本語' }],
+    ['ko', { name: 'Korean', native: '한국어' }],
+    ['hi', { name: 'Hindi', native: 'हिन्दी' }],
+  ] as Array<[string, { name: string; native: string }]>;
+
+  const languages: Record<string, { name: string; native: string }> = {};
+  entries.forEach(([code, meta]) => (languages[code] = meta));
+
+  return {
+    languages,
+    families: {
+      Common: entries.map(([code, meta]) => ({ code, name: meta.name, native: meta.native })),
+    },
+  };
+};
+
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   selectedLanguage,
   onLanguageChange,
@@ -25,10 +51,11 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     const fetchLanguages = async () => {
       setLoading(true);
       try {
-        const data = await apiService.getSupportedLanguages();
+        const data = await apiService.getSupportedLanguages(4000);
         setLanguages(data);
       } catch (error) {
-        console.error('Failed to fetch languages:', error);
+        console.error('Failed to fetch languages, using fallback:', error);
+        setLanguages(buildFallbackLanguages());
       } finally {
         setLoading(false);
       }
@@ -87,7 +114,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Globe className="w-4 h-4 text-gray-400" />
       </button>
 
-      {isOpen && (
+      {isOpen && languages && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-96 overflow-hidden">
           <div className="p-2 border-b border-gray-200">
             <input
