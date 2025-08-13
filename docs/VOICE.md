@@ -2,6 +2,36 @@
 
 ## 🎤 Voice Input (Speech-to-Text)
 
+### System Requirements
+
+**Important**: Voice features require `ffmpeg` to be installed on your system for audio processing.
+
+#### Installing ffmpeg
+
+**macOS:**
+```bash
+brew install ffmpeg
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt install ffmpeg
+```
+
+**Linux (CentOS/RHEL):**
+```bash
+sudo yum install ffmpeg
+```
+
+**Windows:**
+- Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+- Or use: `winget install ffmpeg`
+
+**Verify Installation:**
+```bash
+ffmpeg -version
+```
+
 ### Overview
 Convert speech to text in real-time using the Web Speech API. Perfect for hands-free prompt input and accessibility.
 

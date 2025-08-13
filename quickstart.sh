@@ -151,6 +151,18 @@ if [ ! -f "frontend/.env" ]; then
     cp frontend/env.example frontend/.env
 fi
 
+# Check for ffmpeg (required for audio features)
+if ! command -v ffmpeg &> /dev/null; then
+    echo -e "${YELLOW}⚠️  ffmpeg not found. Audio features (STT/TTS) will not work.${NC}"
+    echo -e "${YELLOW}   To install ffmpeg:${NC}"
+    echo -e "${YELLOW}   - macOS: brew install ffmpeg${NC}"
+    echo -e "${YELLOW}   - Linux: sudo apt install ffmpeg (Ubuntu/Debian)${NC}"
+    echo -e "${YELLOW}   - Windows: Download from https://ffmpeg.org/download.html${NC}"
+    echo -e "${YELLOW}   Continuing without ffmpeg...${NC}"
+else
+    echo -e "${GREEN}✅ ffmpeg found - audio features will work${NC}"
+fi
+
 # Function to start backend
 start_backend() {
     echo -e "${BLUE}🐍 Starting FastAPI backend...${NC}"

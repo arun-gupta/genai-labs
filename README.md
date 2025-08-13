@@ -10,6 +10,12 @@ A full-stack web application that lets you experiment with cutting-edge AI model
 # Clone and start the application
 git clone <repository-url>
 cd genai-labs
+
+# Install ffmpeg (required for audio features)
+# macOS: brew install ffmpeg
+# Linux: sudo apt install ffmpeg
+# Windows: Download from ffmpeg.org
+
 ./quickstart.sh  # Installs everything and starts the app
 ```
 
@@ -161,6 +167,10 @@ cd frontend && npm run dev     # Start frontend
 - **Node.js**: 16+
 - **RAM**: 8GB+ (16GB+ recommended for local models)
 - **Storage**: 10GB+ free space for models
+- **ffmpeg**: Required for audio processing (STT/TTS features)
+  - **macOS**: `brew install ffmpeg`
+  - **Linux**: `sudo apt install ffmpeg` (Ubuntu/Debian) or `sudo yum install ffmpeg` (CentOS/RHEL)
+  - **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use `winget install ffmpeg`
 
 ### Virtual Environment
 All Python dependencies are automatically installed in virtual environments for isolation and consistency.

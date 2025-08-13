@@ -51,6 +51,22 @@ check_npm() {
     fi
 }
 
+# Function to check if ffmpeg is available
+check_ffmpeg() {
+    if command -v ffmpeg &> /dev/null; then
+        echo -e "${GREEN}✅ ffmpeg found: $(ffmpeg -version | head -n1)${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}⚠️  ffmpeg not found. Audio features (STT/TTS) will not work.${NC}"
+        echo -e "${YELLOW}   To install ffmpeg:${NC}"
+        echo -e "${YELLOW}   - macOS: brew install ffmpeg${NC}"
+        echo -e "${YELLOW}   - Linux: sudo apt install ffmpeg (Ubuntu/Debian)${NC}"
+        echo -e "${YELLOW}   - Windows: Download from https://ffmpeg.org/download.html${NC}"
+        echo -e "${YELLOW}   Setup will continue, but audio features may fail.${NC}"
+        return 0  # Don't exit, just warn
+    fi
+}
+
 # Function to setup backend
 setup_backend() {
     echo -e "\n${BLUE}🐍 Setting up Python Backend...${NC}"
@@ -184,6 +200,7 @@ main() {
     check_python || exit 1
     check_node || exit 1
     check_npm || exit 1
+    check_ffmpeg
     
     # Setup backend
     setup_backend

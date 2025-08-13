@@ -69,6 +69,7 @@ export const AudioPage: React.FC = () => {
   const [ttsTranslateText, setTtsTranslateText] = useState(true);
   const [ttsUseSsml, setTtsUseSsml] = useState(false);
   const [ttsNormalizeText, setTtsNormalizeText] = useState(true);
+  const [ttsOutputFormat, setTtsOutputFormat] = useState<'mp3' | 'wav' | 'ogg' | 'm4a'>('mp3');
   const [filteredVoices, setFilteredVoices] = useState<Array<{name: string, language: string, gender: string, model: string, style?: string}>>([]);
   const [ttsAppliedSettings, setTtsAppliedSettings] = useState<any>(null);
   
@@ -413,6 +414,7 @@ export const AudioPage: React.FC = () => {
       formData.append('style', ttsStyle);
       formData.append('language', ttsLanguage);
       formData.append('translate_text', ttsTranslateText.toString());
+      formData.append('output_format', ttsOutputFormat);
       formData.append('use_ssml', ttsUseSsml.toString());
       formData.append('normalize_text', ttsNormalizeText.toString());
       
@@ -2265,6 +2267,25 @@ export const AudioPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Output Format */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-700">Output Format</h4>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Audio Format</label>
+                      <select
+                        value={ttsOutputFormat}
+                        onChange={(e) => setTtsOutputFormat(e.target.value as 'mp3' | 'wav' | 'ogg' | 'm4a')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        <option value="mp3">MP3 (Most Compatible)</option>
+                        <option value="wav">WAV (High Quality)</option>
+                        <option value="ogg">OGG (Smaller Size)</option>
+                        <option value="m4a">M4A (Apple Compatible)</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {/* Advanced Options */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-gray-700">Advanced Options</h4>
@@ -2370,8 +2391,8 @@ export const AudioPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900">Generated Speech</h3>
-                      <a href={ttsAudioUrl} download="speech.mp3" className="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm">
-                        <Download size={14} /> Download MP3
+                      <a href={ttsAudioUrl} download={`speech.${ttsOutputFormat}`} className="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm">
+                        <Download size={14} /> Download {ttsOutputFormat.toUpperCase()}
                       </a>
                     </div>
                     
@@ -2538,7 +2559,7 @@ export const AudioPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* File Status and Generate Button */}
+                  {/* File Status and Controls */}
                   {sttUploadedFile && (
                     <div className="mt-4 space-y-3">
                       <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -2549,6 +2570,49 @@ export const AudioPage: React.FC = () => {
                             <div className="text-green-600">{(sttUploadedFile.size / 1024 / 1024).toFixed(2)} MB</div>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Audio Player */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-medium text-gray-700">Preview Audio:</div>
+                          <button
+                            onClick={() => {
+                              const audio = document.getElementById('stt-audio-player') as HTMLAudioElement;
+                              if (audio) {
+                                if (audio.paused) {
+                                  audio.play();
+                                } else {
+                                  audio.pause();
+                                }
+                              }
+                            }}
+                            className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            <Play size={14} />
+                            Play Audio
+                          </button>
+                        </div>
+                        <audio
+                          id="stt-audio-player"
+                          controls
+                          className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-6 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full"
+                          style={{
+                            '--webkit-media-controls-panel-background-color': '#f3f4f6',
+                            '--webkit-media-controls-play-button-background-color': '#3b82f6',
+                            '--webkit-media-controls-timeline-background-color': '#d1d5db',
+                            '--webkit-media-controls-timeline-progress-color': '#3b82f6',
+                            '--webkit-media-controls-timeline-border-radius': '9999px',
+                            '--webkit-media-controls-timeline-height': '24px',
+                            '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
+                            '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
+                            '--webkit-media-controls-volume-slider-border-radius': '9999px',
+                            '--webkit-media-controls-volume-slider-height': '8px'
+                          } as React.CSSProperties}
+                        >
+                          <source src={URL.createObjectURL(sttUploadedFile)} type={sttUploadedFile.type} />
+                          Your browser does not support the audio element.
+                        </audio>
                       </div>
                       
                       <button
@@ -2598,8 +2662,28 @@ export const AudioPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-gray-900">Transcription Result</h3>
-                      <div className="text-sm text-gray-600">
-                        Confidence: {Math.round(sttResult.confidence * 100)}%
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-600">
+                          Confidence: {Math.round(sttResult.confidence * 100)}%
+                        </div>
+                        {sttUploadedFile && (
+                          <button
+                            onClick={() => {
+                              const audio = document.getElementById('stt-audio-player') as HTMLAudioElement;
+                              if (audio) {
+                                if (audio.paused) {
+                                  audio.play();
+                                } else {
+                                  audio.pause();
+                                }
+                              }
+                            }}
+                            className="flex items-center gap-2 px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+                          >
+                            <Play size={14} />
+                            Replay Audio
+                          </button>
+                        )}
                       </div>
                     </div>
                     

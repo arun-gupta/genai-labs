@@ -156,6 +156,46 @@ ollama serve
 # 4. Check Web Speech API support
 ```
 
+#### "STT processing failed: Audio file could not be read"
+```bash
+# Solution: Install ffmpeg for audio processing
+# This error occurs when ffmpeg is not installed
+
+# macOS:
+brew install ffmpeg
+
+# Linux (Ubuntu/Debian):
+sudo apt install ffmpeg
+
+# Linux (CentOS/RHEL):
+sudo yum install ffmpeg
+
+# Windows:
+# Download from https://ffmpeg.org/download.html
+# or use: winget install ffmpeg
+
+# Verify installation:
+ffmpeg -version
+```
+
+#### "Speech-to-text failed: 500 Internal Server Error"
+```bash
+# Solution: Check ffmpeg installation and audio file format
+# 1. Ensure ffmpeg is installed (see above)
+# 2. Check audio file is not corrupted
+# 3. Try with different audio format (WAV, MP3, M4A)
+# 4. Restart backend server after installing ffmpeg
+```
+
+#### "Text-to-speech failed"
+```bash
+# Solution: Check TTS configuration
+# 1. Verify ffmpeg is installed
+# 2. Check internet connection (for cloud TTS)
+# 3. Verify API keys if using cloud services
+# 4. Try different voice options
+```
+
 ### Export Issues
 
 #### "Export failed"
