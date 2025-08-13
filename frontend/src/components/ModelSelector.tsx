@@ -192,11 +192,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">2</span>
-                    <span className="text-sm text-blue-700">Download a model: <code className="bg-blue-100 px-1 rounded text-xs">ollama pull mistral:7b</code></span>
+                    <span className="text-sm text-blue-700">Download a model: <code className="bg-blue-100 px-1 rounded text-xs">ollama pull llama3.2:3b</code></span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">3</span>
-                    <span className="text-sm text-blue-700">Run the model: <code className="bg-blue-100 px-1 rounded text-xs">ollama run mistral:7b</code></span>
+                    <span className="text-sm text-blue-700">Run the model: <code className="bg-blue-100 px-1 rounded text-xs">ollama run llama3.2:3b</code></span>
                   </div>
                 </div>
                 
@@ -207,7 +207,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   </p>
                   <div className="space-y-1">
                     <code className="block text-xs bg-green-100 text-green-800 p-1 rounded break-all">
-                      {`curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": -1}'`}
+                      {`curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": -1}'`}
                     </code>
                     <code className="block text-xs bg-green-100 text-green-800 p-1 rounded break-all">
                       {`curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'`}

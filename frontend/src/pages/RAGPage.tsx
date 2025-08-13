@@ -43,7 +43,7 @@ interface Source {
 
 export const RAGPage: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState('ollama');
-  const [selectedModel, setSelectedModel] = useState('mistral:7b');
+  const [selectedModel, setSelectedModel] = useState('llama3.2:3b');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState<number | undefined>(1000);
   const [question, setQuestion] = useState('');
@@ -100,7 +100,7 @@ export const RAGPage: React.FC = () => {
       name: "Local vs Cloud",
       description: "Compare local Ollama model with cloud models",
       models: [
-        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama3.2:3b" },
         { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
@@ -109,7 +109,7 @@ export const RAGPage: React.FC = () => {
       name: "Efficient Models",
       description: "Compare lightweight models for speed",
       models: [
-        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama3.2:3b" },
         { provider: "openai", model: "gpt-4o" },
         { provider: "anthropic", model: "claude-3-5-haiku-20241022" }
       ]
@@ -118,7 +118,7 @@ export const RAGPage: React.FC = () => {
       name: "High Performance",
       description: "Compare high-quality models for accuracy",
       models: [
-        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama3.2:3b" },
         { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-sonnet-4" }
       ]
@@ -127,7 +127,7 @@ export const RAGPage: React.FC = () => {
       name: "Reasoning & Analysis",
       description: "Compare models with advanced reasoning and analysis capabilities",
       models: [
-        { provider: "ollama", model: "mistral:7b" },
+        { provider: "ollama", model: "llama3.2:3b" },
         { provider: "openai", model: "gpt-5" },
         { provider: "anthropic", model: "claude-sonnet-4" }
       ]
@@ -848,8 +848,8 @@ export const RAGPage: React.FC = () => {
                             </p>
                             <div className="text-xs text-blue-600 space-y-1">
                               <div>1. Start Ollama: <code className="bg-blue-100 px-1 rounded">ollama serve</code></div>
-                              <div>2. Download a model: <code className="bg-blue-100 px-1 rounded">ollama pull mistral:7b</code></div>
-                              <div>3. Run the model: <code className="bg-blue-100 px-1 rounded">ollama run mistral:7b</code></div>
+                                                      <div>2. Download a model: <code className="bg-blue-100 px-1 rounded">ollama pull llama3.2:3b</code></div>
+                        <div>3. Run the model: <code className="bg-blue-100 px-1 rounded">ollama run llama3.2:3b</code></div>
                             </div>
                             <div className="mt-2">
                               <a

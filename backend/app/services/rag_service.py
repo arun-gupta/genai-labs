@@ -179,7 +179,7 @@ class RAGService:
             raise Exception(f"Failed to upload document: {str(e)}")
     
     async def ask_question(self, question: str, collection_name: str = "default", 
-                          model_provider: str = "ollama", model_name: str = "mistral:7b",
+                          model_provider: str = "ollama", model_name: str = "llama3.2:3b",
                           temperature: float = 0.7, max_tokens: Optional[int] = None,
                           top_k: int = 5, similarity_threshold: float = -0.5, filter_tags: List[str] = None,
                           collection_names: List[str] = None) -> Dict:
@@ -437,7 +437,7 @@ Question: {question}"""
             raise Exception(f"Failed to process question: {str(e)}")
     
     async def ask_question_stream(self, question: str, collection_name: str = "default",
-                                 model_provider: str = "ollama", model_name: str = "mistral:7b",
+                                 model_provider: str = "ollama", model_name: str = "llama3.2:3b",
                                  temperature: float = 0.7, max_tokens: Optional[int] = None,
                                  top_k: int = 5, similarity_threshold: float = -0.5, filter_tags: List[str] = None,
                                  collection_names: List[str] = None) -> AsyncGenerator[Dict, None]:

@@ -23,7 +23,7 @@ Generate text with real-time streaming.
   "system_prompt": "You are a helpful assistant.",
   "user_prompt": "Write a short story about a robot.",
   "model_provider": "ollama",
-  "model_name": "mistral:7b",
+  "model_name": "llama3.2:3b",
   "temperature": 0.7,
   "max_tokens": 1000,
   "stream": true,
@@ -80,7 +80,7 @@ Summarize text with various options.
 {
   "text": "Long text to summarize",
   "model_provider": "ollama",
-  "model_name": "mistral:7b",
+  "model_name": "llama3.2:3b",
   "max_length": 150,
   "temperature": 0.3,
   "summary_type": "general",
@@ -185,14 +185,14 @@ Get available models and their status.
 {
   "models": [
     {
-      "name": "mistral:7b",
+      "name": "llama3.2:3b",
       "provider": "ollama",
-      "description": "High-performance reasoning model",
-      "parameters": "7B",
-      "organization": "Mistral AI",
+      "description": "Meta's latest 3B model with improved performance",
+      "parameters": "3B",
+      "organization": "Meta",
       "category": "general",
       "installed": true,
-      "download_command": "ollama pull mistral:7b"
+      "download_command": "ollama pull llama3.2:3b"
     }
   ]
 }
@@ -211,7 +211,7 @@ Compare multiple models for text generation.
   "system_prompt": "You are a helpful assistant.",
   "user_prompt": "Write a short story about a robot.",
   "models": [
-    {"provider": "ollama", "name": "mistral:7b"},
+    {"provider": "ollama", "name": "llama3.2:3b"},
     {"provider": "openai", "name": "gpt-3.5-turbo"}
   ],
   "temperature": 0.7,
@@ -225,7 +225,7 @@ Compare multiple models for text generation.
 {
   "results": [
     {
-      "model": "mistral:7b",
+      "model": "llama3.2:3b",
       "provider": "ollama",
       "response": "Generated text...",
       "metrics": {
@@ -241,7 +241,7 @@ Compare multiple models for text generation.
   ],
   "recommendations": {
     "best_overall": "gpt-3.5-turbo",
-    "best_speed": "mistral:7b",
+    "best_speed": "llama3.2:3b",
     "best_quality": "gpt-3.5-turbo"
   }
 }
@@ -255,7 +255,7 @@ Compare multiple models for text summarization.
 {
   "text": "Long text to summarize",
   "models": [
-    {"provider": "ollama", "name": "mistral:7b"},
+    {"provider": "ollama", "name": "llama3.2:3b"},
     {"provider": "openai", "name": "gpt-3.5-turbo"}
   ],
   "summary_type": "general",
@@ -302,7 +302,7 @@ Ask a question about uploaded documents.
   "question": "What are the main findings?",
   "collection_names": ["my_collection"],
   "model_provider": "ollama",
-  "model_name": "mistral:7b",
+  "model_name": "llama3.2:3b",
   "temperature": 0.3,
   "max_tokens": 500
 }

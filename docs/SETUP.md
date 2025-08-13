@@ -196,11 +196,11 @@ If you want to use local models via Ollama:
 ollama serve
 
 # Download and run a model
-ollama pull mistral:7b
-ollama run mistral:7b
+ollama pull llama3.2:3b
+ollama run llama3.2:3b
 
 # Keep models running indefinitely for better performance
-curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": -1}'
 curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'
 ```
 
@@ -215,7 +215,7 @@ curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_a
 ollama ps
 
 # Stop a model to free memory
-curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
+curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": 0}'
 ```
 
 ### 5. Local Image Generation Setup (Automatic)

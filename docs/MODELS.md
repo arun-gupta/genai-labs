@@ -81,14 +81,14 @@ The application includes a comprehensive **Models Explorer** page that showcases
 3. **Click "Copy Command"**
 4. **Run the command in terminal**:
    ```bash
-   ollama pull mistral:7b
-   ```
+ollama pull llama3.2:3b
+```
 
 ### Popular Model Commands
 
 ```bash
 # General purpose models
-ollama pull mistral:7b
+ollama pull llama3.2:3b
 ollama pull llama3.1:3b
 ollama pull gemma2:3b
 
@@ -177,7 +177,7 @@ By default, Ollama unloads models after a period of inactivity to free up memory
 
 ```bash
 # Keep a model running forever (until manually stopped)
-curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": -1}'
+curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": -1}'
 
 # Examples for other models
 curl http://localhost:11434/api/generate -d '{"model": "mistral:latest", "keep_alive": -1}'
@@ -201,7 +201,7 @@ curl http://localhost:11434/api/generate -d '{"model": "gpt-oss-20b", "keep_aliv
 ollama ps
 
 # Stop a specific model to free memory
-curl http://localhost:11434/api/generate -d '{"model": "mistral:7b", "keep_alive": 0}'
+curl http://localhost:11434/api/generate -d '{"model": "llama3.2:3b", "keep_alive": 0}'
 ```
 
 ## 🎨 Image Generation Models
