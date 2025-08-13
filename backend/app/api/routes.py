@@ -208,7 +208,10 @@ def process_ssml(text: str, style: str = "", emotion: str = "", speed: float = 1
     """Process text with SSML markup for enhanced TTS."""
     # Check if text already contains SSML markup
     if text.strip().startswith('<speak'):
-        # If text already has SSML, return it as-is
+        # If text already has SSML, ensure it has proper namespace
+        if 'xmlns=' not in text:
+            # Add namespace to existing SSML
+            text = text.replace('<speak>', '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">')
         return text
     
     # Only generate SSML if we actually have speed/pitch modifications
@@ -1991,11 +1994,16 @@ async def text_to_speech(
                 logger.warning(f"Translation failed: {e}, using original text")
                 # If translation fails, use original text
         
-        # Apply text normalization if enabled
-        if normalize_text:
+        # Check if text contains SSML markup
+        is_ssml = text.strip().startswith('<speak')
+        
+        # Apply text normalization if enabled (but skip if SSML is present)
+        if normalize_text and not is_ssml:
             original_text = text
             text = normalize_text_for_tts(text)
             logger.info(f"Text normalized: {len(original_text)} -> {len(text)} chars")
+        elif normalize_text and is_ssml:
+            logger.info(f"Text normalization skipped due to SSML markup")
         
         # Apply SSML processing if enabled
         if use_ssml:
