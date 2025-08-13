@@ -28,7 +28,7 @@ cd genai-labs
 - **Text Summarization**: Summarize text, URLs, and documents with 7+ summary types
 - **Real-time Streaming**: Watch your content being created live
 - **Multiple Variations**: Generate 1-5 different versions of your content
-- **Voice Features**: Speak your prompts and hear responses aloud
+- **Voice Features**: Speak your prompts and hear responses aloud (SSML support: WIP)
 - **Export Options**: Save as PDF, Word, Markdown, or other formats
 
 ### 📄 **Document Intelligence**

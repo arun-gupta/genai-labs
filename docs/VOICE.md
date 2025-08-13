@@ -1,241 +1,101 @@
-# Voice Features Guide
+# Voice Features Documentation
 
-## 🎤 Voice Input (Speech-to-Text)
+## Overview
+The GenAI Lab includes comprehensive voice features for both Speech-to-Text (STT) and Text-to-Speech (TTS) capabilities.
 
-### System Requirements
+## System Requirements
 
-**Important**: Voice features require `ffmpeg` to be installed on your system for audio processing.
+### Required Dependencies
+- **ffmpeg**: Required for audio processing (STT/TTS features)
+  - **macOS**: `brew install ffmpeg`
+  - **Linux**: `sudo apt install ffmpeg` (Ubuntu/Debian) or `sudo yum install ffmpeg` (CentOS/RHEL)
+  - **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html) or use `winget install ffmpeg`
 
-#### Installing ffmpeg
+## Speech-to-Text (STT)
 
-**macOS:**
-```bash
-brew install ffmpeg
-```
+### Supported Models
+- **Google Speech Recognition**: High accuracy, supports multiple languages
+- **OpenAI Whisper**: Advanced AI model with excellent transcription quality
 
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt install ffmpeg
-```
-
-**Linux (CentOS/RHEL):**
-```bash
-sudo yum install ffmpeg
-```
-
-**Windows:**
-- Download from [ffmpeg.org](https://ffmpeg.org/download.html)
-- Or use: `winget install ffmpeg`
-
-**Verify Installation:**
-```bash
-ffmpeg -version
-```
-
-### Overview
-Convert speech to text in real-time using the Web Speech API. Perfect for hands-free prompt input and accessibility.
+### Supported Audio Formats
+- **Primary**: WAV, MP3, M4A, OGG
+- **Conversion**: Automatic conversion using ffmpeg for unsupported formats
 
 ### Features
-- **Real-time Transcription**: Convert speech to text as you speak
-- **Continuous Recognition**: Supports ongoing speech input without interruption
-- **Language Support**: Defaults to English (en-US) with multi-language capability
-- **Visual Feedback**: Animated microphone with audio level indicators
-- **Error Handling**: Graceful fallback for unsupported browsers
-- **Noise Filtering**: Built-in noise reduction and echo cancellation
+- Real-time audio processing
+- Language detection and selection
+- Multiple model selection
+- Audio format conversion
 
-### How to Use
+## Text-to-Speech (TTS)
 
-1. **Navigate to Text Generation** (`/generate`) or **Text Summarization** (`/summarize`)
-2. **Click the microphone icon** next to the input field
-3. **Start speaking** - your words will appear as text
-4. **Click again to stop** recording
-5. **Edit the transcript** if needed before generating
-
-### Browser Compatibility
-
-| Browser | Speech Recognition | Text-to-Speech | Notes |
-|---------|-------------------|----------------|-------|
-| **Chrome/Edge** | ✅ Full Support | ✅ Full Support | Best experience |
-| **Firefox** | ⚠️ Limited | ✅ Full Support | May require HTTPS |
-| **Safari** | ⚠️ Limited | ✅ Full Support | iOS support varies |
-| **Mobile** | ⚠️ Varies | ✅ Good Support | Platform dependent |
-
-### Troubleshooting Voice Input
-
-#### Microphone Not Working
-```bash
-# Check browser permissions
-# Allow microphone access when prompted
-# Ensure HTTPS connection (required for some browsers)
-```
-
-#### No Speech Recognition
-```bash
-# Try Chrome or Edge browser
-# Check if Web Speech API is supported
-# Ensure microphone is not muted
-```
-
-## 🔊 Voice Output (Text-to-Speech)
-
-### Overview
-Listen to generated responses with natural-sounding speech synthesis. Choose from multiple voices and control playback.
+### Supported Models
+- **Microsoft Edge TTS**: High-quality, free TTS service
+- **Google Text-to-Speech (gTTS)**: Google's TTS service
 
 ### Features
-- **Multiple Voices**: Choose from available system voices
-- **Playback Controls**: Play, pause, resume, and stop functionality
-- **Voice Selection**: Dropdown to select preferred voice
-- **Visual Status**: Clear playing/paused status indicators
-- **Smart Voice Detection**: Automatically selects English voices
-- **Speed Control**: Adjust playback speed (0.5x to 2x)
-
-### How to Use
-
-1. **Generate text** using Text Generation or Summarization
-2. **Click the speaker icon** next to the response
-3. **Choose your preferred voice** from the dropdown
-4. **Control playback** with play/pause/stop buttons
-5. **Adjust speed** if needed
+- Multiple voice selection
+- Speed and pitch control
+- Volume adjustment
+- Output format selection (MP3, WAV, OGG, M4A)
+- Text normalization for better pronunciation
 
 ### Voice Selection
+- 322+ voices available via Edge TTS
+- Filter by language, gender, and style
+- Automatic voice selection based on content
 
-#### Available Voice Types
-- **Male Voices**: Deep, authoritative, professional
-- **Female Voices**: Clear, expressive, natural
-- **Neutral Voices**: Balanced, easy to understand
-- **Accented Voices**: Various regional accents
+## ⚠️ Work In Progress (WIP)
 
-#### Voice Quality Factors
-- **Clarity**: How well the voice pronounces words
-- **Naturalness**: How human-like the voice sounds
-- **Speed**: Speaking rate and pacing
-- **Pitch**: Voice tone and inflection
+### SSML (Speech Synthesis Markup Language)
+**Status**: WIP - Currently experiencing issues with proper SSML processing
 
-### Browser Compatibility
+**Known Issues**:
+- SSML tags may be spoken literally instead of being interpreted
+- Speed variations in SSML may not work correctly
+- Complex SSML structures may cause processing errors
 
-| Feature | Chrome | Firefox | Safari | Edge |
-|---------|--------|---------|--------|------|
-| **Voice Selection** | ✅ | ✅ | ✅ | ✅ |
-| **Playback Controls** | ✅ | ✅ | ✅ | ✅ |
-| **Speed Control** | ✅ | ✅ | ✅ | ✅ |
-| **Voice Quality** | Excellent | Good | Good | Excellent |
+**Current State**:
+- Basic SSML detection and namespace injection implemented
+- Text normalization properly skipped for SSML content
+- Frontend UI includes SSML checkbox and sample prompts
+- Backend processing includes SSML handling logic
 
-## 🔧 Technical Implementation
+**Future Improvements Needed**:
+- Fix SSML parsing and processing in Edge TTS
+- Implement proper SSML validation
+- Add support for more SSML features (emotions, styles, etc.)
+- Improve error handling for malformed SSML
 
-### Web Speech API
+**Temporary Workaround**:
+- Use plain text with speed/pitch controls instead of SSML
+- Text normalization works well for improved pronunciation
+- Voice selection provides natural speech variations
 
-The voice features use the browser's native Web Speech API:
+## Troubleshooting
 
-```javascript
-// Speech Recognition
-const recognition = new webkitSpeechRecognition();
-recognition.continuous = true;
-recognition.interimResults = true;
+### Common Issues
 
-// Speech Synthesis
-const utterance = new SpeechSynthesisUtterance(text);
-speechSynthesis.speak(utterance);
-```
+#### STT Issues
+1. **"Audio file could not be read" error**
+   - **Solution**: Install ffmpeg (`brew install ffmpeg` on macOS)
+   - **Cause**: Missing ffmpeg dependency for audio conversion
 
-### Supported Languages
+2. **Poor transcription quality**
+   - **Solution**: Try different STT models (Google vs Whisper)
+   - **Solution**: Ensure audio is clear and in supported format
 
-#### Speech Recognition
-- **Primary**: English (en-US)
-- **Secondary**: Spanish, French, German, Italian
-- **Experimental**: Chinese, Japanese, Korean
+#### TTS Issues
+1. **No audio generated**
+   - **Solution**: Check voice selection and model availability
+   - **Solution**: Verify text input is not empty
 
-#### Text-to-Speech
-- **English**: Multiple accents and dialects
-- **Spanish**: European and Latin American
-- **French**: European and Canadian
-- **German**: Standard and Austrian
-- **Italian**: Standard Italian
+2. **SSML not working properly**
+   - **Solution**: Use plain text with speed/pitch controls instead
+   - **Status**: Known issue, marked as WIP
 
-## 🎯 Best Practices
-
-### Voice Input Tips
-- **Speak clearly** and at a normal pace
-- **Minimize background noise** for better accuracy
-- **Use punctuation commands** like "period" or "comma"
-- **Pause briefly** between sentences
-- **Review transcript** before submitting
-
-### Voice Output Tips
-- **Choose appropriate voice** for content type
-- **Adjust speed** for complex content
-- **Use for proofreading** generated text
-- **Enable for accessibility** features
-- **Test voice quality** before long content
-
-### Performance Optimization
-- **Close other audio apps** to reduce interference
-- **Use wired headphones** for better quality
-- **Ensure stable internet** for cloud-based features
-- **Restart browser** if voice features stop working
-
-## 🛠️ Troubleshooting
-
-### Common Voice Input Issues
-
-#### "Microphone access denied"
-```bash
-# Solution: Allow microphone permissions
-# Click the microphone icon in browser address bar
-# Select "Allow" for microphone access
-```
-
-#### "No speech detected"
-```bash
-# Solution: Check microphone settings
-# Ensure microphone is not muted
-# Try speaking louder or closer to microphone
-# Check browser console for errors
-```
-
-#### "Recognition not supported"
-```bash
-# Solution: Use supported browser
-# Chrome or Edge recommended
-# Ensure HTTPS connection
-# Update browser to latest version
-```
-
-### Common Voice Output Issues
-
-#### "No voices available"
-```bash
-# Solution: Install system voices
-# Windows: Settings > Time & Language > Speech
-# macOS: System Preferences > Accessibility > Speech
-# Linux: Install speech synthesis packages
-```
-
-#### "Voice sounds robotic"
-```bash
-# Solution: Choose better voice
-# Select higher quality voice from dropdown
-# Ensure stable internet connection
-# Try different voice options
-```
-
-#### "Playback not working"
-```bash
-# Solution: Check audio settings
-# Ensure system audio is not muted
-# Check browser audio permissions
-# Try refreshing the page
-```
-
-## 🔒 Privacy & Security
-
-### Data Handling
-- **No cloud processing** - Voice recognition runs locally
-- **No voice data stored** - Transcripts are temporary
-- **Browser-only** - No server-side voice processing
-- **User control** - Full control over voice features
-
-### Security Considerations
-- **HTTPS required** - Voice features need secure connection
-- **Permission-based** - Explicit user consent required
-- **Local processing** - Voice data stays on your device
-- **No tracking** - Voice usage is not monitored or logged 
+### Getting Help
+- Check the [Troubleshooting Guide](../docs/TROUBLESHOOTING.md)
+- Review system requirements and dependencies
+- Ensure ffmpeg is properly installed
+- For SSML issues, use plain text alternatives until WIP is resolved 
