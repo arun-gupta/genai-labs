@@ -133,6 +133,67 @@ export const AudioPage: React.FC = () => {
     }
   };
 
+  const handleUseSampleAudio = async () => {
+    try {
+      // Create a simple audio file with speech-like content
+      const sampleText = "Hello, this is a sample audio file for testing speech-to-text functionality. The weather is nice today and I hope you're having a great day!";
+      
+      // Generate a simple audio waveform (sine wave with speech-like patterns)
+      const sampleRate = 44100;
+      const duration = 3; // 3 seconds
+      const samples = sampleRate * duration;
+      const audioData = new Float32Array(samples);
+      
+      // Create a simple speech-like pattern with varying frequencies
+      for (let i = 0; i < samples; i++) {
+        const time = i / sampleRate;
+        const frequency = 200 + 100 * Math.sin(time * 2) + 50 * Math.sin(time * 5);
+        audioData[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 0.5);
+      }
+      
+      // Convert to WAV format
+      const wavBuffer = new ArrayBuffer(44 + samples * 2);
+      const view = new DataView(wavBuffer);
+      
+      // WAV header
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
+      
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + samples * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, samples * 2, true);
+      
+      // Write audio data
+      for (let i = 0; i < samples; i++) {
+        const sample = Math.max(-1, Math.min(1, audioData[i]));
+        view.setInt16(44 + i * 2, sample * 0x7FFF, true);
+      }
+      
+      // Create File object
+      const sampleFile = new File([wavBuffer], 'sample-speech.wav', { type: 'audio/wav' });
+      
+      // Process the sample file
+      await handleSpeechToText(sampleFile);
+      
+    } catch (error) {
+      alert('Failed to generate sample audio. Please try uploading a file instead.');
+      console.error(error);
+    }
+  };
+
   const handleTextToSpeech = async () => {
     if (!ttsText.trim()) return;
     
@@ -1961,6 +2022,18 @@ export const AudioPage: React.FC = () => {
                   {/* File Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Upload Audio File</label>
+                    
+                    {/* Sample Audio Option */}
+                    <div className="mb-3">
+                      <button
+                        onClick={() => handleUseSampleAudio()}
+                        className="w-full bg-indigo-50 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 border border-indigo-200"
+                      >
+                        <Play size={16} />
+                        Use Sample Audio
+                      </button>
+                    </div>
+                    
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
                       <input
                         type="file"
