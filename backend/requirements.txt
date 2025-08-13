@@ -32,6 +32,12 @@ markdown>=3.4.0
 # Audio processing compatibility for Python 3.13+
 audioop-lts>=0.2.1
 
+# Speech Processing Dependencies
+SpeechRecognition>=3.10.0
+pyttsx3>=2.90
+gTTS>=2.3.2
+edge-tts>=6.1.9
+
 # RAG Dependencies
 chromadb>=0.4.0
 sentence-transformers>=2.2.0

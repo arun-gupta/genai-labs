@@ -829,6 +829,32 @@ class ApiService {
     if (!res.ok) throw new Error('Audio processing failed');
     return res.json();
   }
+
+  async speechToText(formData: FormData) {
+    const res = await fetch(`${this.baseUrl}/audio/speech-to-text`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Speech-to-text failed');
+    return res.json();
+  }
+
+  async textToSpeech(formData: FormData) {
+    const res = await fetch(`${this.baseUrl}/audio/text-to-speech`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Text-to-speech failed');
+    return res.json();
+  }
+
+  async getTTSVoices() {
+    const res = await fetch(`${this.baseUrl}/audio/tts/voices`, {
+      method: 'GET',
+    });
+    if (!res.ok) throw new Error('Failed to get TTS voices');
+    return res.json();
+  }
 }
 
 export const apiService = new ApiService(); 

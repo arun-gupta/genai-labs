@@ -141,3 +141,14 @@ backend/models/*/
 *.pth 
 backend/.env.backup
 backend/.env*
+
+# ChromaDB database files
+chroma_db/
+backend/chroma_db/
+
+# Environment verification scripts
+verify_env.sh
+
+# Temporary uploads
+temp_uploads/
+backend/temp_uploads/

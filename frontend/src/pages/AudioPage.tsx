@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { Music2, SlidersHorizontal, Upload, Download, Play, Zap, Volume2, VolumeX, RotateCcw, Clock, Filter } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Music2, SlidersHorizontal, Upload, Download, Play, Zap, Volume2, VolumeX, RotateCcw, Clock, Filter, Mic, Volume1, FileText } from 'lucide-react';
 import { apiService } from '../services/api';
 
 export const AudioPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'music' | 'effects'>('music');
+  const [activeTab, setActiveTab] = useState<'music' | 'effects' | 'speech'>('music');
 
   // Music generation state
   const [prompt, setPrompt] = useState('uplifting cinematic theme with major scale');
@@ -49,6 +49,29 @@ export const AudioPage: React.FC = () => {
   const [sampleRate, setSampleRate] = useState(44100);
   const [appliedEffects, setAppliedEffects] = useState<{pitch: number, speed: number}>({pitch: 1.0, speed: 1.0});
 
+  // Speech processing state
+  const [speechText, setSpeechText] = useState('');
+  const [ttsText, setTtsText] = useState('Hello, this is a test of the text-to-speech system.');
+  const [ttsVoice, setTtsVoice] = useState('en-US-AriaNeural');
+  const [ttsSpeed, setTtsSpeed] = useState(1.0);
+  const [ttsVolume, setTtsVolume] = useState(100);
+  const [ttsModel, setTtsModel] = useState('edge');
+  const [ttsAudioUrl, setTtsAudioUrl] = useState<string>('');
+  const [isTtsGenerating, setIsTtsGenerating] = useState(false);
+  const [ttsProgress, setTtsProgress] = useState(0);
+  const ttsProgressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  // STT state
+  const [sttLanguage, setSttLanguage] = useState('en-US');
+  const [sttModel, setSttModel] = useState('google');
+  const [isSttProcessing, setIsSttProcessing] = useState(false);
+  const [sttProgress, setSttProgress] = useState(0);
+  const sttProgressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [sttResult, setSttResult] = useState<{text: string, confidence: number, language: string, model: string} | null>(null);
+  
+  // Available voices
+  const [availableVoices, setAvailableVoices] = useState<Array<{name: string, language: string, gender: string, model: string}>>([]);
+
   const clearAllEffects = () => {
     setNormalize(true);
     setReverse(false);
@@ -72,6 +95,70 @@ export const AudioPage: React.FC = () => {
   };
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Load available voices on component mount
+  useEffect(() => {
+    const loadVoices = async () => {
+      try {
+        const response = await apiService.getTTSVoices();
+        setAvailableVoices(response.voices || []);
+      } catch (error) {
+        console.error('Failed to load voices:', error);
+      }
+    };
+    loadVoices();
+  }, []);
+
+  // Speech processing functions
+  const handleSpeechToText = async (file: File) => {
+    try {
+      setIsSttProcessing(true);
+      setSttResult(null);
+      startProgress(setSttProgress, sttProgressTimer);
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('language', sttLanguage);
+      formData.append('model', sttModel);
+      
+      const result = await apiService.speechToText(formData);
+      setSttResult(result);
+      finishProgress(setSttProgress, sttProgressTimer);
+    } catch (error) {
+      alert('Speech-to-text failed. Please try again.');
+      console.error(error);
+      resetProgress(setSttProgress);
+    } finally {
+      setIsSttProcessing(false);
+    }
+  };
+
+  const handleTextToSpeech = async () => {
+    if (!ttsText.trim()) return;
+    
+    try {
+      setIsTtsGenerating(true);
+      setTtsAudioUrl('');
+      startProgress(setTtsProgress, ttsProgressTimer);
+      
+      const formData = new FormData();
+      formData.append('text', ttsText);
+      formData.append('voice', ttsVoice);
+      formData.append('speed', ttsSpeed.toString());
+      formData.append('volume', ttsVolume.toString());
+      formData.append('model', ttsModel);
+      
+      const result = await apiService.textToSpeech(formData);
+      setTtsAudioUrl(result.audio_base64);
+      finishProgress(setTtsProgress, ttsProgressTimer);
+    } catch (error) {
+      alert('Text-to-speech failed. Please try again.');
+      console.error(error);
+      resetProgress(setTtsProgress);
+    } finally {
+      setIsTtsGenerating(false);
+    }
+  };
 
   // Update playback rate when speed changes or effects are applied
   React.useEffect(() => {
@@ -277,6 +364,16 @@ export const AudioPage: React.FC = () => {
               }`}
             >
               Effects
+            </button>
+            <button
+              onClick={() => setActiveTab('speech')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'speech'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Speech
             </button>
           </nav>
         </div>
@@ -1585,6 +1682,261 @@ export const AudioPage: React.FC = () => {
                   )}
                 </>
               )}
+
+              {activeTab === 'speech' && (
+                <>
+                  {/* Speech-to-Text Section */}
+                  <div className="space-y-6">
+                    <div className="card">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Mic className="text-indigo-600" size={18} />
+                        <h2 className="text-lg font-semibold">Speech-to-Text</h2>
+                      </div>
+                      
+                      {/* STT Controls */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                          <select
+                            value={sttLanguage}
+                            onChange={(e) => setSttLanguage(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="fr-FR">French</option>
+                            <option value="de-DE">German</option>
+                            <option value="it-IT">Italian</option>
+                            <option value="pt-BR">Portuguese (Brazil)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="zh-CN">Chinese (Simplified)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                          <select
+                            value={sttModel}
+                            onChange={(e) => setSttModel(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="google">Google Speech Recognition</option>
+                            <option value="whisper">OpenAI Whisper</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* File Upload */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Upload Audio File</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleSpeechToText(file);
+                              }
+                            }}
+                            className="hidden"
+                            id="stt-file-input"
+                          />
+                          <label htmlFor="stt-file-input" className="cursor-pointer">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-600">
+                              Click to upload or drag and drop
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              WAV, MP3, M4A up to 10MB
+                            </p>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      {isSttProcessing && (
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                            <span>Processing speech...</span>
+                            <span>{sttProgress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${sttProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STT Results */}
+                      {sttResult && (
+                        <div className="space-y-3">
+                          <h3 className="text-md font-semibold text-gray-900">Transcription Result</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg border">
+                            <p className="text-gray-800 mb-2">{sttResult.text}</p>
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <span>Confidence: {Math.round(sttResult.confidence * 100)}%</span>
+                              <span>Model: {sttResult.model}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Text-to-Speech Section */}
+                    <div className="card">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Volume1 className="text-indigo-600" size={18} />
+                        <h2 className="text-lg font-semibold">Text-to-Speech</h2>
+                      </div>
+
+                      {/* TTS Text Input */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Text to Convert</label>
+                        <textarea
+                          value={ttsText}
+                          onChange={(e) => setTtsText(e.target.value)}
+                          placeholder="Enter text to convert to speech..."
+                          className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                        />
+                      </div>
+
+                      {/* TTS Controls */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Voice</label>
+                          <select
+                            value={ttsVoice}
+                            onChange={(e) => setTtsVoice(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            {availableVoices
+                              .filter(voice => voice.model === ttsModel)
+                              .map(voice => (
+                                <option key={voice.name} value={voice.name}>
+                                  {voice.name} ({voice.language})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                          <select
+                            value={ttsModel}
+                            onChange={(e) => setTtsModel(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="edge">Microsoft Edge TTS</option>
+                            <option value="gtts">Google TTS</option>
+                            <option value="pyttsx3">System TTS</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* TTS Settings */}
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
+                          <input
+                            type="range"
+                            min="0.5"
+                            max="2.0"
+                            step="0.1"
+                            value={ttsSpeed}
+                            onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
+                            className="w-full"
+                          />
+                          <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={ttsVolume}
+                            onChange={(e) => setTtsVolume(parseInt(e.target.value))}
+                            className="w-full"
+                          />
+                          <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                        </div>
+                        <div className="flex items-end">
+                          <button
+                            onClick={handleTextToSpeech}
+                            disabled={isTtsGenerating || !ttsText.trim()}
+                            className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {isTtsGenerating ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Volume1 size={16} />
+                                Generate Speech
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* TTS Progress */}
+                      {isTtsGenerating && (
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                            <span>Generating speech...</span>
+                            <span>{ttsProgress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${ttsProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TTS Audio Output */}
+                      {ttsAudioUrl && (
+                        <div className="space-y-3">
+                          <h3 className="text-md font-semibold text-gray-900">Generated Speech</h3>
+                          <div className="bg-gray-50 p-4 rounded-lg border">
+                            <audio
+                              src={ttsAudioUrl}
+                              controls
+                              className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-6 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full"
+                              style={{
+                                '--webkit-media-controls-panel-background-color': '#f3f4f6',
+                                '--webkit-media-controls-play-button-background-color': '#3b82f6',
+                                '--webkit-media-controls-timeline-background-color': '#e5e7eb',
+                                '--webkit-media-controls-timeline-progress-color': '#3b82f6',
+                                '--webkit-media-controls-timeline-border-radius': '9999px',
+                                '--webkit-media-controls-timeline-height': '24px',
+                                '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
+                                '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
+                                '--webkit-media-controls-volume-slider-border-radius': '9999px',
+                                '--webkit-media-controls-volume-slider-height': '8px'
+                              } as React.CSSProperties}
+                            />
+                            <div className="flex justify-between items-center mt-2">
+                              <a href={ttsAudioUrl} download="speech.mp3" className="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm">
+                                <Download size={14} /> Download MP3
+                              </a>
+                              <span className="text-xs text-gray-500">
+                                {ttsText.length} characters
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="card">
@@ -1592,6 +1944,8 @@ export const AudioPage: React.FC = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Music generation is a lightweight demo (procedural synth). Swap with server models later.</li>
                 <li>• Processing supports normalize, reverse, and speed change. Upload WAV/PCM for best results.</li>
+                <li>• Speech-to-Text supports Google Speech Recognition and OpenAI Whisper models.</li>
+                <li>• Text-to-Speech uses Microsoft Edge TTS (high quality), Google TTS, and system voices.</li>
               </ul>
             </div>
           </div>

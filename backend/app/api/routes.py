@@ -35,6 +35,13 @@ import base64
 import numpy as np
 import wave
 import audioop
+import speech_recognition as sr
+import pyttsx3
+import gtts
+import asyncio
+import edge_tts
+import tempfile
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -1367,6 +1374,256 @@ async def enhance_video(
     except Exception as e:
         logger.error(f"Video enhancement failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 
+
+
+# =================== Speech Processing Endpoints ===================
+
+@router.post("/audio/speech-to-text")
+async def speech_to_text(
+    file: UploadFile = File(...),
+    language: str = Form("en-US"),
+    model: str = Form("google")  # google, whisper, sphinx
+):
+    """Convert speech audio to text using various speech recognition models."""
+    try:
+        logger.info(f"STT request: language={language}, model={model}")
+        
+        # Read the uploaded audio file
+        audio_data = await file.read()
+        
+        if model == "google":
+            # Use Google Speech Recognition
+            recognizer = sr.Recognizer()
+            
+            # Convert audio data to AudioData object
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+                temp_file.write(audio_data)
+                temp_file_path = temp_file.name
+            
+            try:
+                with sr.AudioFile(temp_file_path) as source:
+                    audio = recognizer.record(source)
+                
+                # Perform speech recognition
+                text = recognizer.recognize_google(audio, language=language)
+                logger.info(f"Google STT successful: {len(text)} characters")
+                
+                return {
+                    "text": text,
+                    "confidence": 0.95,  # Google doesn't provide confidence
+                    "language": language,
+                    "model": model
+                }
+                
+            finally:
+                # Clean up temporary file
+                os.unlink(temp_file_path)
+                
+        elif model == "whisper":
+            # Use OpenAI Whisper (requires OpenAI API key)
+            try:
+                import openai
+                client = openai.OpenAI()
+                
+                # Create temporary file for Whisper API
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+                    temp_file.write(audio_data)
+                    temp_file_path = temp_file.name
+                
+                try:
+                    with open(temp_file_path, "rb") as audio_file:
+                        transcript = client.audio.transcriptions.create(
+                            model="whisper-1",
+                            file=audio_file,
+                            language=language.split("-")[0] if "-" in language else "en"
+                        )
+                    
+                    logger.info(f"Whisper STT successful: {len(transcript.text)} characters")
+                    
+                    return {
+                        "text": transcript.text,
+                        "confidence": 0.98,  # Whisper doesn't provide confidence
+                        "language": language,
+                        "model": model
+                    }
+                    
+                finally:
+                    os.unlink(temp_file_path)
+                    
+            except ImportError:
+                raise HTTPException(status_code=400, detail="OpenAI not available for Whisper")
+                
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported STT model: {model}")
+            
+    except sr.UnknownValueError:
+        raise HTTPException(status_code=400, detail="Speech could not be understood")
+    except sr.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"STT service error: {str(e)}")
+    except Exception as e:
+        logger.error(f"STT failed: {e}")
+        raise HTTPException(status_code=500, detail=f"STT processing failed: {str(e)}")
+
+
+@router.post("/audio/text-to-speech")
+async def text_to_speech(
+    text: str = Form(...),
+    voice: str = Form("en-US-AriaNeural"),  # Default Edge TTS voice
+    speed: float = Form(1.0),
+    pitch: float = Form(0),
+    volume: float = Form(100),
+    model: str = Form("edge")  # edge, gtts, pyttsx3
+):
+    """Convert text to speech using various TTS models."""
+    try:
+        logger.info(f"TTS request: voice={voice}, model={model}, text_length={len(text)}")
+        
+        if model == "edge":
+            # Use Microsoft Edge TTS (high quality, free)
+            try:
+                communicate = edge_tts.Communicate(text, voice, rate=f"{speed:+.1f}%", volume=f"{volume:+.1f}%")
+                
+                # Generate audio data
+                audio_data = b""
+                async for chunk in communicate.stream():
+                    if chunk["type"] == "audio":
+                        audio_data += chunk["data"]
+                
+                # Convert to base64
+                b64 = base64.b64encode(audio_data).decode('utf-8')
+                data_url = f"data:audio/mp3;base64,{b64}"
+                
+                logger.info(f"Edge TTS successful: {len(audio_data)} bytes")
+                
+                return {
+                    "audio_base64": data_url,
+                    "format": "mp3",
+                    "voice": voice,
+                    "model": model,
+                    "text_length": len(text)
+                }
+                
+            except Exception as e:
+                logger.error(f"Edge TTS failed: {e}")
+                raise HTTPException(status_code=500, detail=f"Edge TTS failed: {str(e)}")
+                
+        elif model == "gtts":
+            # Use Google Text-to-Speech
+            try:
+                tts = gtts.gTTS(text=text, lang=voice.split("-")[0] if "-" in voice else "en", slow=False)
+                
+                # Generate audio data
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+                    tts.save(temp_file.name)
+                    with open(temp_file.name, "rb") as f:
+                        audio_data = f.read()
+                    os.unlink(temp_file.name)
+                
+                # Convert to base64
+                b64 = base64.b64encode(audio_data).decode('utf-8')
+                data_url = f"data:audio/mp3;base64,{b64}"
+                
+                logger.info(f"gTTS successful: {len(audio_data)} bytes")
+                
+                return {
+                    "audio_base64": data_url,
+                    "format": "mp3",
+                    "voice": voice,
+                    "model": model,
+                    "text_length": len(text)
+                }
+                
+            except Exception as e:
+                logger.error(f"gTTS failed: {e}")
+                raise HTTPException(status_code=500, detail=f"gTTS failed: {str(e)}")
+                
+        elif model == "pyttsx3":
+            # Use pyttsx3 (offline, system voices)
+            try:
+                engine = pyttsx3.init()
+                
+                # Set voice properties
+                engine.setProperty('rate', int(200 * speed))  # Speed
+                engine.setProperty('volume', volume / 100)    # Volume
+                
+                # Get available voices
+                voices = engine.getProperty('voices')
+                if voices:
+                    engine.setProperty('voice', voices[0].id)  # Use first available voice
+                
+                # Generate audio to temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+                    engine.save_to_file(text, temp_file.name)
+                    engine.runAndWait()
+                    
+                    with open(temp_file.name, "rb") as f:
+                        audio_data = f.read()
+                    os.unlink(temp_file.name)
+                
+                # Convert to base64
+                b64 = base64.b64encode(audio_data).decode('utf-8')
+                data_url = f"data:audio/wav;base64,{b64}"
+                
+                logger.info(f"pyttsx3 successful: {len(audio_data)} bytes")
+                
+                return {
+                    "audio_base64": data_url,
+                    "format": "wav",
+                    "voice": "system",
+                    "model": model,
+                    "text_length": len(text)
+                }
+                
+            except Exception as e:
+                logger.error(f"pyttsx3 failed: {e}")
+                raise HTTPException(status_code=500, detail=f"pyttsx3 failed: {str(e)}")
+                
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported TTS model: {model}")
+            
+    except Exception as e:
+        logger.error(f"TTS failed: {e}")
+        raise HTTPException(status_code=500, detail=f"TTS processing failed: {str(e)}")
+
+
+@router.get("/audio/tts/voices")
+async def get_tts_voices():
+    """Get available TTS voices."""
+    try:
+        voices = []
+        
+        # Edge TTS voices (high quality, free)
+        try:
+            edge_voices = await edge_tts.list_voices()
+            for voice in edge_voices:
+                voices.append({
+                    "name": voice["Name"],
+                    "language": voice["Locale"],
+                    "gender": voice["Gender"],
+                    "model": "edge"
+                })
+        except Exception as e:
+            logger.warning(f"Could not fetch Edge TTS voices: {e}")
+        
+        # System voices (pyttsx3)
+        try:
+            engine = pyttsx3.init()
+            system_voices = engine.getProperty('voices')
+            for voice in system_voices:
+                voices.append({
+                    "name": voice.name,
+                    "language": voice.languages[0] if voice.languages else "en",
+                    "gender": "Unknown",
+                    "model": "pyttsx3"
+                })
+        except Exception as e:
+            logger.warning(f"Could not fetch system voices: {e}")
+        
+        return {"voices": voices}
+        
+    except Exception as e:
+        logger.error(f"Failed to get voices: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get voices: {str(e)}")
 
 
 # =================== Audio/Music Endpoints ===================
