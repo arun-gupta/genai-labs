@@ -2013,13 +2013,13 @@ export const AudioPage: React.FC = () => {
             {/* Left Panel - Inputs */}
             <div className="xl:col-span-1 space-y-6">
               <div className="card">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-4">
                   <Volume1 className="text-indigo-600" size={18} />
                   <h2 className="text-lg font-semibold">Text-to-Speech</h2>
                 </div>
 
-                {/* TTS Text Input */}
-                <div className="mb-4">
+                {/* 1. Text Input Section */}
+                <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Text to Convert</label>
                   <textarea
                     value={ttsText}
@@ -2029,100 +2029,18 @@ export const AudioPage: React.FC = () => {
                   />
                 </div>
 
-                {/* SSML Sample Prompts */}
-                <div className="mb-4">
-                  <details className="group">
-                    <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-indigo-600">
-                      <span>SSML Sample Prompts</span>
-                      <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
-                    </summary>
-                    <div className="mt-3 space-y-2">
-                      <div className="text-xs text-gray-500 mb-2">
-                        Click any prompt to test SSML features. Remember to enable "SSML Processing" above.
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>Hello! This is a <prosody rate="slow">slow</prosody> and <prosody rate="fast">fast</prosody> demonstration of SSML.</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Speed Variation</div>
-                          <div className="text-gray-600">Demonstrates slow and fast speech rates</div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>This is <prosody pitch="high">high pitched</prosody> and <prosody pitch="low">low pitched</prosody> speech.</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Pitch Control</div>
-                          <div className="text-gray-600">Shows high and low pitch variations</div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>Welcome to <break time="1s"/> our <prosody volume="loud">loud</prosody> and <prosody volume="soft">soft</prosody> demonstration.</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Volume & Pauses</div>
-                          <div className="text-gray-600">Combines volume control with pauses</div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>This is a <prosody rate="slow" pitch="low">deep, slow voice</prosody> followed by <prosody rate="fast" pitch="high">a quick, high voice</prosody>.</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Combined Effects</div>
-                          <div className="text-gray-600">Multiple prosody attributes together</div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>Counting: <prosody rate="slow">one</prosody> <break time="0.5s"/> <prosody rate="medium">two</prosody> <break time="0.5s"/> <prosody rate="fast">three</prosody>!</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Counting with Effects</div>
-                          <div className="text-gray-600">Progressive speed changes with pauses</div>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            setTtsText('<speak>This is a <prosody pitch="+20%" rate="0.8">calm, measured</prosody> voice for meditation, followed by <prosody pitch="+50%" rate="1.5">excited, energetic</prosody> speech!</speak>');
-                            setTtsUseSsml(true);
-                          }}
-                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
-                        >
-                          <div className="font-medium text-gray-800">Mood Contrast</div>
-                          <div className="text-gray-600">Calm vs excited speech patterns</div>
-                        </button>
-                      </div>
-                    </div>
-                  </details>
-                </div>
-
-                {/* Quick Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-gray-700">Quick Settings</h3>
+                {/* 2. Voice Selection Section */}
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2">Voice Settings</h3>
                   
                   {/* Model & Voice */}
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">TTS Model</label>
                       <select
                         value={ttsModel}
                         onChange={(e) => setTtsModel(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       >
                         <option value="edge">Microsoft Edge TTS</option>
                         <option value="gtts">Google TTS</option>
@@ -2135,7 +2053,7 @@ export const AudioPage: React.FC = () => {
                       <select
                         value={ttsVoice}
                         onChange={(e) => setTtsVoice(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       >
                         {filteredVoices
                           .filter(voice => voice.model === ttsModel)
@@ -2153,43 +2071,27 @@ export const AudioPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Language & Voice Settings */}
+                  {/* Language & Style */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Output Language</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
                       <select
                         value={ttsLanguage}
                         onChange={(e) => setTtsLanguage(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       >
-                        <option value="">Auto-detect from text</option>
+                        <option value="">Auto-detect</option>
                         <option value="en-US">English (US)</option>
                         <option value="en-GB">English (UK)</option>
                         <option value="es-ES">Spanish</option>
                         <option value="fr-FR">French</option>
                         <option value="de-DE">German</option>
                         <option value="it-IT">Italian</option>
-                        <option value="pt-BR">Portuguese (Brazil)</option>
+                        <option value="pt-BR">Portuguese</option>
                         <option value="ru-RU">Russian</option>
                         <option value="ja-JP">Japanese</option>
                         <option value="ko-KR">Korean</option>
-                        <option value="zh-CN">Chinese (Simplified)</option>
-                        <option value="ar-SA">Arabic</option>
-                        <option value="hi-IN">Hindi</option>
-                        <option value="nl-NL">Dutch</option>
-                        <option value="sv-SE">Swedish</option>
-                        <option value="no-NO">Norwegian</option>
-                        <option value="da-DK">Danish</option>
-                        <option value="fi-FI">Finnish</option>
-                        <option value="pl-PL">Polish</option>
-                        <option value="tr-TR">Turkish</option>
-                        <option value="he-IL">Hebrew</option>
-                        <option value="th-TH">Thai</option>
-                        <option value="vi-VN">Vietnamese</option>
-                        <option value="id-ID">Indonesian</option>
-                        <option value="ms-MY">Malay</option>
-                        <option value="fa-IR">Persian</option>
-                        <option value="ur-PK">Urdu</option>
+                        <option value="zh-CN">Chinese</option>
                       </select>
                     </div>
                     <div>
@@ -2199,7 +2101,7 @@ export const AudioPage: React.FC = () => {
                         onChange={(e) => setTtsGender(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       >
-                        <option value="">Any Gender</option>
+                        <option value="">Any</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Neutral">Neutral</option>
@@ -2215,188 +2117,259 @@ export const AudioPage: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                     >
                       <option value="">Any Style</option>
-                      <option value="formal">Formal (Professional)</option>
-                      <option value="casual">Casual (Conversational)</option>
-                      <option value="cheerful">Cheerful (Happy)</option>
-                      <option value="sad">Sad (Melancholic)</option>
-                      <option value="angry">Angry (Frustrated)</option>
-                      <option value="friendly">Friendly (Warm)</option>
-                      <option value="terrified">Terrified (Scared)</option>
-                      <option value="shouting">Shouting (Loud)</option>
-                      <option value="unfriendly">Unfriendly (Cold)</option>
-                      <option value="whispering">Whispering (Soft)</option>
-                      <option value="hopeful">Hopeful (Optimistic)</option>
+                      <option value="formal">Formal</option>
+                      <option value="casual">Casual</option>
+                      <option value="cheerful">Cheerful</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="whispering">Whispering</option>
+                      <option value="shouting">Shouting</option>
                     </select>
                   </div>
+                </div>
 
-                  {/* Playback Settings */}
+                {/* 3. Audio Controls Section */}
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2">Audio Controls</h3>
+                  
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-gray-700">Playback Settings</h4>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="2.0"
-                          step="0.1"
-                          value={ttsSpeed}
-                          onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
-                          className="w-full"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Pitch</label>
-                        <input
-                          type="range"
-                          min="-50"
-                          max="50"
-                          step="5"
-                          value={ttsPitch}
-                          onChange={(e) => setTtsPitch(parseInt(e.target.value))}
-                          className="w-full"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">{ttsPitch > 0 ? `+${ttsPitch}%` : `${ttsPitch}%`}</div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={ttsVolume}
-                          onChange={(e) => setTtsVolume(parseInt(e.target.value))}
-                          className="w-full"
-                        />
-                        <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Speed: {ttsSpeed}x</label>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="2.0"
+                        step="0.1"
+                        value={ttsSpeed}
+                        onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0.5x</span>
+                        <span>1.0x</span>
+                        <span>2.0x</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Output Format */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-700">Output Format</h4>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Audio Format</label>
-                      <select
-                        value={ttsOutputFormat}
-                        onChange={(e) => setTtsOutputFormat(e.target.value as 'mp3' | 'wav' | 'ogg' | 'm4a')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                      >
-                        <option value="mp3">MP3 (Most Compatible)</option>
-                        <option value="wav">WAV (High Quality)</option>
-                        <option value="ogg">OGG (Smaller Size)</option>
-                        <option value="m4a">M4A (Apple Compatible)</option>
-                      </select>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pitch: {ttsPitch > 0 ? `+${ttsPitch}%` : `${ttsPitch}%`}</label>
+                      <input
+                        type="range"
+                        min="-50"
+                        max="50"
+                        step="5"
+                        value={ttsPitch}
+                        onChange={(e) => setTtsPitch(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>-50%</span>
+                        <span>0%</span>
+                        <span>+50%</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Volume: {ttsVolume}%</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={ttsVolume}
+                        onChange={(e) => setTtsVolume(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100%</span>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Advanced Options */}
+                {/* 4. Output Settings Section */}
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2">Output Settings</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Audio Format</label>
+                    <select
+                      value={ttsOutputFormat}
+                      onChange={(e) => setTtsOutputFormat(e.target.value as 'mp3' | 'wav' | 'ogg' | 'm4a')}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    >
+                      <option value="mp3">MP3 (Most Compatible)</option>
+                      <option value="wav">WAV (High Quality)</option>
+                      <option value="ogg">OGG (Smaller Size)</option>
+                      <option value="m4a">M4A (Apple Compatible)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 5. Advanced Options Section */}
+                <div className="mb-6 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2">Advanced Options</h3>
+                  
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-700">Advanced Options</h4>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="translate-text"
-                          checked={ttsTranslateText}
-                          onChange={(e) => setTtsTranslateText(e.target.checked)}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="translate-text" className="ml-2 text-sm text-gray-700">
+                    <div className="flex items-start">
+                      <input
+                        type="checkbox"
+                        id="translate-text"
+                        checked={ttsTranslateText}
+                        onChange={(e) => setTtsTranslateText(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                      />
+                      <div className="ml-3">
+                        <label htmlFor="translate-text" className="text-sm font-medium text-gray-700">
                           Translate Text
                         </label>
-                      </div>
-                      <div className="text-xs text-gray-500 ml-6">
-                        Translate input text to the selected output language before speech generation
+                        <div className="text-xs text-gray-500 mt-1">
+                          Translate input text to the selected output language
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="use-ssml"
-                          checked={ttsUseSsml}
-                          onChange={(e) => setTtsUseSsml(e.target.checked)}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="use-ssml" className="ml-2 text-sm text-gray-700">
+                    <div className="flex items-start">
+                      <input
+                        type="checkbox"
+                        id="use-ssml"
+                        checked={ttsUseSsml}
+                        onChange={(e) => setTtsUseSsml(e.target.checked)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                      />
+                      <div className="ml-3">
+                        <label htmlFor="use-ssml" className="text-sm font-medium text-gray-700">
                           Enable SSML Processing
                         </label>
-                      </div>
-                      <div className="text-xs text-gray-500 ml-6">
-                        Use Speech Synthesis Markup Language for enhanced voice control
+                        <div className="text-xs text-gray-500 mt-1">
+                          Use Speech Synthesis Markup Language for enhanced control
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="normalize-text"
-                          checked={ttsNormalizeText}
-                          onChange={(e) => setTtsNormalizeText(e.target.checked)}
-                          disabled={ttsText.trim().startsWith('<speak')}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
-                        />
-                        <label htmlFor="normalize-text" className={`ml-2 text-sm ${ttsText.trim().startsWith('<speak') ? 'text-gray-400' : 'text-gray-700'}`}>
+                    <div className="flex items-start">
+                      <input
+                        type="checkbox"
+                        id="normalize-text"
+                        checked={ttsNormalizeText}
+                        onChange={(e) => setTtsNormalizeText(e.target.checked)}
+                        disabled={ttsText.trim().startsWith('<speak')}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 disabled:opacity-50"
+                      />
+                      <div className="ml-3">
+                        <label htmlFor="normalize-text" className={`text-sm font-medium ${ttsText.trim().startsWith('<speak') ? 'text-gray-400' : 'text-gray-700'}`}>
                           Text Normalization
                           {ttsText.trim().startsWith('<speak') && (
                             <span className="ml-1 text-xs text-orange-600">(disabled for SSML)</span>
                           )}
                         </label>
-                      </div>
-                      <div className="text-xs text-gray-500 ml-6">
-                        Convert numbers, abbreviations, and symbols to words for better pronunciation
-                        {ttsText.trim().startsWith('<speak') && (
-                          <div className="text-orange-600 mt-1">
-                            ⚠️ Text normalization is disabled when using SSML to preserve markup
-                          </div>
-                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          Convert numbers and symbols to words for better pronunciation
+                          {ttsText.trim().startsWith('<speak') && (
+                            <div className="text-orange-600 mt-1">
+                              ⚠️ Disabled when using SSML to preserve markup
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Generate Button */}
-                  <button
-                    onClick={handleTextToSpeech}
-                    disabled={isTtsGenerating || !ttsText.trim()}
-                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isTtsGenerating ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Volume1 size={16} />
-                        Generate Speech
-                      </>
-                    )}
-                  </button>
-
-                  {/* TTS Progress */}
-                  {isTtsGenerating && (
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                        <span>Generating speech...</span>
-                        <span>{ttsProgress}%</span>
+                {/* 6. SSML Samples Section */}
+                <div className="mb-6">
+                  <details className="group">
+                    <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold text-gray-800 hover:text-indigo-600 border-b border-gray-200 pb-2">
+                      <span>SSML Sample Prompts</span>
+                      <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      <div className="text-xs text-gray-500 mb-3">
+                        Click any prompt to test SSML features. Remember to enable "SSML Processing" above.
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${ttsProgress}%` }}
-                        />
+                      <div className="grid grid-cols-1 gap-2">
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>Hello! This is a <prosody rate="slow">slow</prosody> and <prosody rate="fast">fast</prosody> demonstration of SSML.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-3 text-xs bg-gray-50 hover:bg-indigo-50 rounded-lg border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Speed Variation</div>
+                          <div className="text-gray-600">Demonstrates slow and fast speech rates</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>This is <prosody pitch="high">high pitched</prosody> and <prosody pitch="low">low pitched</prosody> speech.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-3 text-xs bg-gray-50 hover:bg-indigo-50 rounded-lg border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Pitch Control</div>
+                          <div className="text-gray-600">Shows high and low pitch variations</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>Welcome to <break time="1s"/> our <prosody volume="loud">loud</prosody> and <prosody volume="soft">soft</prosody> demonstration.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-3 text-xs bg-gray-50 hover:bg-indigo-50 rounded-lg border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Volume & Pauses</div>
+                          <div className="text-gray-600">Combines volume control with pauses</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>This is a <prosody rate="slow" pitch="low">deep, slow voice</prosody> followed by <prosody rate="fast" pitch="high">a quick, high voice</prosody>.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-3 text-xs bg-gray-50 hover:bg-indigo-50 rounded-lg border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Combined Effects</div>
+                          <div className="text-gray-600">Multiple prosody attributes together</div>
+                        </button>
                       </div>
                     </div>
-                  )}
+                  </details>
                 </div>
+
+                {/* 7. Generate Button */}
+                <button
+                  onClick={handleTextToSpeech}
+                  disabled={isTtsGenerating || !ttsText.trim()}
+                  className="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+                >
+                  {isTtsGenerating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Volume1 size={16} />
+                      Generate Speech
+                    </>
+                  )}
+                </button>
+
+                {/* TTS Progress */}
+                {isTtsGenerating && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                      <span>Generating speech...</span>
+                      <span>{ttsProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${ttsProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
