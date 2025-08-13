@@ -848,8 +848,9 @@ class ApiService {
     return res.json();
   }
 
-  async getTTSVoices() {
-    const res = await fetch(`${this.baseUrl}/audio/tts/voices`, {
+  async getTTSVoices(params?: string) {
+    const url = params ? `${this.baseUrl}/audio/tts/voices?${params}` : `${this.baseUrl}/audio/tts/voices`;
+    const res = await fetch(url, {
       method: 'GET',
     });
     if (!res.ok) throw new Error('Failed to get TTS voices');

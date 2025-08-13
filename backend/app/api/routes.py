@@ -42,8 +42,428 @@ import asyncio
 import edge_tts
 import tempfile
 import os
+import re
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_text_for_tts(text: str) -> str:
+    """Normalize text for better TTS pronunciation."""
+    # Convert numbers to words
+    text = re.sub(r'\b(\d+)\b', lambda m: _number_to_words(int(m.group(1))), text)
+    
+    # Convert common abbreviations
+    abbreviations = {
+        'Mr.': 'Mister',
+        'Mrs.': 'Missus',
+        'Dr.': 'Doctor',
+        'Prof.': 'Professor',
+        'vs.': 'versus',
+        'etc.': 'et cetera',
+        'i.e.': 'that is',
+        'e.g.': 'for example',
+        'a.m.': 'A M',
+        'p.m.': 'P M',
+        'U.S.A.': 'U S A',
+        'U.K.': 'U K',
+        'U.S.': 'U S',
+        'A.I.': 'A I',
+        'M.L.': 'M L',
+        'PhD': 'P H D',
+        'CEO': 'C E O',
+        'CFO': 'C F O',
+        'CTO': 'C T O',
+        'HR': 'H R',
+        'IT': 'I T',
+        'TV': 'T V',
+        'PC': 'P C',
+        'CD': 'C D',
+        'DVD': 'D V D',
+        'USB': 'U S B',
+        'WiFi': 'Wi Fi',
+        'GPS': 'G P S',
+        'DNA': 'D N A',
+        'RNA': 'R N A',
+        'COVID': 'Covid',
+        'NASA': 'N A S A',
+        'FBI': 'F B I',
+        'CIA': 'C I A',
+        'IRS': 'I R S',
+        'FDA': 'F D A',
+        'EPA': 'E P A',
+        'UN': 'U N',
+        'EU': 'E U',
+        'UNESCO': 'U N E S C O',
+        'WHO': 'W H O',
+        'UNICEF': 'U N I C E F',
+        'NATO': 'N A T O',
+        'EU': 'E U',
+        'IMF': 'I M F',
+        'WTO': 'W T O',
+        'UN': 'U N',
+        'UNESCO': 'U N E S C O',
+        'WHO': 'W H O',
+        'UNICEF': 'U N I C E F',
+        'NATO': 'N A T O',
+        'EU': 'E U',
+        'IMF': 'I M F',
+        'WTO': 'W T O'
+    }
+    
+    for abbr, full in abbreviations.items():
+        text = re.sub(r'\b' + re.escape(abbr) + r'\b', full, text, flags=re.IGNORECASE)
+    
+    # Convert symbols to words
+    symbols = {
+        '@': 'at',
+        '#': 'number',
+        '$': 'dollars',
+        '%': 'percent',
+        '&': 'and',
+        '+': 'plus',
+        '=': 'equals',
+        '<': 'less than',
+        '>': 'greater than',
+        '|': 'or',
+        '~': 'approximately',
+        '^': 'to the power of',
+        '°': 'degrees',
+        '©': 'copyright',
+        '®': 'registered trademark',
+        '™': 'trademark',
+        '€': 'euros',
+        '£': 'pounds',
+        '¥': 'yen',
+        '¢': 'cents',
+        '∞': 'infinity',
+        '≠': 'not equal to',
+        '≤': 'less than or equal to',
+        '≥': 'greater than or equal to',
+        '±': 'plus or minus',
+        '÷': 'divided by',
+        '×': 'times',
+        '√': 'square root of',
+        '²': 'squared',
+        '³': 'cubed',
+        '¼': 'one fourth',
+        '½': 'one half',
+        '¾': 'three fourths',
+        '⅓': 'one third',
+        '⅔': 'two thirds',
+        '⅕': 'one fifth',
+        '⅖': 'two fifths',
+        '⅗': 'three fifths',
+        '⅘': 'four fifths',
+        '⅙': 'one sixth',
+        '⅚': 'five sixths',
+        '⅛': 'one eighth',
+        '⅜': 'three eighths',
+        '⅝': 'five eighths',
+        '⅞': 'seven eighths'
+    }
+    
+    for symbol, word in symbols.items():
+        text = text.replace(symbol, f' {word} ')
+    
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+
+def _number_to_words(n: int) -> str:
+    """Convert numbers to words for better pronunciation."""
+    if n == 0:
+        return "zero"
+    
+    units = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+    tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+    
+    if n < 10:
+        return units[n]
+    elif n < 20:
+        return teens[n - 10]
+    elif n < 100:
+        if n % 10 == 0:
+            return tens[n // 10]
+        else:
+            return f"{tens[n // 10]} {units[n % 10]}"
+    elif n < 1000:
+        if n % 100 == 0:
+            return f"{units[n // 100]} hundred"
+        else:
+            return f"{units[n // 100]} hundred {_number_to_words(n % 100)}"
+    elif n < 1000000:
+        if n % 1000 == 0:
+            return f"{_number_to_words(n // 1000)} thousand"
+        else:
+            return f"{_number_to_words(n // 1000)} thousand {_number_to_words(n % 1000)}"
+    else:
+        return str(n)  # For very large numbers, just return as string
+
+
+def process_ssml(text: str, style: str = "", emotion: str = "", speed: float = 1.0, pitch: float = 0) -> str:
+    """Process text with SSML markup for enhanced TTS."""
+    # Start with basic SSML wrapper
+    ssml = f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">'
+    
+    # Add prosody for speed and pitch
+    if speed != 1.0 or pitch != 0:
+        rate_attr = f'rate="{speed:.1f}"' if speed != 1.0 else ""
+        pitch_attr = f'pitch="{pitch:+d}%"' if pitch != 0 else ""
+        prosody_attrs = " ".join(filter(None, [rate_attr, pitch_attr]))
+        if prosody_attrs:
+            ssml += f'<prosody {prosody_attrs}>'
+    
+    # Add style and emotion
+    if style or emotion:
+        style_attrs = []
+        if style:
+            style_attrs.append(f'style="{style}"')
+        if emotion:
+            style_attrs.append(f'emotion="{emotion}"')
+        
+        if style_attrs:
+            ssml += f'<voice {" ".join(style_attrs)}>'
+    
+    # Add the text content
+    ssml += text
+    
+    # Close tags in reverse order
+    if style or emotion:
+        ssml += '</voice>'
+    if speed != 1.0 or pitch != 0:
+        ssml += '</prosody>'
+    
+    ssml += '</speak>'
+    return ssml
+
+
+def detect_text_language(text: str) -> str:
+    """Detect the language of the input text."""
+    try:
+        from langdetect import detect
+        detected_lang = detect(text)
+        
+        # Map detected language codes to TTS language codes
+        lang_mapping = {
+            'en': 'en-US',
+            'es': 'es-ES', 
+            'fr': 'fr-FR',
+            'de': 'de-DE',
+            'it': 'it-IT',
+            'pt': 'pt-BR',
+            'ru': 'ru-RU',
+            'ja': 'ja-JP',
+            'ko': 'ko-KR',
+            'zh': 'zh-CN',
+            'ar': 'ar-SA',
+            'hi': 'hi-IN',
+            'nl': 'nl-NL',
+            'sv': 'sv-SE',
+            'no': 'no-NO',
+            'da': 'da-DK',
+            'fi': 'fi-FI',
+            'pl': 'pl-PL',
+            'tr': 'tr-TR',
+            'he': 'he-IL',
+            'th': 'th-TH',
+            'vi': 'vi-VN',
+            'id': 'id-ID',
+            'ms': 'ms-MY',
+            'fa': 'fa-IR',
+            'ur': 'ur-PK',
+            'bn': 'bn-IN',
+            'te': 'te-IN',
+            'ta': 'ta-IN',
+            'gu': 'gu-IN',
+            'kn': 'kn-IN',
+            'ml': 'ml-IN',
+            'pa': 'pa-IN',
+            'or': 'or-IN',
+            'as': 'as-IN',
+            'ne': 'ne-NP',
+            'si': 'si-LK',
+            'my': 'my-MM',
+            'km': 'km-KH',
+            'lo': 'lo-LA',
+            'mn': 'mn-MN',
+            'ka': 'ka-GE',
+            'hy': 'hy-AM',
+            'az': 'az-AZ',
+            'kk': 'kk-KZ',
+            'ky': 'ky-KG',
+            'uz': 'uz-UZ',
+            'tg': 'tg-TJ',
+            'tk': 'tk-TM',
+            'ug': 'ug-CN',
+            'bo': 'bo-CN',
+            'dz': 'dz-BT',
+            'jv': 'jv-ID',
+            'su': 'su-ID',
+            'ceb': 'ceb-PH',
+            'war': 'war-PH',
+            'tl': 'tl-PH',
+            'hmn': 'hmn-US',
+            'haw': 'haw-US',
+            'mi': 'mi-NZ',
+            'sm': 'sm-WS',
+            'to': 'to-TO',
+            'fj': 'fj-FJ',
+            'ch': 'ch-GU',
+            'co': 'co-FR',
+            'eu': 'eu-ES',
+            'gl': 'gl-ES',
+            'cy': 'cy-GB',
+            'ga': 'ga-IE',
+            'mt': 'mt-MT',
+            'sq': 'sq-AL',
+            'mk': 'mk-MK',
+            'sr': 'sr-RS',
+            'hr': 'hr-HR',
+            'bs': 'bs-BA',
+            'sl': 'sl-SI',
+            'et': 'et-EE',
+            'lv': 'lv-LV',
+            'lt': 'lt-LT',
+            'is': 'is-IS',
+            'fo': 'fo-FO',
+            'kl': 'kl-GL',
+            'iu': 'iu-CA',
+            'oj': 'oj-CA',
+            'cr': 'cr-CA',
+            'gn': 'gn-PY',
+            'qu': 'qu-PE',
+            'ay': 'ay-BO',
+            'sw': 'sw-TZ',
+            'zu': 'zu-ZA',
+            'af': 'af-ZA',
+            'xh': 'xh-ZA',
+            'st': 'st-ZA',
+            'tn': 'tn-BW',
+            'ts': 'ts-ZA',
+            've': 've-ZA',
+            'ny': 'ny-MW',
+            'sn': 'sn-ZW',
+            'rw': 'rw-RW',
+            'lg': 'lg-UG',
+            'ak': 'ak-GH',
+            'tw': 'tw-GH',
+            'ee': 'ee-GH',
+            'yo': 'yo-NG',
+            'ig': 'ig-NG',
+            'ha': 'ha-NG',
+            'so': 'so-SO',
+            'am': 'am-ET',
+            'ti': 'ti-ET',
+            'om': 'om-ET',
+            'aa': 'aa-ET',
+            'ss': 'ss-SZ',
+            'nr': 'nr-ZA',
+            'nso': 'nso-ZA',
+            'tso': 'tso-ZA',
+            'venda': 've-ZA',
+            'tswana': 'tn-BW',
+            'sesotho': 'st-ZA',
+            'setswana': 'tn-BW',
+            'sepedi': 'nso-ZA',
+            'xitsonga': 'tso-ZA',
+            'tsivenda': 've-ZA',
+            'isizulu': 'zu-ZA',
+            'isixhosa': 'xh-ZA',
+            'isindebele': 'nr-ZA',
+            'siswati': 'ss-SZ',
+            'isixhosa': 'xh-ZA',
+            'isizulu': 'zu-ZA',
+            'isindebele': 'nr-ZA',
+            'siswati': 'ss-SZ',
+            'isixhosa': 'xh-ZA',
+            'isizulu': 'zu-ZA',
+            'isindebele': 'nr-ZA',
+            'siswati': 'ss-SZ'
+        }
+        
+        return lang_mapping.get(detected_lang, 'en-US')
+    except Exception as e:
+        logger.warning(f"Language detection failed: {e}")
+        return 'en-US'  # Default to English
+
+
+def filter_voices_by_criteria(voices: List[Dict[str, Any]], gender: str = "", age: str = "", model: str = "", language: str = "") -> List[Dict[str, Any]]:
+    """Filter voices based on gender, age, model, and language criteria."""
+    filtered = voices
+    
+    if gender:
+        gender_lower = gender.lower()
+        filtered = [v for v in filtered if gender_lower in v.get("gender", "").lower()]
+    
+    if age:
+        age_lower = age.lower()
+        # Map age categories to voice characteristics
+        age_keywords = {
+            "child": ["child", "young", "kid"],
+            "young": ["young", "teen", "youth"],
+            "adult": ["adult", "mature", "professional"],
+            "elderly": ["elderly", "senior", "mature", "wise"]
+        }
+        
+        if age_lower in age_keywords:
+            keywords = age_keywords[age_lower]
+            filtered = [v for v in filtered if any(kw in v.get("name", "").lower() for kw in keywords)]
+    
+    if model:
+        filtered = [v for v in filtered if v.get("model", "").lower() == model.lower()]
+    
+    if language:
+        # Simple language filtering - match language code prefix
+        target_lang_code = language.split('-')[0].lower()
+        
+        # Very simple filtering - just check if language contains the target code
+        filtered = [v for v in filtered if target_lang_code in v.get("language", "").lower()]
+        
+        # Sort voices by quality/priority for the selected language
+        filtered = sort_voices_by_quality(filtered, language)
+    
+    return filtered
+
+
+def sort_voices_by_quality(voices: List[Dict[str, Any]], language: str) -> List[Dict[str, Any]]:
+    """Sort voices by quality and preference for the given language."""
+    def voice_score(voice: Dict[str, Any]) -> int:
+        score = 0
+        voice_lang = voice.get("language", "").lower()
+        voice_name = voice.get("name", "").lower()
+        voice_model = voice.get("model", "").lower()
+        
+        # Prefer Edge TTS (highest quality)
+        if voice_model == "edge":
+            score += 100
+        
+        # Prefer exact language matches
+        if voice_lang == language.lower():
+            score += 50
+        
+        # Prefer voices with the language in the name
+        if language.split('-')[0].lower() in voice_name:
+            score += 25
+        
+        # Prefer female voices (often better quality)
+        if "female" in voice.get("gender", "").lower():
+            score += 10
+        
+        # Prefer neural voices (Edge TTS)
+        if "neural" in voice_name:
+            score += 20
+        
+        # Prefer voices with clear language indicators
+        if any(lang in voice_name for lang in ["hindi", "spanish", "french", "german", "italian", "japanese", "chinese"]):
+            score += 15
+        
+        return score
+    
+    return sorted(voices, key=voice_score, reverse=True)
 
 router = APIRouter()
 generation_service = GenerationService()
@@ -1472,15 +1892,54 @@ async def text_to_speech(
     speed: float = Form(1.0),
     pitch: float = Form(0),
     volume: float = Form(100),
-    model: str = Form("edge")  # edge, gtts, pyttsx3
+    model: str = Form("edge"),  # edge, gtts, pyttsx3
+    gender: str = Form(""),  # male, female, neutral
+    age: str = Form(""),  # child, young, adult, elderly
+    style: str = Form(""),  # formal, casual, excited, calm
+    emotion: str = Form(""),  # happy, sad, angry, neutral
+    use_ssml: bool = Form(False),  # Enable SSML processing
+    normalize_text: bool = Form(True),  # Enable text normalization
+    language: str = Form(""),  # Target language for TTS
+    translate_text: bool = Form(True)  # Enable text translation
 ):
     """Convert text to speech using various TTS models."""
     try:
         logger.info(f"TTS request: voice={voice}, model={model}, text_length={len(text)}")
         
+        # Detect language if not provided
+        if not language:
+            detected_lang = detect_text_language(text)
+            logger.info(f"Detected language: {detected_lang}")
+        else:
+            detected_lang = language
+        
+        # Translate text if output language is different from detected language
+        if translate_text and language and detected_lang != language:
+            try:
+                from deep_translator import GoogleTranslator
+                translated_text = GoogleTranslator(source=detected_lang.split('-')[0], target=language.split('-')[0]).translate(text)
+                logger.info(f"Translated text from {detected_lang} to {language}: {text[:50]}... → {translated_text[:50]}...")
+                text = translated_text
+            except Exception as e:
+                logger.warning(f"Translation failed: {e}, using original text")
+                # If translation fails, use original text
+        
+        # Apply text normalization if enabled
+        if normalize_text:
+            original_text = text
+            text = normalize_text_for_tts(text)
+            logger.info(f"Text normalized: {len(original_text)} -> {len(text)} chars")
+        
+        # Apply SSML processing if enabled
+        if use_ssml:
+            text = process_ssml(text, style, emotion, speed, pitch)
+            logger.info(f"SSML processing applied")
+        
         if model == "edge":
             # Use Microsoft Edge TTS (high quality, free)
             try:
+                logger.info(f"Using Edge TTS voice: {voice} for language: {detected_lang}")
+                
                 # Format rate properly - Edge TTS expects percentage changes
                 rate_str = f"{int((speed-1.0)*100):+d}%" if speed != 1.0 else "+0%"
                 volume_str = f"{int(volume-100):+d}%" if volume != 100 else "+0%"
@@ -1513,7 +1972,10 @@ async def text_to_speech(
         elif model == "gtts":
             # Use Google Text-to-Speech
             try:
-                tts = gtts.gTTS(text=text, lang=voice.split("-")[0] if "-" in voice else "en", slow=False)
+                # Use detected language or extract from voice name
+                gtts_lang = detected_lang.split("-")[0] if detected_lang else (voice.split("-")[0] if "-" in voice else "en")
+                tts = gtts.gTTS(text=text, lang=gtts_lang, slow=False)
+                logger.info(f"gTTS using language: {gtts_lang}")
                 
                 # Generate audio data
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
@@ -1590,8 +2052,13 @@ async def text_to_speech(
 
 
 @router.get("/audio/tts/voices")
-async def get_tts_voices():
-    """Get available TTS voices."""
+async def get_tts_voices(
+    gender: str = "",
+    age: str = "",
+    model: str = "",
+    language: str = ""
+):
+    """Get available TTS voices with optional filtering."""
     try:
         voices = []
         
@@ -1603,7 +2070,9 @@ async def get_tts_voices():
                     "name": voice["Name"],
                     "language": voice["Locale"],
                     "gender": voice["Gender"],
-                    "model": "edge"
+                    "model": "edge",
+                    "age": _extract_age_from_voice_name(voice["Name"]),
+                    "style": _extract_style_from_voice_name(voice["Name"])
                 })
         except Exception as e:
             logger.warning(f"Could not fetch Edge TTS voices: {e}")
@@ -1617,16 +2086,63 @@ async def get_tts_voices():
                     "name": voice.name,
                     "language": voice.languages[0] if voice.languages else "en",
                     "gender": "Unknown",
-                    "model": "pyttsx3"
+                    "model": "pyttsx3",
+                    "age": "adult",
+                    "style": "neutral"
                 })
         except Exception as e:
             logger.warning(f"Could not fetch system voices: {e}")
+        
+        # Apply filtering if criteria provided
+        if gender or age or model or language:
+            try:
+                voices = filter_voices_by_criteria(voices, gender, age, model, language)
+                logger.info(f"Filtered voices for criteria - gender: {gender}, age: {age}, model: {model}, language: {language}")
+                logger.info(f"Found {len(voices)} voices after filtering")
+            except Exception as e:
+                logger.error(f"Error filtering voices: {e}")
+                # Return all voices if filtering fails
+                voices = []
+        
+        # Log available voices for debugging
+        if language:
+            logger.info(f"Available voices for language '{language}': {[v['name'] for v in voices]}")
         
         return {"voices": voices}
         
     except Exception as e:
         logger.error(f"Failed to get voices: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get voices: {str(e)}")
+
+
+def _extract_age_from_voice_name(voice_name: str) -> str:
+    """Extract age category from voice name."""
+    name_lower = voice_name.lower()
+    
+    if any(word in name_lower for word in ["child", "kid", "young"]):
+        return "child"
+    elif any(word in name_lower for word in ["teen", "youth", "adolescent"]):
+        return "young"
+    elif any(word in name_lower for word in ["senior", "elderly", "old"]):
+        return "elderly"
+    else:
+        return "adult"
+
+
+def _extract_style_from_voice_name(voice_name: str) -> str:
+    """Extract speaking style from voice name."""
+    name_lower = voice_name.lower()
+    
+    if any(word in name_lower for word in ["formal", "professional", "business"]):
+        return "formal"
+    elif any(word in name_lower for word in ["casual", "friendly", "conversational"]):
+        return "casual"
+    elif any(word in name_lower for word in ["excited", "energetic", "enthusiastic"]):
+        return "excited"
+    elif any(word in name_lower for word in ["calm", "relaxed", "gentle"]):
+        return "calm"
+    else:
+        return "neutral"
 
 
 # =================== Audio/Music Endpoints ===================

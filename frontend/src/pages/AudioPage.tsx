@@ -61,6 +61,18 @@ export const AudioPage: React.FC = () => {
   const [ttsProgress, setTtsProgress] = useState(0);
   const ttsProgressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   
+  // Enhanced TTS settings
+  const [ttsPitch, setTtsPitch] = useState(0);
+  const [ttsGender, setTtsGender] = useState('');
+  const [ttsAge, setTtsAge] = useState('');
+  const [ttsStyle, setTtsStyle] = useState('');
+  const [ttsEmotion, setTtsEmotion] = useState('');
+  const [ttsLanguage, setTtsLanguage] = useState('');
+  const [ttsTranslateText, setTtsTranslateText] = useState(true);
+  const [ttsUseSsml, setTtsUseSsml] = useState(false);
+  const [ttsNormalizeText, setTtsNormalizeText] = useState(true);
+  const [filteredVoices, setFilteredVoices] = useState<Array<{name: string, language: string, gender: string, model: string, age?: string, style?: string}>>([]);
+  
   // STT state
   const [sttLanguage, setSttLanguage] = useState('en-US');
   const [sttModel, setSttModel] = useState('google');
@@ -70,7 +82,7 @@ export const AudioPage: React.FC = () => {
   const [sttResult, setSttResult] = useState<{text: string, confidence: number, language: string, model: string} | null>(null);
   
   // Available voices
-  const [availableVoices, setAvailableVoices] = useState<Array<{name: string, language: string, gender: string, model: string}>>([]);
+  const [availableVoices, setAvailableVoices] = useState<Array<{name: string, language: string, gender: string, model: string, age?: string, style?: string}>>([]);
 
   const clearAllEffects = () => {
     setNormalize(true);
@@ -102,12 +114,154 @@ export const AudioPage: React.FC = () => {
       try {
         const response = await apiService.getTTSVoices();
         setAvailableVoices(response.voices || []);
+        setFilteredVoices(response.voices || []);
       } catch (error) {
         console.error('Failed to load voices:', error);
       }
     };
     loadVoices();
   }, []);
+
+  // Filter voices when criteria change
+  useEffect(() => {
+    const filterVoices = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (ttsGender) params.append('gender', ttsGender);
+        if (ttsAge) params.append('age', ttsAge);
+        if (ttsModel) params.append('model', ttsModel);
+        if (ttsLanguage) params.append('language', ttsLanguage);
+        
+        const response = await apiService.getTTSVoices(params.toString());
+        console.log('TTS Voices API Response:', response);
+        console.log('Filtered voices count:', response.voices?.length || 0);
+        setFilteredVoices(response.voices || []);
+        
+        // Auto-select the best voice for the chosen language
+        if (response.voices && response.voices.length > 0) {
+          // Find the best voice for the selected language
+          let bestVoice = response.voices[0];
+          
+          if (ttsLanguage === 'hi-IN') {
+            // For Hindi, prefer Edge TTS neural voices
+            const edgeNeuralVoice = response.voices.find((v: any) => 
+              v.model === 'edge' && v.name.toLowerCase().includes('neural') && v.language.toLowerCase().includes('hi')
+            );
+            if (edgeNeuralVoice) {
+              bestVoice = edgeNeuralVoice;
+            } else {
+              // Fallback to any Hindi voice
+              const hindiVoice = response.voices.find((v: any) => 
+                v.language.toLowerCase().includes('hi')
+              );
+              if (hindiVoice) {
+                bestVoice = hindiVoice;
+              }
+            }
+          } else if (ttsLanguage) {
+            // For other languages, prefer Edge TTS voices
+            const edgeVoice = response.voices.find((v: any) => v.model === 'edge');
+            if (edgeVoice) {
+              bestVoice = edgeVoice;
+            }
+          } else {
+            // If no language selected, prefer Edge TTS English voices based on browser locale
+            const browserLang = navigator.language.toLowerCase();
+            console.log(`Browser locale: ${browserLang}`);
+            
+            // Try to find a voice that matches the browser locale
+            let edgeEnglishVoice = response.voices.find((v: any) => 
+              v.model === 'edge' && v.language.toLowerCase() === browserLang
+            );
+            
+            // If no exact match, try to find a voice from the same country/region
+            if (!edgeEnglishVoice && browserLang.startsWith('en')) {
+              if (browserLang.includes('us') || browserLang.includes('en-us')) {
+                // Prefer US English
+                edgeEnglishVoice = response.voices.find((v: any) => 
+                  v.model === 'edge' && v.language.toLowerCase() === 'en-us'
+                );
+              } else if (browserLang.includes('gb') || browserLang.includes('en-gb')) {
+                // Prefer UK English
+                edgeEnglishVoice = response.voices.find((v: any) => 
+                  v.model === 'edge' && v.language.toLowerCase() === 'en-gb'
+                );
+              } else if (browserLang.includes('au') || browserLang.includes('en-au')) {
+                // Prefer Australian English
+                edgeEnglishVoice = response.voices.find((v: any) => 
+                  v.model === 'edge' && v.language.toLowerCase() === 'en-au'
+                );
+              }
+            }
+            
+            // Fallback to any Edge TTS English voice, preferring US English
+            if (!edgeEnglishVoice) {
+              edgeEnglishVoice = response.voices.find((v: any) => 
+                v.model === 'edge' && v.language.toLowerCase() === 'en-us'
+              ) || response.voices.find((v: any) => 
+                v.model === 'edge' && v.language.toLowerCase().startsWith('en')
+              );
+            }
+            
+            if (edgeEnglishVoice) {
+              bestVoice = edgeEnglishVoice;
+            }
+          }
+          
+          console.log(`Auto-selecting voice: ${bestVoice.name} for language: ${ttsLanguage || 'auto-detected'}`);
+          console.log(`Selected voice language: ${bestVoice.language}`);
+          setTtsVoice(bestVoice.name);
+        } else {
+          // If no voices found for the selected language, fall back to English based on browser locale
+          console.warn(`No voices found for language: ${ttsLanguage}, falling back to English`);
+          const browserLang = navigator.language.toLowerCase();
+          
+          // Try to find a voice that matches the browser locale
+          let englishVoice = availableVoices.find((v: any) => 
+            v.model === 'edge' && v.language.toLowerCase() === browserLang
+          );
+          
+          // If no exact match, try to find a voice from the same country/region
+          if (!englishVoice && browserLang.startsWith('en')) {
+            if (browserLang.includes('us') || browserLang.includes('en-us')) {
+              // Prefer US English
+              englishVoice = availableVoices.find((v: any) => 
+                v.model === 'edge' && v.language.toLowerCase() === 'en-us'
+              );
+            } else if (browserLang.includes('gb') || browserLang.includes('en-gb')) {
+              // Prefer UK English
+              englishVoice = availableVoices.find((v: any) => 
+                v.model === 'edge' && v.language.toLowerCase() === 'en-gb'
+              );
+            } else if (browserLang.includes('au') || browserLang.includes('en-au')) {
+              // Prefer Australian English
+              englishVoice = availableVoices.find((v: any) => 
+                v.model === 'edge' && v.language.toLowerCase() === 'en-au'
+              );
+            }
+          }
+          
+          // Fallback to any Edge TTS English voice, preferring US English
+          if (!englishVoice) {
+            englishVoice = availableVoices.find((v: any) => 
+              v.model === 'edge' && v.language.toLowerCase() === 'en-us'
+            ) || availableVoices.find((v: any) => 
+              v.model === 'edge' && v.language.toLowerCase().startsWith('en')
+            );
+          }
+          
+          if (englishVoice) {
+            setTtsVoice(englishVoice.name);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to filter voices:', error);
+      }
+    };
+    
+    // Always filter voices, even when no criteria are set
+    filterVoices();
+  }, [ttsGender, ttsAge, ttsModel, ttsLanguage, availableVoices]);
 
   // Speech processing functions
   const handleSpeechToText = async (file: File) => {
@@ -202,12 +356,24 @@ export const AudioPage: React.FC = () => {
       setTtsAudioUrl('');
       startProgress(setTtsProgress, ttsProgressTimer);
       
+      console.log(`TTS Request - Voice: ${ttsVoice}, Language: ${ttsLanguage}, Model: ${ttsModel}, Translate: ${ttsTranslateText}`);
+      console.log(`Available voices:`, filteredVoices.map(v => `${v.name} (${v.language})`));
+      
       const formData = new FormData();
       formData.append('text', ttsText);
       formData.append('voice', ttsVoice);
       formData.append('speed', ttsSpeed.toString());
+      formData.append('pitch', ttsPitch.toString());
       formData.append('volume', ttsVolume.toString());
       formData.append('model', ttsModel);
+      formData.append('gender', ttsGender);
+      formData.append('age', ttsAge);
+      formData.append('style', ttsStyle);
+      formData.append('emotion', ttsEmotion);
+      formData.append('language', ttsLanguage);
+      formData.append('translate_text', ttsTranslateText.toString());
+      formData.append('use_ssml', ttsUseSsml.toString());
+      formData.append('normalize_text', ttsNormalizeText.toString());
       
       const result = await apiService.textToSpeech(formData);
       setTtsAudioUrl(result.audio_base64);
@@ -1824,7 +1990,7 @@ export const AudioPage: React.FC = () => {
                         onChange={(e) => setTtsVoice(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
-                        {availableVoices
+                        {filteredVoices
                           .filter(voice => voice.model === ttsModel)
                           .map(voice => (
                             <option key={voice.name} value={voice.name}>
@@ -1832,6 +1998,34 @@ export const AudioPage: React.FC = () => {
                             </option>
                           ))}
                       </select>
+                      {ttsVoice && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Selected: {ttsVoice}
+                        </div>
+                      )}
+                      
+                      {/* Debug Info */}
+                      <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-50 rounded">
+                        <div>Language: {ttsLanguage || 'Auto-detect'}</div>
+                        <div>Translate: {ttsTranslateText ? 'Yes' : 'No'}</div>
+                        <div>Available: {filteredVoices.length} voices</div>
+                        <div>Selected Voice: {ttsVoice}</div>
+                        <div>Model: {ttsModel}</div>
+                        <button 
+                          onClick={() => {
+                            console.log('=== TTS DEBUG INFO ===');
+                            console.log('Language:', ttsLanguage);
+                            console.log('Translate:', ttsTranslateText);
+                            console.log('Selected Voice:', ttsVoice);
+                            console.log('Model:', ttsModel);
+                            console.log('Available Voices:', filteredVoices);
+                            console.log('All Voices:', availableVoices);
+                          }}
+                          className="mt-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                        >
+                          Debug Info
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
@@ -1845,6 +2039,112 @@ export const AudioPage: React.FC = () => {
                         <option value="pyttsx3">System TTS</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Voice Quality & Style Settings */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-gray-700">Voice Quality & Style</h4>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Output Language</label>
+                        <select
+                          value={ttsLanguage}
+                          onChange={(e) => setTtsLanguage(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        >
+                          <option value="">Auto-detect from text</option>
+                          <option value="en-US">English (US)</option>
+                          <option value="en-GB">English (UK)</option>
+                          <option value="es-ES">Spanish</option>
+                          <option value="fr-FR">French</option>
+                          <option value="de-DE">German</option>
+                          <option value="it-IT">Italian</option>
+                          <option value="pt-BR">Portuguese (Brazil)</option>
+                          <option value="ru-RU">Russian</option>
+                          <option value="ja-JP">Japanese</option>
+                          <option value="ko-KR">Korean</option>
+                          <option value="zh-CN">Chinese (Simplified)</option>
+                          <option value="ar-SA">Arabic</option>
+                          <option value="hi-IN">Hindi</option>
+                          <option value="nl-NL">Dutch</option>
+                          <option value="sv-SE">Swedish</option>
+                          <option value="no-NO">Norwegian</option>
+                          <option value="da-DK">Danish</option>
+                          <option value="fi-FI">Finnish</option>
+                          <option value="pl-PL">Polish</option>
+                          <option value="tr-TR">Turkish</option>
+                          <option value="he-IL">Hebrew</option>
+                          <option value="th-TH">Thai</option>
+                          <option value="vi-VN">Vietnamese</option>
+                          <option value="id-ID">Indonesian</option>
+                          <option value="ms-MY">Malay</option>
+                          <option value="fa-IR">Persian</option>
+                          <option value="ur-PK">Urdu</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <select
+                          value={ttsGender}
+                          onChange={(e) => setTtsGender(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        >
+                          <option value="">Any Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Neutral">Neutral</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                        <select
+                          value={ttsAge}
+                          onChange={(e) => setTtsAge(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        >
+                          <option value="">Any Age</option>
+                          <option value="child">Child</option>
+                          <option value="young">Young</option>
+                          <option value="adult">Adult</option>
+                          <option value="elderly">Elderly</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Speaking Style</label>
+                        <select
+                          value={ttsStyle}
+                          onChange={(e) => setTtsStyle(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        >
+                          <option value="">Any Style</option>
+                          <option value="formal">Formal (Professional)</option>
+                          <option value="casual">Casual (Conversational)</option>
+                          <option value="excited">Excited (Energetic)</option>
+                          <option value="calm">Calm (Relaxed)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Emotional Tone</label>
+                      <select
+                        value={ttsEmotion}
+                        onChange={(e) => setTtsEmotion(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        <option value="">Any Tone</option>
+                        <option value="happy">Happy (Joyful)</option>
+                        <option value="sad">Sad (Melancholic)</option>
+                        <option value="angry">Angry (Frustrated)</option>
+                        <option value="neutral">Neutral (Balanced)</option>
+                      </select>
+                    </div>
+
+
                   </div>
 
                   {/* TTS Settings */}
@@ -1863,6 +2163,19 @@ export const AudioPage: React.FC = () => {
                       <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pitch</label>
+                      <input
+                        type="range"
+                        min="-50"
+                        max="50"
+                        step="5"
+                        value={ttsPitch}
+                        onChange={(e) => setTtsPitch(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">{ttsPitch > 0 ? `+${ttsPitch}%` : `${ttsPitch}%`}</div>
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
                       <input
                         type="range"
@@ -1873,6 +2186,65 @@ export const AudioPage: React.FC = () => {
                         className="w-full"
                       />
                       <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                    </div>
+                  </div>
+
+                  {/* Advanced Options */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-700">Advanced Options</h4>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="translate-text"
+                          checked={ttsTranslateText}
+                          onChange={(e) => setTtsTranslateText(e.target.checked)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="translate-text" className="ml-2 text-sm text-gray-700">
+                          Translate Text
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500 ml-6">
+                        Translate input text to the selected output language before speech generation
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="use-ssml"
+                          checked={ttsUseSsml}
+                          onChange={(e) => setTtsUseSsml(e.target.checked)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="use-ssml" className="ml-2 text-sm text-gray-700">
+                          Enable SSML Processing
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500 ml-6">
+                        Use Speech Synthesis Markup Language for enhanced voice control
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="normalize-text"
+                          checked={ttsNormalizeText}
+                          onChange={(e) => setTtsNormalizeText(e.target.checked)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <label htmlFor="normalize-text" className="ml-2 text-sm text-gray-700">
+                          Text Normalization
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500 ml-6">
+                        Convert numbers, abbreviations, and symbols to words for better pronunciation
+                      </div>
                     </div>
                   </div>
 
@@ -1958,13 +2330,13 @@ export const AudioPage: React.FC = () => {
 
               {/* TTS Notes */}
               <div className="card">
-                <h3 className="text-md font-semibold mb-2">Notes</h3>
+                <h3 className="text-md font-semibold mb-2">Quick Guide</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Text-to-Speech uses Microsoft Edge TTS (high quality), Google TTS, and system voices.</li>
-                  <li>• Edge TTS provides the best quality with natural-sounding voices in multiple languages.</li>
-                  <li>• Google TTS offers good quality and supports many languages.</li>
-                  <li>• System TTS uses your device's built-in text-to-speech capabilities.</li>
-                  <li>• Adjust speed and volume to customize the generated speech output.</li>
+                  <li>• <strong>Output Language</strong>: Choose the language for speech generation</li>
+                  <li>• <strong>Translate Text</strong>: When enabled, translates your text before speaking</li>
+                  <li>• <strong>Voice Quality</strong>: Filter by gender, age, style, and emotion</li>
+                  <li>• <strong>Models</strong>: Edge TTS (best), Google TTS (good), System TTS (basic)</li>
+                  <li>• <strong>Customization</strong>: Adjust speed, pitch, and volume as needed</li>
                 </ul>
               </div>
             </div>
