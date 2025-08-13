@@ -117,6 +117,7 @@ jspm_packages/
 # Gatsby files
 .cache/
 public
+!frontend/public/speech-sample.mp3
 
 # Storybook build outputs
 .out

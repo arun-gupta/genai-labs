@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from sse_starlette.sse import EventSourceResponse
 from typing import Optional
 from app.models.requests import (
@@ -204,38 +204,35 @@ def _number_to_words(n: int) -> str:
         return str(n)  # For very large numbers, just return as string
 
 
-def process_ssml(text: str, style: str = "", emotion: str = "", speed: float = 1.0, pitch: float = 0) -> str:
+def process_ssml(text: str, style: str = "", emotion: str = "", speed: float = 1.0, pitch: float = 0, voice: str = "") -> str:
     """Process text with SSML markup for enhanced TTS."""
+    # Only generate SSML if we actually have speed/pitch modifications
+    # Otherwise, return plain text to avoid SSML issues
+    if speed == 1.0 and pitch == 0:
+        return text
+    
     # Start with basic SSML wrapper
     ssml = f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">'
     
-    # Add prosody for speed and pitch
-    if speed != 1.0 or pitch != 0:
-        rate_attr = f'rate="{speed:.1f}"' if speed != 1.0 else ""
-        pitch_attr = f'pitch="{pitch:+d}%"' if pitch != 0 else ""
-        prosody_attrs = " ".join(filter(None, [rate_attr, pitch_attr]))
-        if prosody_attrs:
-            ssml += f'<prosody {prosody_attrs}>'
+    # Add prosody for speed and pitch only (Edge TTS doesn't support style in prosody)
+    prosody_attrs = []
     
-    # Add style and emotion
-    if style or emotion:
-        style_attrs = []
-        if style:
-            style_attrs.append(f'style="{style}"')
-        if emotion:
-            style_attrs.append(f'emotion="{emotion}"')
-        
-        if style_attrs:
-            ssml += f'<voice {" ".join(style_attrs)}>'
+    if speed != 1.0:
+        prosody_attrs.append(f'rate="{speed:.1f}"')
+    if pitch != 0:
+        prosody_attrs.append(f'pitch="{pitch:+d}%"')
     
-    # Add the text content
-    ssml += text
+    # Note: Edge TTS doesn't support 'style' or 'emotion' attributes in prosody tags
+    # These would cause the tags to be spoken literally
+    # We'll handle speaking styles through voice selection instead
     
-    # Close tags in reverse order
-    if style or emotion:
-        ssml += '</voice>'
-    if speed != 1.0 or pitch != 0:
+    # Add the text with prosody if we have attributes
+    if prosody_attrs:
+        ssml += f'<prosody {" ".join(prosody_attrs)}>'
+        ssml += text
         ssml += '</prosody>'
+    else:
+        ssml += text
     
     ssml += '</speak>'
     return ssml
@@ -245,6 +242,14 @@ def detect_text_language(text: str) -> str:
     """Detect the language of the input text."""
     try:
         from langdetect import detect
+        
+        # For very short text or common English phrases, default to English
+        text_lower = text.lower().strip()
+        common_english_phrases = ['hi', 'hello', 'hey', 'how are you', 'good morning', 'good afternoon', 'good evening', 'thank you', 'thanks', 'bye', 'goodbye']
+        
+        if len(text.split()) <= 3 or any(phrase in text_lower for phrase in common_english_phrases):
+            return 'en-US'
+        
         detected_lang = detect(text)
         
         # Map detected language codes to TTS language codes
@@ -397,7 +402,7 @@ def filter_voices_by_criteria(voices: List[Dict[str, Any]], gender: str = "", ag
     
     if gender:
         gender_lower = gender.lower()
-        filtered = [v for v in filtered if gender_lower in v.get("gender", "").lower()]
+        filtered = [v for v in filtered if gender_lower == v.get("gender", "").lower()]
     
     if age:
         age_lower = age.lower()
@@ -1798,6 +1803,30 @@ async def enhance_video(
 
 # =================== Speech Processing Endpoints ===================
 
+@router.get("/sample-speech")
+async def get_sample_speech():
+    """Serve a sample speech file for testing STT functionality."""
+    try:
+        # Path to the sample speech file (local to the project)
+        sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "speech-sample.mp3")
+        
+        if not os.path.exists(sample_path):
+            raise HTTPException(status_code=404, detail="Sample speech file not found")
+        
+        # Read the file and return it
+        with open(sample_path, "rb") as f:
+            audio_data = f.read()
+        
+        return Response(
+            content=audio_data,
+            media_type="audio/mp3",
+            headers={"Content-Disposition": "attachment; filename=speech-sample.mp3"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to serve sample speech: {e}")
+        raise HTTPException(status_code=500, detail="Failed to serve sample speech file")
+
 @router.post("/audio/speech-to-text")
 async def speech_to_text(
     file: UploadFile = File(...),
@@ -1894,9 +1923,7 @@ async def text_to_speech(
     volume: float = Form(100),
     model: str = Form("edge"),  # edge, gtts, pyttsx3
     gender: str = Form(""),  # male, female, neutral
-    age: str = Form(""),  # child, young, adult, elderly
-    style: str = Form(""),  # formal, casual, excited, calm
-    emotion: str = Form(""),  # happy, sad, angry, neutral
+    style: str = Form(""),  # formal, casual, cheerful, sad, angry, etc.
     use_ssml: bool = Form(False),  # Enable SSML processing
     normalize_text: bool = Form(True),  # Enable text normalization
     language: str = Form(""),  # Target language for TTS
@@ -1906,12 +1933,9 @@ async def text_to_speech(
     try:
         logger.info(f"TTS request: voice={voice}, model={model}, text_length={len(text)}")
         
-        # Detect language if not provided
-        if not language:
-            detected_lang = detect_text_language(text)
-            logger.info(f"Detected language: {detected_lang}")
-        else:
-            detected_lang = language
+        # Always detect the language of the input text
+        detected_lang = detect_text_language(text)
+        logger.info(f"Detected language: {detected_lang}")
         
         # Translate text if output language is different from detected language
         if translate_text and language and detected_lang != language:
@@ -1930,20 +1954,87 @@ async def text_to_speech(
             text = normalize_text_for_tts(text)
             logger.info(f"Text normalized: {len(original_text)} -> {len(text)} chars")
         
-        # Apply SSML processing if enabled
+        # Apply SSML processing if enabled (but not for speaking styles - those are handled by voice selection)
         if use_ssml:
-            text = process_ssml(text, style, emotion, speed, pitch)
-            logger.info(f"SSML processing applied")
+            text = process_ssml(text, "", "", speed, pitch, voice)
+            logger.info(f"SSML processing applied (use_ssml: {use_ssml})")
+        
+        # Note: Speaking styles and emotions are handled through voice selection, not SSML
+        # This prevents SSML tags from being spoken literally
         
         if model == "edge":
             # Use Microsoft Edge TTS (high quality, free)
             try:
+                # Only override user's voice selection if they haven't explicitly chosen a voice
+                # or if the voice doesn't match the selected gender
+                user_selected_voice = voice
+                
+                # Get available voices once for style selection
+                available_voices = []
+                if style and not text.strip().startswith('<speak'):
+                    try:
+                        # Get available voices for the target language
+                        edge_voices = await edge_tts.list_voices()
+                        
+                        for v in edge_voices:
+                            available_voices.append({
+                                "name": v["Name"],
+                                "language": v["Locale"],
+                                "gender": v["Gender"]
+                            })
+                        
+                        # Filter voices by language if specified
+                        if language:
+                            target_lang = language.split('-')[0].lower()
+                            available_voices = [v for v in available_voices 
+                                              if target_lang in v["language"].lower()]
+                        
+                        logger.info(f"Found {len(available_voices)} available voices for language {language}")
+                        
+                    except Exception as e:
+                        logger.warning(f"Failed to get available voices: {e}")
+                        available_voices = []
+                
+                # Handle style-based voice selection
+                if style and available_voices and not text.strip().startswith('<speak'):
+                    try:
+                        # Check if user's selected voice matches their gender preference
+                        user_voice_matches_gender = True
+                        if gender:
+                            # Find the user's selected voice in available voices
+                            user_voice_info = next((v for v in available_voices if v["name"] == user_selected_voice), None)
+                            if user_voice_info:
+                                user_voice_matches_gender = user_voice_info["gender"].lower() == gender.lower()
+                        
+                        # Only override if user's voice doesn't match their gender preference
+                        if not user_voice_matches_gender:
+                            # Select voice by style
+                            style_voice = select_voice_by_style(available_voices, style, language)
+                            if style_voice:
+                                voice = style_voice
+                                logger.info(f"Overriding user voice '{user_selected_voice}' with style voice '{voice}' for style '{style}'")
+                            else:
+                                logger.info(f"Keeping user's selected voice '{user_selected_voice}' as no suitable style voice found")
+                        else:
+                            logger.info(f"Keeping user's selected voice '{user_selected_voice}' as it matches gender preference")
+                    except Exception as e:
+                        logger.warning(f"Failed to select voice by style: {e}, using original voice")
+                
+
+                
                 logger.info(f"Using Edge TTS voice: {voice} for language: {detected_lang}")
                 
-                # Format rate properly - Edge TTS expects percentage changes
-                rate_str = f"{int((speed-1.0)*100):+d}%" if speed != 1.0 else "+0%"
-                volume_str = f"{int(volume-100):+d}%" if volume != 100 else "+0%"
-                communicate = edge_tts.Communicate(text, voice, rate=rate_str, volume=volume_str)
+                # Check if text contains SSML markup
+                is_ssml = text.strip().startswith('<speak')
+                
+                if is_ssml:
+                    # For SSML, pass the text directly without voice parameter
+                    communicate = edge_tts.Communicate(text)
+                else:
+                    # For plain text, use voice parameter with rate and volume
+                    rate_str = f"{int((speed-1.0)*100):+d}%" if speed != 1.0 else "+0%"
+                    volume_str = f"{int(volume-100):+d}%" if volume != 100 else "+0%"
+                    communicate = edge_tts.Communicate(text, voice, rate=rate_str, volume=volume_str)
                 
                 # Generate audio data
                 audio_data = b""
@@ -1962,7 +2053,19 @@ async def text_to_speech(
                     "format": "mp3",
                     "voice": voice,
                     "model": model,
-                    "text_length": len(text)
+                    "text_length": len(text),
+                    "applied_settings": {
+                        "voice": voice,
+                        "speed": speed,
+                        "pitch": pitch,
+                        "volume": volume,
+                        "gender": gender,
+                        "style": style,
+                        "language": language,
+                        "translation_applied": translate_text and language and detected_lang != language,
+                        "ssml_used": use_ssml,
+                        "text_normalized": normalize_text
+                    }
                 }
                 
             except Exception as e:
@@ -1995,7 +2098,19 @@ async def text_to_speech(
                     "format": "mp3",
                     "voice": voice,
                     "model": model,
-                    "text_length": len(text)
+                    "text_length": len(text),
+                    "applied_settings": {
+                        "voice": voice,
+                        "speed": speed,
+                        "pitch": pitch,
+                        "volume": volume,
+                        "gender": gender,
+                        "style": style,
+                        "language": language,
+                        "translation_applied": translate_text and language and detected_lang != language,
+                        "ssml_used": use_ssml,
+                        "text_normalized": normalize_text
+                    }
                 }
                 
             except Exception as e:
@@ -2036,7 +2151,19 @@ async def text_to_speech(
                     "format": "wav",
                     "voice": "system",
                     "model": model,
-                    "text_length": len(text)
+                    "text_length": len(text),
+                    "applied_settings": {
+                        "voice": "system",
+                        "speed": speed,
+                        "pitch": pitch,
+                        "volume": volume,
+                        "gender": gender,
+                        "style": style,
+                        "language": language,
+                        "translation_applied": translate_text and language and detected_lang != language,
+                        "ssml_used": use_ssml,
+                        "text_normalized": normalize_text
+                    }
                 }
                 
             except Exception as e:
@@ -2054,7 +2181,6 @@ async def text_to_speech(
 @router.get("/audio/tts/voices")
 async def get_tts_voices(
     gender: str = "",
-    age: str = "",
     model: str = "",
     language: str = ""
 ):
@@ -2071,7 +2197,6 @@ async def get_tts_voices(
                     "language": voice["Locale"],
                     "gender": voice["Gender"],
                     "model": "edge",
-                    "age": _extract_age_from_voice_name(voice["Name"]),
                     "style": _extract_style_from_voice_name(voice["Name"])
                 })
         except Exception as e:
@@ -2087,17 +2212,16 @@ async def get_tts_voices(
                     "language": voice.languages[0] if voice.languages else "en",
                     "gender": "Unknown",
                     "model": "pyttsx3",
-                    "age": "adult",
                     "style": "neutral"
                 })
         except Exception as e:
             logger.warning(f"Could not fetch system voices: {e}")
         
         # Apply filtering if criteria provided
-        if gender or age or model or language:
+        if gender or model or language:
             try:
-                voices = filter_voices_by_criteria(voices, gender, age, model, language)
-                logger.info(f"Filtered voices for criteria - gender: {gender}, age: {age}, model: {model}, language: {language}")
+                voices = filter_voices_by_criteria(voices, gender, "", model, language)
+                logger.info(f"Filtered voices for criteria - gender: {gender}, model: {model}, language: {language}")
                 logger.info(f"Found {len(voices)} voices after filtering")
             except Exception as e:
                 logger.error(f"Error filtering voices: {e}")
@@ -2115,18 +2239,7 @@ async def get_tts_voices(
         raise HTTPException(status_code=500, detail=f"Failed to get voices: {str(e)}")
 
 
-def _extract_age_from_voice_name(voice_name: str) -> str:
-    """Extract age category from voice name."""
-    name_lower = voice_name.lower()
-    
-    if any(word in name_lower for word in ["child", "kid", "young"]):
-        return "child"
-    elif any(word in name_lower for word in ["teen", "youth", "adolescent"]):
-        return "young"
-    elif any(word in name_lower for word in ["senior", "elderly", "old"]):
-        return "elderly"
-    else:
-        return "adult"
+
 
 
 def _extract_style_from_voice_name(voice_name: str) -> str:
@@ -2143,6 +2256,52 @@ def _extract_style_from_voice_name(voice_name: str) -> str:
         return "calm"
     else:
         return "neutral"
+
+
+def select_voice_by_style(voices: List[Dict[str, Any]], target_style: str, target_language: str = "") -> str:
+    """Select a voice that matches the desired speaking style and language."""
+    if not target_style:
+        return voices[0]["name"] if voices else ""
+    
+    # Map our style names to voice characteristics
+    style_keywords = {
+        'cheerful': ['cheerful', 'happy', 'bright', 'energetic'],
+        'sad': ['sad', 'melancholic', 'somber', 'serious'],
+        'angry': ['angry', 'frustrated', 'stern', 'harsh'],
+        'friendly': ['friendly', 'warm', 'casual', 'conversational'],
+        'terrified': ['terrified', 'scared', 'fearful', 'nervous'],
+        'shouting': ['shouting', 'loud', 'booming', 'powerful'],
+        'unfriendly': ['unfriendly', 'cold', 'formal', 'distant'],
+        'whispering': ['whispering', 'soft', 'gentle', 'quiet'],
+        'hopeful': ['hopeful', 'optimistic', 'positive', 'encouraging'],
+        'casual': ['casual', 'friendly', 'conversational', 'relaxed'],
+        'excited': ['excited', 'energetic', 'enthusiastic', 'cheerful'],
+        'calm': ['calm', 'relaxed', 'gentle', 'peaceful']
+    }
+    
+    keywords = style_keywords.get(target_style.lower(), [target_style.lower()])
+    
+    # First, try to find a voice that matches both style and language
+    if target_language:
+        for voice in voices:
+            voice_name_lower = voice["name"].lower()
+            voice_lang = voice.get("language", "").lower()
+            
+            if (any(keyword in voice_name_lower for keyword in keywords) and 
+                target_language.lower() in voice_lang):
+                return voice["name"]
+    
+    # If no match found, try to find any voice with the style
+    for voice in voices:
+        voice_name_lower = voice["name"].lower()
+        if any(keyword in voice_name_lower for keyword in keywords):
+            return voice["name"]
+    
+    # Fallback to first available voice
+    return voices[0]["name"] if voices else ""
+
+
+
 
 
 # =================== Audio/Music Endpoints ===================

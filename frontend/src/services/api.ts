@@ -835,7 +835,11 @@ class ApiService {
       method: 'POST',
       body: formData,
     });
-    if (!res.ok) throw new Error('Speech-to-text failed');
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('STT API Error:', res.status, res.statusText, errorText);
+      throw new Error(`Speech-to-text failed: ${res.status} ${res.statusText}`);
+    }
     return res.json();
   }
 

@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Music2, SlidersHorizontal, Upload, Download, Play, Zap, Volume2, VolumeX, RotateCcw, Clock, Filter, Mic, Volume1, FileText } from 'lucide-react';
+import { Music2, SlidersHorizontal, Upload, Download, Play, Zap, Volume2, VolumeX, RotateCcw, Clock, Filter, Mic, Volume1, FileText, ChevronDown } from 'lucide-react';
 import { apiService } from '../services/api';
 
 export const AudioPage: React.FC = () => {
@@ -64,14 +64,13 @@ export const AudioPage: React.FC = () => {
   // Enhanced TTS settings
   const [ttsPitch, setTtsPitch] = useState(0);
   const [ttsGender, setTtsGender] = useState('');
-  const [ttsAge, setTtsAge] = useState('');
   const [ttsStyle, setTtsStyle] = useState('');
-  const [ttsEmotion, setTtsEmotion] = useState('');
   const [ttsLanguage, setTtsLanguage] = useState('');
   const [ttsTranslateText, setTtsTranslateText] = useState(true);
   const [ttsUseSsml, setTtsUseSsml] = useState(false);
   const [ttsNormalizeText, setTtsNormalizeText] = useState(true);
-  const [filteredVoices, setFilteredVoices] = useState<Array<{name: string, language: string, gender: string, model: string, age?: string, style?: string}>>([]);
+  const [filteredVoices, setFilteredVoices] = useState<Array<{name: string, language: string, gender: string, model: string, style?: string}>>([]);
+  const [ttsAppliedSettings, setTtsAppliedSettings] = useState<any>(null);
   
   // STT state
   const [sttLanguage, setSttLanguage] = useState('en-US');
@@ -80,9 +79,10 @@ export const AudioPage: React.FC = () => {
   const [sttProgress, setSttProgress] = useState(0);
   const sttProgressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [sttResult, setSttResult] = useState<{text: string, confidence: number, language: string, model: string} | null>(null);
+  const [sttUploadedFile, setSttUploadedFile] = useState<File | null>(null);
   
   // Available voices
-  const [availableVoices, setAvailableVoices] = useState<Array<{name: string, language: string, gender: string, model: string, age?: string, style?: string}>>([]);
+  const [availableVoices, setAvailableVoices] = useState<Array<{name: string, language: string, gender: string, model: string, style?: string}>>([]);
 
   const clearAllEffects = () => {
     setNormalize(true);
@@ -128,13 +128,10 @@ export const AudioPage: React.FC = () => {
       try {
         const params = new URLSearchParams();
         if (ttsGender) params.append('gender', ttsGender);
-        if (ttsAge) params.append('age', ttsAge);
         if (ttsModel) params.append('model', ttsModel);
         if (ttsLanguage) params.append('language', ttsLanguage);
         
         const response = await apiService.getTTSVoices(params.toString());
-        console.log('TTS Voices API Response:', response);
-        console.log('Filtered voices count:', response.voices?.length || 0);
         setFilteredVoices(response.voices || []);
         
         // Auto-select the best voice for the chosen language
@@ -167,7 +164,6 @@ export const AudioPage: React.FC = () => {
           } else {
             // If no language selected, prefer Edge TTS English voices based on browser locale
             const browserLang = navigator.language.toLowerCase();
-            console.log(`Browser locale: ${browserLang}`);
             
             // Try to find a voice that matches the browser locale
             let edgeEnglishVoice = response.voices.find((v: any) => 
@@ -208,8 +204,6 @@ export const AudioPage: React.FC = () => {
             }
           }
           
-          console.log(`Auto-selecting voice: ${bestVoice.name} for language: ${ttsLanguage || 'auto-detected'}`);
-          console.log(`Selected voice language: ${bestVoice.language}`);
           setTtsVoice(bestVoice.name);
         } else {
           // If no voices found for the selected language, fall back to English based on browser locale
@@ -261,7 +255,14 @@ export const AudioPage: React.FC = () => {
     
     // Always filter voices, even when no criteria are set
     filterVoices();
-  }, [ttsGender, ttsAge, ttsModel, ttsLanguage, availableVoices]);
+        }, [ttsGender, ttsModel, ttsLanguage, availableVoices]);
+
+  // Auto-enable SSML when speaking styles are selected
+  useEffect(() => {
+    if (ttsStyle) {
+      setTtsUseSsml(true);
+    }
+  }, [ttsStyle]);
 
   // Speech processing functions
   const handleSpeechToText = async (file: File) => {
@@ -278,9 +279,23 @@ export const AudioPage: React.FC = () => {
       const result = await apiService.speechToText(formData);
       setSttResult(result);
       finishProgress(setSttProgress, sttProgressTimer);
+      
+      // Show success message for real audio files
+      if (!file.name.includes('sample')) {
+        alert(`Speech-to-text successful! Transcribed ${result.text.length} characters with ${Math.round(result.confidence * 100)}% confidence.`);
+      }
     } catch (error) {
-      alert('Speech-to-text failed. Please try again.');
-      console.error(error);
+      console.error('STT Error details:', error);
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        if (errorMessage.includes('Speech could not be understood') && sttUploadedFile?.name.includes('sample') && !sttUploadedFile?.name.includes('speech-sample')) {
+          alert('Test completed! The "Speech could not be understood" result is expected for the test tone. This confirms the STT interface is working correctly. Try uploading a real audio file with speech for actual transcription.');
+        } else {
+          alert(`Speech-to-text failed: ${errorMessage}`);
+        }
+      } else {
+        alert('Speech-to-text failed. Please try again.');
+      }
       resetProgress(setSttProgress);
     } finally {
       setIsSttProcessing(false);
@@ -289,20 +304,55 @@ export const AudioPage: React.FC = () => {
 
   const handleUseSampleAudio = async () => {
     try {
-      // Create a simple audio file with speech-like content
-      const sampleText = "Hello, this is a sample audio file for testing speech-to-text functionality. The weather is nice today and I hope you're having a great day!";
+      // Try to fetch the speech sample from the public directory
+      const response = await fetch('/speech-sample.mp3');
       
-      // Generate a simple audio waveform (sine wave with speech-like patterns)
+      if (!response.ok) {
+        // If the file doesn't exist, create a fallback audio file
+        throw new Error('Sample speech file not available');
+      }
+      
+      const audioBlob = await response.blob();
+      const sampleFile = new File([audioBlob], 'speech-sample.mp3', { type: 'audio/mp3' });
+      
+      // Set the sample file for processing
+      setSttUploadedFile(sampleFile);
+      
+    } catch (error) {
+      // Fallback: Create a simple audio file if the sample is not available
+      console.log('Sample speech file not available, creating fallback audio...');
+      
       const sampleRate = 44100;
-      const duration = 3; // 3 seconds
+      const duration = 2; // 2 seconds
       const samples = sampleRate * duration;
+      
+      // Create audio data with a clear, recognizable pattern
       const audioData = new Float32Array(samples);
       
-      // Create a simple speech-like pattern with varying frequencies
+      // Create a pattern that mimics speech with clear variations
       for (let i = 0; i < samples; i++) {
         const time = i / sampleRate;
-        const frequency = 200 + 100 * Math.sin(time * 2) + 50 * Math.sin(time * 5);
-        audioData[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 0.5);
+        let amplitude = 0;
+        
+        // Create a pattern that varies over time to simulate speech
+        const baseFreq = 300 + 200 * Math.sin(time * 1.5);
+        const modulation = Math.sin(2 * Math.PI * baseFreq * time);
+        
+        // Add some variation to make it more speech-like
+        const variation = Math.sin(time * 4) * Math.sin(time * 7);
+        
+        // Combine the patterns
+        amplitude = 0.3 * modulation * (1 + 0.2 * variation);
+        
+        // Add some noise to make it more realistic
+        amplitude += 0.05 * (Math.random() - 0.5);
+        
+        // Add fade in/out
+        const fadeIn = Math.min(1, time / 0.3);
+        const fadeOut = Math.min(1, (duration - time) / 0.3);
+        amplitude *= fadeIn * fadeOut;
+        
+        audioData[i] = Math.max(-1, Math.min(1, amplitude));
       }
       
       // Convert to WAV format
@@ -337,14 +387,10 @@ export const AudioPage: React.FC = () => {
       }
       
       // Create File object
-      const sampleFile = new File([wavBuffer], 'sample-speech.wav', { type: 'audio/wav' });
+      const sampleFile = new File([wavBuffer], 'sample-tone.wav', { type: 'audio/wav' });
       
-      // Process the sample file
-      await handleSpeechToText(sampleFile);
-      
-    } catch (error) {
-      alert('Failed to generate sample audio. Please try uploading a file instead.');
-      console.error(error);
+      // Set the sample file for processing
+      setSttUploadedFile(sampleFile);
     }
   };
 
@@ -356,9 +402,6 @@ export const AudioPage: React.FC = () => {
       setTtsAudioUrl('');
       startProgress(setTtsProgress, ttsProgressTimer);
       
-      console.log(`TTS Request - Voice: ${ttsVoice}, Language: ${ttsLanguage}, Model: ${ttsModel}, Translate: ${ttsTranslateText}`);
-      console.log(`Available voices:`, filteredVoices.map(v => `${v.name} (${v.language})`));
-      
       const formData = new FormData();
       formData.append('text', ttsText);
       formData.append('voice', ttsVoice);
@@ -367,9 +410,7 @@ export const AudioPage: React.FC = () => {
       formData.append('volume', ttsVolume.toString());
       formData.append('model', ttsModel);
       formData.append('gender', ttsGender);
-      formData.append('age', ttsAge);
       formData.append('style', ttsStyle);
-      formData.append('emotion', ttsEmotion);
       formData.append('language', ttsLanguage);
       formData.append('translate_text', ttsTranslateText.toString());
       formData.append('use_ssml', ttsUseSsml.toString());
@@ -377,6 +418,7 @@ export const AudioPage: React.FC = () => {
       
       const result = await apiService.textToSpeech(formData);
       setTtsAudioUrl(result.audio_base64);
+      setTtsAppliedSettings(result.applied_settings);
       finishProgress(setTtsProgress, ttsProgressTimer);
     } catch (error) {
       alert('Text-to-speech failed. Please try again.');
@@ -1977,12 +2019,107 @@ export const AudioPage: React.FC = () => {
                   />
                 </div>
 
+                {/* SSML Sample Prompts */}
+                <div className="mb-4">
+                  <details className="group">
+                    <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-indigo-600">
+                      <span>SSML Sample Prompts</span>
+                      <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                    </summary>
+                    <div className="mt-3 space-y-2">
+                      <div className="text-xs text-gray-500 mb-2">
+                        Click any prompt to test SSML features. Remember to enable "SSML Processing" above.
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>Hello! This is a <prosody rate="slow">slow</prosody> and <prosody rate="fast">fast</prosody> demonstration of SSML.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Speed Variation</div>
+                          <div className="text-gray-600">Demonstrates slow and fast speech rates</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>This is <prosody pitch="high">high pitched</prosody> and <prosody pitch="low">low pitched</prosody> speech.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Pitch Control</div>
+                          <div className="text-gray-600">Shows high and low pitch variations</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>Welcome to <break time="1s"/> our <prosody volume="loud">loud</prosody> and <prosody volume="soft">soft</prosody> demonstration.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Volume & Pauses</div>
+                          <div className="text-gray-600">Combines volume control with pauses</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>This is a <prosody rate="slow" pitch="low">deep, slow voice</prosody> followed by <prosody rate="fast" pitch="high">a quick, high voice</prosody>.</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Combined Effects</div>
+                          <div className="text-gray-600">Multiple prosody attributes together</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>Counting: <prosody rate="slow">one</prosody> <break time="0.5s"/> <prosody rate="medium">two</prosody> <break time="0.5s"/> <prosody rate="fast">three</prosody>!</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Counting with Effects</div>
+                          <div className="text-gray-600">Progressive speed changes with pauses</div>
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            setTtsText('<speak>This is a <prosody pitch="+20%" rate="0.8">calm, measured</prosody> voice for meditation, followed by <prosody pitch="+50%" rate="1.5">excited, energetic</prosody> speech!</speak>');
+                            setTtsUseSsml(true);
+                          }}
+                          className="text-left p-2 text-xs bg-gray-50 hover:bg-indigo-50 rounded border hover:border-indigo-200 transition-colors"
+                        >
+                          <div className="font-medium text-gray-800">Mood Contrast</div>
+                          <div className="text-gray-600">Calm vs excited speech patterns</div>
+                        </button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+
                 {/* Quick Settings */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium text-gray-700">Quick Settings</h3>
                   
-                  {/* TTS Controls */}
+                  {/* Model & Voice */}
                   <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                      <select
+                        value={ttsModel}
+                        onChange={(e) => setTtsModel(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="edge">Microsoft Edge TTS</option>
+                        <option value="gtts">Google TTS</option>
+                        <option value="pyttsx3">System TTS</option>
+                      </select>
+                    </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Voice</label>
                       <select
@@ -2003,189 +2140,128 @@ export const AudioPage: React.FC = () => {
                           Selected: {ttsVoice}
                         </div>
                       )}
-                      
-                      {/* Debug Info */}
-                      <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-50 rounded">
-                        <div>Language: {ttsLanguage || 'Auto-detect'}</div>
-                        <div>Translate: {ttsTranslateText ? 'Yes' : 'No'}</div>
-                        <div>Available: {filteredVoices.length} voices</div>
-                        <div>Selected Voice: {ttsVoice}</div>
-                        <div>Model: {ttsModel}</div>
-                        <button 
-                          onClick={() => {
-                            console.log('=== TTS DEBUG INFO ===');
-                            console.log('Language:', ttsLanguage);
-                            console.log('Translate:', ttsTranslateText);
-                            console.log('Selected Voice:', ttsVoice);
-                            console.log('Model:', ttsModel);
-                            console.log('Available Voices:', filteredVoices);
-                            console.log('All Voices:', availableVoices);
-                          }}
-                          className="mt-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                        >
-                          Debug Info
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                      <select
-                        value={ttsModel}
-                        onChange={(e) => setTtsModel(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="edge">Microsoft Edge TTS</option>
-                        <option value="gtts">Google TTS</option>
-                        <option value="pyttsx3">System TTS</option>
-                      </select>
                     </div>
                   </div>
 
-                  {/* Voice Quality & Style Settings */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-gray-700">Voice Quality & Style</h4>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Output Language</label>
-                        <select
-                          value={ttsLanguage}
-                          onChange={(e) => setTtsLanguage(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                        >
-                          <option value="">Auto-detect from text</option>
-                          <option value="en-US">English (US)</option>
-                          <option value="en-GB">English (UK)</option>
-                          <option value="es-ES">Spanish</option>
-                          <option value="fr-FR">French</option>
-                          <option value="de-DE">German</option>
-                          <option value="it-IT">Italian</option>
-                          <option value="pt-BR">Portuguese (Brazil)</option>
-                          <option value="ru-RU">Russian</option>
-                          <option value="ja-JP">Japanese</option>
-                          <option value="ko-KR">Korean</option>
-                          <option value="zh-CN">Chinese (Simplified)</option>
-                          <option value="ar-SA">Arabic</option>
-                          <option value="hi-IN">Hindi</option>
-                          <option value="nl-NL">Dutch</option>
-                          <option value="sv-SE">Swedish</option>
-                          <option value="no-NO">Norwegian</option>
-                          <option value="da-DK">Danish</option>
-                          <option value="fi-FI">Finnish</option>
-                          <option value="pl-PL">Polish</option>
-                          <option value="tr-TR">Turkish</option>
-                          <option value="he-IL">Hebrew</option>
-                          <option value="th-TH">Thai</option>
-                          <option value="vi-VN">Vietnamese</option>
-                          <option value="id-ID">Indonesian</option>
-                          <option value="ms-MY">Malay</option>
-                          <option value="fa-IR">Persian</option>
-                          <option value="ur-PK">Urdu</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                        <select
-                          value={ttsGender}
-                          onChange={(e) => setTtsGender(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                        >
-                          <option value="">Any Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Neutral">Neutral</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                        <select
-                          value={ttsAge}
-                          onChange={(e) => setTtsAge(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                        >
-                          <option value="">Any Age</option>
-                          <option value="child">Child</option>
-                          <option value="young">Young</option>
-                          <option value="adult">Adult</option>
-                          <option value="elderly">Elderly</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Speaking Style</label>
-                        <select
-                          value={ttsStyle}
-                          onChange={(e) => setTtsStyle(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                        >
-                          <option value="">Any Style</option>
-                          <option value="formal">Formal (Professional)</option>
-                          <option value="casual">Casual (Conversational)</option>
-                          <option value="excited">Excited (Energetic)</option>
-                          <option value="calm">Calm (Relaxed)</option>
-                        </select>
-                      </div>
-                    </div>
-
+                  {/* Language & Voice Settings */}
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Emotional Tone</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Output Language</label>
                       <select
-                        value={ttsEmotion}
-                        onChange={(e) => setTtsEmotion(e.target.value)}
+                        value={ttsLanguage}
+                        onChange={(e) => setTtsLanguage(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                       >
-                        <option value="">Any Tone</option>
-                        <option value="happy">Happy (Joyful)</option>
-                        <option value="sad">Sad (Melancholic)</option>
-                        <option value="angry">Angry (Frustrated)</option>
-                        <option value="neutral">Neutral (Balanced)</option>
+                        <option value="">Auto-detect from text</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="es-ES">Spanish</option>
+                        <option value="fr-FR">French</option>
+                        <option value="de-DE">German</option>
+                        <option value="it-IT">Italian</option>
+                        <option value="pt-BR">Portuguese (Brazil)</option>
+                        <option value="ru-RU">Russian</option>
+                        <option value="ja-JP">Japanese</option>
+                        <option value="ko-KR">Korean</option>
+                        <option value="zh-CN">Chinese (Simplified)</option>
+                        <option value="ar-SA">Arabic</option>
+                        <option value="hi-IN">Hindi</option>
+                        <option value="nl-NL">Dutch</option>
+                        <option value="sv-SE">Swedish</option>
+                        <option value="no-NO">Norwegian</option>
+                        <option value="da-DK">Danish</option>
+                        <option value="fi-FI">Finnish</option>
+                        <option value="pl-PL">Polish</option>
+                        <option value="tr-TR">Turkish</option>
+                        <option value="he-IL">Hebrew</option>
+                        <option value="th-TH">Thai</option>
+                        <option value="vi-VN">Vietnamese</option>
+                        <option value="id-ID">Indonesian</option>
+                        <option value="ms-MY">Malay</option>
+                        <option value="fa-IR">Persian</option>
+                        <option value="ur-PK">Urdu</option>
                       </select>
                     </div>
-
-
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                      <select
+                        value={ttsGender}
+                        onChange={(e) => setTtsGender(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      >
+                        <option value="">Any Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Neutral">Neutral</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* TTS Settings */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Speaking Style</label>
+                    <select
+                      value={ttsStyle}
+                      onChange={(e) => setTtsStyle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    >
+                      <option value="">Any Style</option>
+                      <option value="formal">Formal (Professional)</option>
+                      <option value="casual">Casual (Conversational)</option>
+                      <option value="cheerful">Cheerful (Happy)</option>
+                      <option value="sad">Sad (Melancholic)</option>
+                      <option value="angry">Angry (Frustrated)</option>
+                      <option value="friendly">Friendly (Warm)</option>
+                      <option value="terrified">Terrified (Scared)</option>
+                      <option value="shouting">Shouting (Loud)</option>
+                      <option value="unfriendly">Unfriendly (Cold)</option>
+                      <option value="whispering">Whispering (Soft)</option>
+                      <option value="hopeful">Hopeful (Optimistic)</option>
+                    </select>
+                  </div>
+
+                  {/* Playback Settings */}
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
-                      <input
-                        type="range"
-                        min="0.5"
-                        max="2.0"
-                        step="0.1"
-                        value={ttsSpeed}
-                        onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
-                        className="w-full"
-                      />
-                      <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Pitch</label>
-                      <input
-                        type="range"
-                        min="-50"
-                        max="50"
-                        step="5"
-                        value={ttsPitch}
-                        onChange={(e) => setTtsPitch(parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                      <div className="text-xs text-gray-500 mt-1">{ttsPitch > 0 ? `+${ttsPitch}%` : `${ttsPitch}%`}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={ttsVolume}
-                        onChange={(e) => setTtsVolume(parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                      <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                    <h4 className="text-sm font-medium text-gray-700">Playback Settings</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="2.0"
+                          step="0.1"
+                          value={ttsSpeed}
+                          onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Pitch</label>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          step="5"
+                          value={ttsPitch}
+                          onChange={(e) => setTtsPitch(parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">{ttsPitch > 0 ? `+${ttsPitch}%` : `${ttsPitch}%`}</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={ttsVolume}
+                          onChange={(e) => setTtsVolume(parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                      </div>
                     </div>
                   </div>
 
@@ -2322,6 +2398,26 @@ export const AudioPage: React.FC = () => {
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Text Length:</span> {ttsText.length} characters
                     </div>
+
+                    {/* Applied Settings Display */}
+                    {ttsAppliedSettings && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-2">Applied Settings</h4>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div><span className="font-medium">Voice:</span> {ttsAppliedSettings.voice}</div>
+                          <div><span className="font-medium">Model:</span> {ttsAppliedSettings.model}</div>
+                          <div><span className="font-medium">Speed:</span> {ttsAppliedSettings.speed}x</div>
+                          <div><span className="font-medium">Pitch:</span> {ttsAppliedSettings.pitch > 0 ? `+${ttsAppliedSettings.pitch}%` : `${ttsAppliedSettings.pitch}%`}</div>
+                          <div><span className="font-medium">Volume:</span> {ttsAppliedSettings.volume}%</div>
+                          <div><span className="font-medium">Language:</span> {ttsAppliedSettings.language || 'Auto-detected'}</div>
+                          {ttsAppliedSettings.gender && <div><span className="font-medium">Gender:</span> {ttsAppliedSettings.gender}</div>}
+                          {ttsAppliedSettings.style && <div><span className="font-medium">Style:</span> {ttsAppliedSettings.style}</div>}
+                          <div><span className="font-medium">Translation:</span> {ttsAppliedSettings.translation_applied ? 'Yes' : 'No'}</div>
+                          <div><span className="font-medium">SSML:</span> {ttsAppliedSettings.ssml_used ? 'Yes' : 'No'}</div>
+                          <div><span className="font-medium">Normalized:</span> {ttsAppliedSettings.text_normalized ? 'Yes' : 'No'}</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-sm text-gray-600">No speech generated yet. Enter text, choose settings, and click Generate Speech to create audio.</div>
@@ -2396,14 +2492,25 @@ export const AudioPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Upload Audio File</label>
                     
                     {/* Sample Audio Option */}
-                    <div className="mb-3">
+                    <div className="mb-3 space-y-2">
                       <button
                         onClick={() => handleUseSampleAudio()}
                         className="w-full bg-indigo-50 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 border border-indigo-200"
                       >
                         <Play size={16} />
-                        Use Sample Audio
+                        Use Sample Speech
                       </button>
+                      <div className="text-xs text-gray-500 text-center">
+                        Loads a real speech sample file for testing STT functionality.
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 text-center">
+                        💡 <strong>Tip:</strong> For best results, upload a file with clear spoken words or record your voice using your device's recording app.
+                      </div>
+                      
+                      <div className="text-xs text-blue-600 text-center bg-blue-50 p-2 rounded border border-blue-200">
+                        <strong>💡 For Real STT Testing:</strong> The sample speech file contains real speech that should be recognized. You can also upload your own audio files.
+                      </div>
                     </div>
                     
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
@@ -2413,7 +2520,7 @@ export const AudioPage: React.FC = () => {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            handleSpeechToText(file);
+                            setSttUploadedFile(file);
                           }
                         }}
                         className="hidden"
@@ -2430,6 +2537,39 @@ export const AudioPage: React.FC = () => {
                       </label>
                     </div>
                   </div>
+
+                  {/* File Status and Generate Button */}
+                  {sttUploadedFile && (
+                    <div className="mt-4 space-y-3">
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <FileText className="text-green-600" size={16} />
+                          <div className="text-sm">
+                            <div className="font-medium text-green-800">{sttUploadedFile.name}</div>
+                            <div className="text-green-600">{(sttUploadedFile.size / 1024 / 1024).toFixed(2)} MB</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleSpeechToText(sttUploadedFile)}
+                        disabled={isSttProcessing}
+                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isSttProcessing ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Mic size={16} />
+                            Generate Text
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Progress Bar */}
                   {isSttProcessing && (
@@ -2472,7 +2612,16 @@ export const AudioPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-600">No transcription yet. Upload an audio file to convert speech to text.</div>
+                  <div className="text-sm text-gray-600">
+                    {sttUploadedFile 
+                      ? sttUploadedFile.name.includes('speech-sample') 
+                        ? "Sample speech loaded! Click 'Generate Text' to transcribe the real speech audio." 
+                        : sttUploadedFile.name.includes('sample')
+                        ? "Test tone loaded. Click 'Generate Text' to test the interface (will likely show 'Speech could not be understood')." 
+                        : "Click 'Generate Text' to convert your audio file to text."
+                      : "Upload an audio file or use the sample speech to test STT functionality."
+                    }
+                  </div>
                 )}
               </div>
 
@@ -2485,6 +2634,8 @@ export const AudioPage: React.FC = () => {
                   <li>• OpenAI Whisper provides high accuracy and works well with various audio qualities.</li>
                   <li>• Supported audio formats: WAV, MP3, M4A up to 10MB file size.</li>
                   <li>• Choose the appropriate language for better transcription accuracy.</li>
+                  <li>• <strong>For testing:</strong> Record your voice or use a file with clear spoken words.</li>
+                  <li>• The sample audio is for interface testing only and may not contain recognizable speech.</li>
                 </ul>
               </div>
             </div>
