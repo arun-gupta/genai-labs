@@ -123,6 +123,14 @@ export const AudioPage: React.FC = () => {
     loadVoices();
   }, []);
 
+  // Auto-disable text normalization when SSML is detected
+  useEffect(() => {
+    const isSSML = ttsText.trim().startsWith('<speak');
+    if (isSSML && ttsNormalizeText) {
+      setTtsNormalizeText(false);
+    }
+  }, [ttsText, ttsNormalizeText]);
+
   // Filter voices when criteria change
   useEffect(() => {
     const filterVoices = async () => {
@@ -2333,14 +2341,23 @@ export const AudioPage: React.FC = () => {
                           id="normalize-text"
                           checked={ttsNormalizeText}
                           onChange={(e) => setTtsNormalizeText(e.target.checked)}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          disabled={ttsText.trim().startsWith('<speak')}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
                         />
-                        <label htmlFor="normalize-text" className="ml-2 text-sm text-gray-700">
+                        <label htmlFor="normalize-text" className={`ml-2 text-sm ${ttsText.trim().startsWith('<speak') ? 'text-gray-400' : 'text-gray-700'}`}>
                           Text Normalization
+                          {ttsText.trim().startsWith('<speak') && (
+                            <span className="ml-1 text-xs text-orange-600">(disabled for SSML)</span>
+                          )}
                         </label>
                       </div>
                       <div className="text-xs text-gray-500 ml-6">
                         Convert numbers, abbreviations, and symbols to words for better pronunciation
+                        {ttsText.trim().startsWith('<speak') && (
+                          <div className="text-orange-600 mt-1">
+                            ⚠️ Text normalization is disabled when using SSML to preserve markup
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
