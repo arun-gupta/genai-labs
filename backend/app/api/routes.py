@@ -1393,8 +1393,62 @@ async def generate_music(request: dict):
         tempo_bpm = int(request.get("tempo", 100))
         sample_rate = 44100
 
+        # Parse the enhanced prompt to extract instrument, genre, mood, and key
+        prompt_parts = prompt.split(":")
+        if len(prompt_parts) >= 2:
+            # Extract the descriptive part after the colon
+            description = prompt_parts[1].strip()
+            # Parse the prefix for instrument, genre, mood, key
+            prefix = prompt_parts[0].strip()
+            prefix_words = prefix.split()
+            
+            # Extract parameters from the prefix
+            instrument = "piano"  # default
+            genre = "cinematic"   # default
+            mood = "uplifting"    # default
+            key = "C"             # default
+            
+            # Look for instrument keywords (check all words in prefix)
+            instrument_keywords = ["piano", "guitar", "strings", "drums", "synth", "orchestra", "jazz", "electronic"]
+            for word in prefix_words:
+                if word.lower() in instrument_keywords:
+                    instrument = word.lower()
+                    break
+            
+            # Look for genre keywords (check all words in prefix)
+            genre_keywords = ["cinematic", "rock", "pop", "jazz", "classical", "electronic", "ambient", "folk"]
+            for word in prefix_words:
+                if word.lower() in genre_keywords:
+                    genre = word.lower()
+                    break
+            
+            # Look for mood keywords (check all words in prefix)
+            mood_keywords = ["uplifting", "melancholic", "energetic", "relaxing", "dramatic", "mysterious", "romantic", "epic"]
+            for word in prefix_words:
+                if word.lower() in mood_keywords:
+                    mood = word.lower()
+                    break
+            
+            # Look for key (usually the last word before "key")
+            for i, word in enumerate(prefix_words):
+                if word.lower() == "key" and i > 0:
+                    key = prefix_words[i-1]
+                    break
+        else:
+            # Fallback to old prompt analysis
+            description = prompt
+            instrument = "piano"
+            genre = "cinematic"
+            mood = "uplifting"
+            key = "C"
+
+        logger.info(f"Music generation parameters: instrument={instrument}, genre={genre}, mood={mood}, key={key}")
+        logger.info(f"Description: {description}")
+        logger.info(f"Full prompt: '{prompt}'")
+        logger.info(f"Prefix words: {prefix_words}")
+
         # Enhanced prompt analysis for musical characteristics
-        prompt_lower = prompt.lower()
+        prompt_lower = description.lower()
         
         # Determine scale/mode based on mood keywords
         if any(k in prompt_lower for k in ["sad", "minor", "melancholy", "dark", "somber", "gloomy"]):
@@ -1449,43 +1503,239 @@ async def generate_music(request: dict):
 
         t = np.linspace(0, note_len, int(sample_rate * note_len), endpoint=False)
 
+        # Instrument-specific sound generation functions
+        def generate_piano_tone(freq, t):
+            """Generate piano-like tone with attack and decay"""
+            tone = 0.6 * np.sin(2 * np.pi * freq * t)
+            # Add piano-like envelope (quick attack, slow decay)
+            attack_samples = int(0.01 * sample_rate)  # 10ms attack
+            decay_samples = int(0.5 * sample_rate)    # 500ms decay
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            env[attack_samples:] = np.exp(-np.linspace(0, 3, len(env) - attack_samples))
+            return tone * env
+
+        def generate_guitar_tone(freq, t):
+            """Generate guitar-like tone with harmonics"""
+            # Add harmonics for guitar-like sound
+            tone = 0.5 * np.sin(2 * np.pi * freq * t)
+            tone += 0.3 * np.sin(2 * np.pi * freq * 2 * t)  # 2nd harmonic
+            tone += 0.2 * np.sin(2 * np.pi * freq * 3 * t)  # 3rd harmonic
+            # Guitar-like envelope
+            attack_samples = int(0.02 * sample_rate)  # 20ms attack
+            decay_samples = int(0.8 * sample_rate)    # 800ms decay
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            env[attack_samples:] = np.exp(-np.linspace(0, 2, len(env) - attack_samples))
+            return tone * env
+
+        def generate_strings_tone(freq, t):
+            """Generate strings-like tone with vibrato"""
+            # Add vibrato for strings
+            vibrato_freq = 5.0  # 5 Hz vibrato
+            vibrato_depth = 0.02  # 2% frequency modulation
+            freq_mod = freq * (1 + vibrato_depth * np.sin(2 * np.pi * vibrato_freq * t))
+            tone = 0.4 * np.sin(2 * np.pi * freq_mod * t)
+            # Strings envelope (slow attack, long sustain)
+            attack_samples = int(0.1 * sample_rate)  # 100ms attack
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            return tone * env
+
+        def generate_drums_tone(freq, t):
+            """Generate drum-like percussive sound"""
+            # For drums, we'll create percussive patterns instead of melodic tones
+            # Create a drum pattern with kick, snare, and hi-hat
+            kick_freq = 60.0
+            snare_freq = 200.0
+            hihat_freq = 800.0
+            
+            # Create drum pattern (kick on 1, snare on 3, hi-hat on every beat)
+            drum_pattern = []
+            for i in range(num_notes):
+                if i % 4 == 0:  # Kick drum
+                    tone = 0.8 * np.exp(-np.linspace(0, 5, len(t))) * np.sin(2 * np.pi * kick_freq * t)
+                elif i % 4 == 2:  # Snare drum
+                    tone = 0.6 * np.exp(-np.linspace(0, 3, len(t))) * (np.sin(2 * np.pi * snare_freq * t) + np.random.normal(0, 0.3, len(t)))
+                else:  # Hi-hat
+                    tone = 0.4 * np.exp(-np.linspace(0, 1, len(t))) * (np.sin(2 * np.pi * hihat_freq * t) + np.random.normal(0, 0.5, len(t)))
+                drum_pattern.append(tone)
+            return drum_pattern
+
+        def generate_synth_tone(freq, t):
+            """Generate synth-like tone with filter sweep"""
+            # Add filter sweep effect
+            filter_freq = 0.5  # 0.5 Hz filter sweep
+            filter_depth = 0.3
+            freq_mod = freq * (1 + filter_depth * np.sin(2 * np.pi * filter_freq * t))
+            tone = 0.5 * np.sin(2 * np.pi * freq_mod * t)
+            # Add some harmonics for synth character
+            tone += 0.2 * np.sin(2 * np.pi * freq_mod * 2 * t)
+            # Synth envelope
+            attack_samples = int(0.05 * sample_rate)  # 50ms attack
+            decay_samples = int(0.3 * sample_rate)    # 300ms decay
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            env[attack_samples:] = np.exp(-np.linspace(0, 2, len(env) - attack_samples))
+            return tone * env
+
+        def generate_orchestra_tone(freq, t):
+            """Generate orchestra-like tone with multiple instruments"""
+            # Combine strings and brass-like sounds
+            strings = 0.3 * np.sin(2 * np.pi * freq * t)
+            brass = 0.2 * np.sin(2 * np.pi * freq * t) + 0.1 * np.sin(2 * np.pi * freq * 2 * t)
+            woodwind = 0.2 * np.sin(2 * np.pi * freq * 1.5 * t)
+            tone = strings + brass + woodwind
+            # Orchestra envelope
+            attack_samples = int(0.15 * sample_rate)  # 150ms attack
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            return tone * env
+
+        def generate_jazz_tone(freq, t):
+            """Generate jazz-like tone with swing and blues notes"""
+            # Add blues notes (flattened 3rd, 5th, 7th)
+            blues_third = freq * (2 ** (3.5 / 12.0))  # Between minor and major third
+            blues_fifth = freq * (2 ** (6.5 / 12.0))  # Between perfect and diminished fifth
+            blues_seventh = freq * (2 ** (9.5 / 12.0))  # Between major and minor seventh
+            
+            # Jazz chord with blues notes
+            tone = 0.4 * np.sin(2 * np.pi * freq * t)  # Root
+            tone += 0.2 * np.sin(2 * np.pi * blues_third * t)  # Blues third
+            tone += 0.15 * np.sin(2 * np.pi * blues_fifth * t)  # Blues fifth
+            tone += 0.1 * np.sin(2 * np.pi * blues_seventh * t)  # Blues seventh
+            
+            # Jazz envelope (smooth attack, long sustain)
+            attack_samples = int(0.08 * sample_rate)  # 80ms attack
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            return tone * env
+
+        def generate_electronic_tone(freq, t):
+            """Generate electronic-like tone with digital effects"""
+            # Add digital harmonics and filtering
+            tone = 0.5 * np.sin(2 * np.pi * freq * t)
+            tone += 0.3 * np.sin(2 * np.pi * freq * 2 * t)  # 2nd harmonic
+            tone += 0.2 * np.sin(2 * np.pi * freq * 4 * t)  # 4th harmonic
+            
+            # Add digital distortion
+            tone = np.tanh(tone * 2) * 0.5  # Soft clipping
+            
+            # Electronic envelope (quick attack, medium decay)
+            attack_samples = int(0.02 * sample_rate)  # 20ms attack
+            decay_samples = int(0.2 * sample_rate)    # 200ms decay
+            env = np.ones_like(t)
+            env[:attack_samples] = np.linspace(0, 1, attack_samples)
+            env[attack_samples:] = np.exp(-np.linspace(0, 2, len(env) - attack_samples))
+            return tone * env
+
+        # Select tone generation function based on instrument
+        if instrument == "piano":
+            tone_generator = generate_piano_tone
+        elif instrument == "guitar":
+            tone_generator = generate_guitar_tone
+        elif instrument == "strings":
+            tone_generator = generate_strings_tone
+        elif instrument == "drums":
+            tone_generator = generate_drums_tone
+        elif instrument == "synth":
+            tone_generator = generate_synth_tone
+        elif instrument == "orchestra":
+            tone_generator = generate_orchestra_tone
+        elif instrument == "jazz":
+            tone_generator = generate_jazz_tone
+        elif instrument == "electronic":
+            tone_generator = generate_electronic_tone
+        else:
+            # Default to piano for other instruments
+            tone_generator = generate_piano_tone
+
         # Build melody with more variation based on prompt
         num_notes = max(1, int(duration / note_len))
         melody = []
         
-        # Create more interesting note patterns based on prompt
-        if any(k in prompt_lower for k in ["ambient", "drone", "atmospheric"]):
-            # Long sustained notes
-            for i in range(num_notes):
-                degree = scale[i % len(scale)]
-                freq = root_hz * (2 ** (degree / 12.0))
-                tone = 0.4 * np.sin(2 * np.pi * freq * t)  # quieter
-                melody.append(tone)
-        elif any(k in prompt_lower for k in ["epic", "orchestral", "heroic"]):
-            # Ascending pattern
-            for i in range(num_notes):
-                degree = scale[min(i, len(scale) - 1)]
-                freq = root_hz * (2 ** (degree / 12.0))
-                tone = 0.7 * np.sin(2 * np.pi * freq * t)
-                melody.append(tone)
-        elif any(k in prompt_lower for k in ["latin", "salsa", "tropical"]):
-            # Rhythmic pattern
-            for i in range(num_notes):
-                degree = scale[(i * 2) % len(scale)]  # skip notes for rhythm
-                freq = root_hz * (2 ** (degree / 12.0))
-                tone = 0.6 * np.sin(2 * np.pi * freq * t)
-                melody.append(tone)
+        # Create more sophisticated patterns based on prompt description and instrument
+        if instrument == "drums":
+            # Special handling for drums - use the drum pattern generator
+            melody = tone_generator(None, t)  # freq not needed for drums
         else:
-            # Standard pattern with some variation
-            for i in range(num_notes):
-                degree = scale[i % len(scale)]
-                freq = root_hz * (2 ** (degree / 12.0))
-                tone = 0.6 * np.sin(2 * np.pi * freq * t)
-                # Add some variation in envelope
-                env = np.minimum(1.0, np.linspace(0, 3, tone.size))
-                env = np.minimum(env, np.linspace(3, 0, tone.size))
-                tone *= env / 3.0
-                melody.append(tone)
+            # Enhanced melodic generation based on prompt description
+            if any(k in prompt_lower for k in ["jazz", "quartet", "smooth", "walking", "brush"]):
+                # Jazz-style patterns with more sophisticated note selection
+                jazz_patterns = [
+                    [0, 2, 4, 7],  # Major triad + 7th
+                    [0, 3, 7, 10], # Minor triad + 7th
+                    [0, 4, 7, 11], # Major 7th chord
+                    [0, 3, 6, 10], # Diminished chord
+                    [0, 2, 5, 9],  # Suspended chord
+                ]
+                
+                for i in range(num_notes):
+                    # Use jazz chord patterns
+                    pattern = jazz_patterns[i % len(jazz_patterns)]
+                    chord_notes = []
+                    for degree in pattern:
+                        freq = root_hz * (2 ** (degree / 12.0))
+                        chord_notes.append(freq)
+                    
+                    # Create chord progression
+                    for j, freq in enumerate(chord_notes):
+                        tone = tone_generator(freq, t)
+                        if j == 0:  # Root note
+                            melody.append(tone)
+                        else:  # Add harmony notes with reduced volume
+                            harmony_tone = tone * 0.3
+                            if len(melody) > 0:
+                                melody[-1] += harmony_tone
+                            else:
+                                melody.append(harmony_tone)
+                                
+            elif any(k in prompt_lower for k in ["epic", "orchestral", "heroic", "cinematic"]):
+                # Epic orchestral patterns with dramatic progressions
+                epic_pattern = [0, 4, 7, 12, 7, 4, 0, 7, 12, 16, 12, 7]  # Ascending/descending pattern
+                for i in range(num_notes):
+                    degree = epic_pattern[i % len(epic_pattern)]
+                    freq = root_hz * (2 ** (degree / 12.0))
+                    tone = tone_generator(freq, t)
+                    melody.append(tone)
+                    
+            elif any(k in prompt_lower for k in ["ambient", "drone", "atmospheric", "meditation"]):
+                # Long sustained notes with subtle variations
+                for i in range(num_notes):
+                    degree = scale[i % len(scale)]
+                    freq = root_hz * (2 ** (degree / 12.0))
+                    # Add subtle frequency modulation for ambient feel
+                    freq_mod = freq * (1 + 0.01 * np.sin(2 * np.pi * 0.1 * i))
+                    tone = tone_generator(freq_mod, t)
+                    melody.append(tone)
+                    
+            elif any(k in prompt_lower for k in ["rock", "anthem", "powerful", "guitar"]):
+                # Rock-style patterns with power chords
+                rock_pattern = [0, 7, 0, 7, 12, 7, 0, 7]  # Power chord progression
+                for i in range(num_notes):
+                    degree = rock_pattern[i % len(rock_pattern)]
+                    freq = root_hz * (2 ** (degree / 12.0))
+                    tone = tone_generator(freq, t)
+                    melody.append(tone)
+                    
+            elif any(k in prompt_lower for k in ["electronic", "synth", "dance", "pulsing"]):
+                # Electronic patterns with arpeggios
+                arp_pattern = [0, 4, 7, 12, 7, 4, 0, 4, 7, 12, 16, 12]  # Arpeggio pattern
+                for i in range(num_notes):
+                    degree = arp_pattern[i % len(arp_pattern)]
+                    freq = root_hz * (2 ** (degree / 12.0))
+                    tone = tone_generator(freq, t)
+                    melody.append(tone)
+                    
+            else:
+                # Enhanced standard pattern with more musical variation
+                # Use a more sophisticated progression
+                progression = [0, 4, 7, 12, 7, 4, 0, 7, 12, 16, 12, 7, 4, 0]
+                for i in range(num_notes):
+                    degree = progression[i % len(progression)]
+                    freq = root_hz * (2 ** (degree / 12.0))
+                    tone = tone_generator(freq, t)
+                    melody.append(tone)
 
         signal = np.concatenate(melody)
         # Ensure exact duration length
@@ -1516,6 +1766,15 @@ async def process_audio(
     volume: float = Form(1.0),
     fade_in: float = Form(0.0),
     fade_out: float = Form(0.0),
+    # EQ parameters
+    eq_low: float = Form(0.0),      # Low frequency boost/cut in dB
+    eq_mid: float = Form(0.0),      # Mid frequency boost/cut in dB
+    eq_high: float = Form(0.0),     # High frequency boost/cut in dB
+    # Compression parameters
+    compression_threshold: float = Form(-20.0),  # Threshold in dB
+    compression_ratio: float = Form(4.0),        # Compression ratio
+    compression_attack: float = Form(10.0),      # Attack time in ms
+    compression_release: float = Form(100.0),    # Release time in ms
     output_format: str = Form("wav"),
     sample_rate: int = Form(44100)
 ):
@@ -1595,6 +1854,85 @@ async def process_audio(
             target_rms = 5000
             gain = min(4.0, max(0.25, target_rms / rms))
             processed = audioop.mul(processed, sw, gain)
+
+        # EQ processing (apply after normalization)
+        if abs(eq_low) > 0.1 or abs(eq_mid) > 0.1 or abs(eq_high) > 0.1:
+            logger.info(f"Applying EQ: low={eq_low}dB, mid={eq_mid}dB, high={eq_high}dB")
+            try:
+                # Convert audio to numpy array for processing
+                audio_array = np.frombuffer(processed, dtype=np.int16)
+                
+                # Simple 3-band EQ using FFT
+                # This is a simplified implementation - in practice you'd use proper filter design
+                fft_data = np.fft.fft(audio_array.astype(np.float32))
+                freqs = np.fft.fftfreq(len(audio_array), 1/fr)
+                
+                # Apply EQ gains to different frequency bands
+                # Low frequencies (below 250Hz)
+                low_mask = np.abs(freqs) < 250
+                fft_data[low_mask] *= 10**(eq_low/20)
+                
+                # Mid frequencies (250Hz - 4kHz)
+                mid_mask = (np.abs(freqs) >= 250) & (np.abs(freqs) < 4000)
+                fft_data[mid_mask] *= 10**(eq_mid/20)
+                
+                # High frequencies (above 4kHz)
+                high_mask = np.abs(freqs) >= 4000
+                fft_data[high_mask] *= 10**(eq_high/20)
+                
+                # Convert back to time domain
+                processed_array = np.real(np.fft.ifft(fft_data)).astype(np.int16)
+                processed = processed_array.tobytes()
+                
+                logger.info(f"EQ applied successfully")
+            except Exception as e:
+                logger.error(f"Error during EQ processing: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+
+        # Compression processing (apply after EQ)
+        if compression_threshold < 0:  # Only apply if threshold is set
+            logger.info(f"Applying compression: threshold={compression_threshold}dB, ratio={compression_ratio}:1")
+            try:
+                # Convert audio to numpy array
+                audio_array = np.frombuffer(processed, dtype=np.int16)
+                
+                # Convert to float for processing
+                audio_float = audio_array.astype(np.float32) / 32768.0
+                
+                # Calculate RMS in sliding windows for compression
+                window_size = int(fr * 0.01)  # 10ms window
+                compressed = np.zeros_like(audio_float)
+                
+                for i in range(len(audio_float)):
+                    # Calculate RMS of recent samples
+                    start_idx = max(0, i - window_size)
+                    rms = np.sqrt(np.mean(audio_float[start_idx:i+1]**2))
+                    
+                    # Convert RMS to dB
+                    rms_db = 20 * np.log10(max(rms, 1e-10))
+                    
+                    # Apply compression if above threshold
+                    if rms_db > compression_threshold:
+                        # Calculate gain reduction
+                        excess_db = rms_db - compression_threshold
+                        gain_reduction_db = excess_db * (1 - 1/compression_ratio)
+                        gain_reduction = 10**(gain_reduction_db/20)
+                        
+                        # Apply gain reduction
+                        compressed[i] = audio_float[i] * gain_reduction
+                    else:
+                        compressed[i] = audio_float[i]
+                
+                # Convert back to int16
+                processed_array = (compressed * 32768.0).astype(np.int16)
+                processed = processed_array.tobytes()
+                
+                logger.info(f"Compression applied successfully")
+            except Exception as e:
+                logger.error(f"Error during compression processing: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
 
         # Pitch shift (apply before speed to avoid conflicts)
         if abs(pitch - 1.0) > 1e-3:
@@ -1863,7 +2201,14 @@ async def process_audio(
                 "echo": echo,
                 "volume": volume,
                 "fade_in": fade_in,
-                "fade_out": fade_out
+                "fade_out": fade_out,
+                "eq_low": eq_low,
+                "eq_mid": eq_mid,
+                "eq_high": eq_high,
+                "compression_threshold": compression_threshold,
+                "compression_ratio": compression_ratio,
+                "compression_attack": compression_attack,
+                "compression_release": compression_release
             }
         }
     except Exception as e:

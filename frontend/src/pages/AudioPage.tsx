@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Music2, SlidersHorizontal, Upload, Download, Play, Zap, Volume2, VolumeX, RotateCcw, Clock, Filter } from 'lucide-react';
 import { apiService } from '../services/api';
-import { LanguageSelector } from '../components/LanguageSelector';
 
 export const AudioPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'music' | 'effects'>('music');
@@ -10,9 +9,12 @@ export const AudioPage: React.FC = () => {
   const [prompt, setPrompt] = useState('uplifting cinematic theme with major scale');
   const [duration, setDuration] = useState(8);
   const [tempo, setTempo] = useState(100);
+  // Music generation controls
+  const [genre, setGenre] = useState('cinematic');
+  const [mood, setMood] = useState('uplifting');
+  const [key, setKey] = useState('C');
   const [musicUrl, setMusicUrl] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [musicLanguage, setMusicLanguage] = useState('en');
   const [musicProgress, setMusicProgress] = useState(0);
   const musicProgressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -34,6 +36,15 @@ export const AudioPage: React.FC = () => {
   const [volume, setVolume] = useState(1.0);
   const [fadeIn, setFadeIn] = useState(0);
   const [fadeOut, setFadeOut] = useState(0);
+  // EQ parameters
+  const [eqLow, setEqLow] = useState(0);
+  const [eqMid, setEqMid] = useState(0);
+  const [eqHigh, setEqHigh] = useState(0);
+  // Compression parameters
+  const [compressionThreshold, setCompressionThreshold] = useState(-20);
+  const [compressionRatio, setCompressionRatio] = useState(4);
+  const [compressionAttack, setCompressionAttack] = useState(10);
+  const [compressionRelease, setCompressionRelease] = useState(100);
   const [outputFormat, setOutputFormat] = useState<'wav' | 'mp3' | 'flac'>('wav');
   const [sampleRate, setSampleRate] = useState(44100);
   const [appliedEffects, setAppliedEffects] = useState<{pitch: number, speed: number}>({pitch: 1.0, speed: 1.0});
@@ -48,6 +59,13 @@ export const AudioPage: React.FC = () => {
     setVolume(1.0);
     setFadeIn(0);
     setFadeOut(0);
+    setEqLow(0);
+    setEqMid(0);
+    setEqHigh(0);
+    setCompressionThreshold(-20);
+    setCompressionRatio(4);
+    setCompressionAttack(10);
+    setCompressionRelease(100);
     setOutputFormat('wav');
     setSampleRate(44100);
     setAppliedEffects({pitch: 1.0, speed: 1.0});
@@ -90,16 +108,21 @@ export const AudioPage: React.FC = () => {
   };
 
   const samplePrompts: string[] = [
-    'Epic orchestral trailer with soaring strings and thunderous drums',
-    'Warm lo-fi chillhop with dusty drums and jazzy Rhodes',
-    'Energetic synthwave chase with retro arps and driving bass',
-    'Acoustic folk with fingerpicked guitar and light percussion',
-    '8-bit chiptune adventure theme with catchy melody',
-    'Latin salsa groove with lively horns and congas',
-    'Dark trap beat with sub 808s and sparse piano',
-    'Ambient space pads with distant choirs and slow swells',
-    'Funk bass riff driving a tight, syncopated groove',
-    'Minimal piano ostinato with evolving harmonies'
+    'Epic cinematic theme with orchestral strings and dramatic brass',
+    'Jazz quartet with smooth piano, walking bass, and brush drums',
+    'Electronic dance track with pulsing synths and driving beats',
+    'Classical piano sonata with flowing melodies and rich harmonies',
+    'Rock anthem with powerful guitar riffs and thunderous drums',
+    'Ambient meditation with ethereal strings and gentle piano',
+    'Latin jazz fusion with fiery horns and percussive rhythms',
+    'Folk ballad with acoustic guitar and warm vocal harmonies',
+    'Synthwave retro with analog synthesizers and drum machines',
+    'Orchestral film score with emotional strings and brass',
+    'Blues trio with soulful guitar, walking bass, and brush drums',
+    'Chamber music with delicate strings and gentle woodwinds',
+    'Funk groove with tight bass, rhythmic guitar, and punchy drums',
+    'Celtic folk with acoustic guitar, fiddle, and bodhran drums',
+    'Smooth jazz with mellow saxophone, piano, and soft brushes'
   ];
 
   const [showAllSamples, setShowAllSamples] = useState(false);
@@ -141,12 +164,17 @@ export const AudioPage: React.FC = () => {
   }, []);
 
   const handleGenerate = async () => {
+    if (!prompt.trim()) return;
+    
     try {
       setIsGenerating(true);
       setMusicUrl('');
       startProgress(setMusicProgress, musicProgressTimer);
-      const fullPrompt = musicLanguage ? `[lang:${musicLanguage}] ${prompt}` : prompt;
+      
+      // Generate music based on descriptive prompt
+      const fullPrompt = `${genre} ${mood} music in ${key} key: ${prompt}`;
       const res = await apiService.generateMusic({ prompt: fullPrompt, duration, tempo });
+      
       setMusicUrl(res.audio_base64);
       finishProgress(setMusicProgress, musicProgressTimer);
     } catch (e) {
@@ -180,6 +208,15 @@ export const AudioPage: React.FC = () => {
       formData.append('volume', volume.toString());
       formData.append('fade_in', fadeIn.toString());
       formData.append('fade_out', fadeOut.toString());
+      // EQ parameters
+      formData.append('eq_low', eqLow.toString());
+      formData.append('eq_mid', eqMid.toString());
+      formData.append('eq_high', eqHigh.toString());
+      // Compression parameters
+      formData.append('compression_threshold', compressionThreshold.toString());
+      formData.append('compression_ratio', compressionRatio.toString());
+      formData.append('compression_attack', compressionAttack.toString());
+      formData.append('compression_release', compressionRelease.toString());
       formData.append('output_format', outputFormat);
       formData.append('sample_rate', sampleRate.toString());
 
@@ -251,8 +288,8 @@ export const AudioPage: React.FC = () => {
             {activeTab === 'music' && (
               <>
                 {/* Prompt */}
-                <div className="card space-y-3">
-                  <div className="flex items-center gap-2">
+                <div className="card">
+                  <div className="flex items-center gap-2 mb-3">
                     <Music2 className="text-indigo-600" size={18} />
                     <h2 className="text-lg font-semibold">Prompt</h2>
                   </div>
@@ -262,10 +299,6 @@ export const AudioPage: React.FC = () => {
                     placeholder="Describe the music you want (e.g., uplifting cinematic theme)"
                     className="w-full h-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
-                  <div>
-                    <label className="block text-sm text-gray-700 mb-1">Output Language</label>
-                    <LanguageSelector selectedLanguage={musicLanguage} onLanguageChange={setMusicLanguage} />
-                  </div>
                 </div>
 
                 {/* Sample Prompts */}
@@ -293,19 +326,105 @@ export const AudioPage: React.FC = () => {
                   )}
                 </div>
 
+
+
                 {/* Quick Settings */}
-                <div className="card space-y-4">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="text-gray-600" size={18} />
-                    <h2 className="text-lg font-semibold">Quick Settings</h2>
+                <div className="card">
+                  <h3 className="text-md font-semibold mb-3">Quick Settings</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-4">
+                      <label className="text-sm text-gray-700 font-medium w-16">Genre</label>
+                      <select
+                        value={genre}
+                        onChange={(e) => setGenre(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                      >
+                        <option value="cinematic">Cinematic</option>
+                        <option value="rock">Rock</option>
+                        <option value="pop">Pop</option>
+                        <option value="jazz">Jazz</option>
+                        <option value="classical">Classical</option>
+                        <option value="electronic">Electronic</option>
+                        <option value="ambient">Ambient</option>
+                        <option value="folk">Folk</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <label className="text-sm text-gray-700 font-medium w-16">Mood</label>
+                      <select
+                        value={mood}
+                        onChange={(e) => setMood(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                      >
+                        <option value="uplifting">Uplifting</option>
+                        <option value="melancholic">Melancholic</option>
+                        <option value="energetic">Energetic</option>
+                        <option value="relaxing">Relaxing</option>
+                        <option value="dramatic">Dramatic</option>
+                        <option value="mysterious">Mysterious</option>
+                        <option value="romantic">Romantic</option>
+                        <option value="epic">Epic</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <label className="text-sm text-gray-700 font-medium w-16">Key</label>
+                      <select
+                        value={key}
+                        onChange={(e) => setKey(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
+                      >
+                        <option value="C">C Major</option>
+                        <option value="G">G Major</option>
+                        <option value="D">D Major</option>
+                        <option value="A">A Major</option>
+                        <option value="E">E Major</option>
+                        <option value="B">B Major</option>
+                        <option value="F">F Major</option>
+                        <option value="Bb">Bb Major</option>
+                        <option value="Am">A Minor</option>
+                        <option value="Em">E Minor</option>
+                        <option value="Bm">B Minor</option>
+                        <option value="F#m">F# Minor</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-700 mb-1">Duration: {duration}s</label>
-                    <input type="range" min={4} max={16} value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="w-full" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-700 mb-1">Tempo: {tempo} BPM</label>
-                    <input type="range" min={60} max={160} step={5} value={tempo} onChange={(e) => setTempo(Number(e.target.value))} className="w-full" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-2 font-medium">Duration: {duration}s</label>
+                      <input
+                        type="range"
+                        min="4"
+                        max="16"
+                        step="1"
+                        value={duration}
+                        onChange={(e) => setDuration(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>4s</span>
+                        <span>16s</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-2 font-medium">Tempo: {tempo} BPM</label>
+                      <input
+                        type="range"
+                        min="60"
+                        max="160"
+                        step="10"
+                        value={tempo}
+                        onChange={(e) => setTempo(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>60</span>
+                        <span>160</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -493,6 +612,13 @@ export const AudioPage: React.FC = () => {
                           setVolume(1.0);
                           setFadeIn(0);
                           setFadeOut(0);
+                          setEqLow(0);
+                          setEqMid(0);
+                          setEqHigh(0);
+                          setCompressionThreshold(-20);
+                          setCompressionRatio(4);
+                          setCompressionAttack(10);
+                          setCompressionRelease(100);
                         }}
                         className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
                       >
@@ -637,11 +763,118 @@ export const AudioPage: React.FC = () => {
                           setVolume(1.0);
                           setFadeIn(0);
                           setFadeOut(0);
+                          setEqLow(0);
+                          setEqMid(0);
+                          setEqHigh(0);
+                          setCompressionThreshold(-20);
+                          setCompressionRatio(4);
+                          setCompressionAttack(10);
+                          setCompressionRelease(100);
                         }}
                         className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
                       >
                         <div className="font-medium text-gray-900">Slow & Deep</div>
                         <div className="text-xs text-gray-600">Slow + low pitch</div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setNormalize(true);
+                          setReverse(false);
+                          setSpeed(1.0);
+                          setPitch(1.0);
+                          setReverb(0);
+                          setEcho(0);
+                          setVolume(1.0);
+                          setFadeIn(0);
+                          setFadeOut(0);
+                          setEqLow(6);
+                          setEqMid(0);
+                          setEqHigh(0);
+                          setCompressionThreshold(-20);
+                          setCompressionRatio(4);
+                          setCompressionAttack(10);
+                          setCompressionRelease(100);
+                        }}
+                        className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
+                      >
+                        <div className="font-medium text-gray-900">Bass Boost</div>
+                        <div className="text-xs text-gray-600">+6dB low frequencies</div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setNormalize(true);
+                          setReverse(false);
+                          setSpeed(1.0);
+                          setPitch(1.0);
+                          setReverb(0);
+                          setEcho(0);
+                          setVolume(1.0);
+                          setFadeIn(0);
+                          setFadeOut(0);
+                          setEqLow(0);
+                          setEqMid(0);
+                          setEqHigh(6);
+                          setCompressionThreshold(-20);
+                          setCompressionRatio(4);
+                          setCompressionAttack(10);
+                          setCompressionRelease(100);
+                        }}
+                        className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
+                      >
+                        <div className="font-medium text-gray-900">Bright</div>
+                        <div className="text-xs text-gray-600">+6dB high frequencies</div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setNormalize(true);
+                          setReverse(false);
+                          setSpeed(1.0);
+                          setPitch(1.0);
+                          setReverb(0);
+                          setEcho(0);
+                          setVolume(1.0);
+                          setFadeIn(0);
+                          setFadeOut(0);
+                          setEqLow(0);
+                          setEqMid(0);
+                          setEqHigh(0);
+                          setCompressionThreshold(-12);
+                          setCompressionRatio(8);
+                          setCompressionAttack(5);
+                          setCompressionRelease(50);
+                        }}
+                        className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
+                      >
+                        <div className="font-medium text-gray-900">Heavy Compression</div>
+                        <div className="text-xs text-gray-600">8:1 ratio, -12dB threshold</div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setNormalize(true);
+                          setReverse(false);
+                          setSpeed(1.0);
+                          setPitch(1.0);
+                          setReverb(0);
+                          setEcho(0);
+                          setVolume(1.0);
+                          setFadeIn(0);
+                          setFadeOut(0);
+                          setEqLow(3);
+                          setEqMid(0);
+                          setEqHigh(3);
+                          setCompressionThreshold(-16);
+                          setCompressionRatio(6);
+                          setCompressionAttack(10);
+                          setCompressionRelease(100);
+                        }}
+                        className="text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors text-sm"
+                      >
+                        <div className="font-medium text-gray-900">Radio Ready</div>
+                        <div className="text-xs text-gray-600">EQ + compression</div>
                       </button>
                     </div>
                   </div>
@@ -649,7 +882,7 @@ export const AudioPage: React.FC = () => {
                   {/* Basic Effects */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Automatically adjust audio levels to make quiet parts louder and loud parts quieter">
                         <Volume2 size={16} />
                         Normalize Audio
                       </label>
@@ -665,7 +898,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Play the audio backwards, creating a reversed effect">
                         <RotateCcw size={16} />
                         Reverse Audio
                       </label>
@@ -684,7 +917,7 @@ export const AudioPage: React.FC = () => {
                   {/* Slider Effects */}
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Change playback speed without affecting pitch">
                         <Zap size={16} />
                         Speed: {speed.toFixed(1)}x
                       </label>
@@ -705,7 +938,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Change the pitch (frequency) of the audio - higher values make it sound higher">
                         <Music2 size={16} />
                         Pitch: {pitch.toFixed(1)}x
                       </label>
@@ -726,7 +959,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Adjust the overall volume level of the audio">
                         <Volume2 size={16} />
                         Volume: {volume.toFixed(1)}x
                       </label>
@@ -747,7 +980,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Add room-like echo effects to simulate different acoustic spaces">
                         <Zap size={16} />
                         Reverb: {reverb}%
                       </label>
@@ -768,7 +1001,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Add repeating echo effects with multiple delay taps">
                         <Clock size={16} />
                         Echo: {echo}%
                       </label>
@@ -789,7 +1022,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Gradually increase volume from silence at the beginning of the audio">
                         <Volume2 size={16} />
                         Fade In: {fadeIn}s
                       </label>
@@ -825,7 +1058,7 @@ export const AudioPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Gradually decrease volume to silence at the end of the audio">
                         <VolumeX size={16} />
                         Fade Out: {fadeOut}s
                       </label>
@@ -856,6 +1089,167 @@ export const AudioPage: React.FC = () => {
                           {[...Array(11)].map((_, i) => (
                             <div key={i} className="w-px h-2 bg-gray-300"></div>
                           ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* EQ Controls */}
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-semibold text-gray-900" title="Adjust different frequency bands to shape the tonal character of the audio">Equalizer (EQ)</h4>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Boost or cut low frequencies (below 250Hz) - affects bass and warmth">
+                          <Volume2 size={16} />
+                          Low (Bass): {eqLow}dB
+                        </label>
+                        <input
+                          type="range"
+                          min="-12"
+                          max="12"
+                          step="1"
+                          value={eqLow}
+                          onChange={(e) => setEqLow(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>-12dB</span>
+                          <span>0dB</span>
+                          <span>+12dB</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Boost or cut mid frequencies (250Hz-4kHz) - affects vocals and instruments">
+                          <Music2 size={16} />
+                          Mid: {eqMid}dB
+                        </label>
+                        <input
+                          type="range"
+                          min="-12"
+                          max="12"
+                          step="1"
+                          value={eqMid}
+                          onChange={(e) => setEqMid(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>-12dB</span>
+                          <span>0dB</span>
+                          <span>+12dB</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="Boost or cut high frequencies (above 4kHz) - affects brightness and clarity">
+                          <Zap size={16} />
+                          High (Treble): {eqHigh}dB
+                        </label>
+                        <input
+                          type="range"
+                          min="-12"
+                          max="12"
+                          step="1"
+                          value={eqHigh}
+                          onChange={(e) => setEqHigh(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>-12dB</span>
+                          <span>0dB</span>
+                          <span>+12dB</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compression Controls */}
+                  <div className="space-y-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-semibold text-gray-900" title="Reduce dynamic range by making loud parts quieter and quiet parts louder">Compression</h4>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="The level at which compression starts to take effect">
+                          <Volume2 size={16} />
+                          Threshold: {compressionThreshold}dB
+                        </label>
+                        <input
+                          type="range"
+                          min="-40"
+                          max="0"
+                          step="1"
+                          value={compressionThreshold}
+                          onChange={(e) => setCompressionThreshold(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>-40dB</span>
+                          <span>-20dB</span>
+                          <span>0dB</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="How much compression is applied - higher ratios mean more aggressive compression">
+                          <Zap size={16} />
+                          Ratio: {compressionRatio}:1
+                        </label>
+                        <input
+                          type="range"
+                          min="1"
+                          max="20"
+                          step="1"
+                          value={compressionRatio}
+                          onChange={(e) => setCompressionRatio(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>1:1</span>
+                          <span>4:1</span>
+                          <span>20:1</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="How quickly compression kicks in when audio exceeds the threshold">
+                          <Clock size={16} />
+                          Attack: {compressionAttack}ms
+                        </label>
+                        <input
+                          type="range"
+                          min="1"
+                          max="100"
+                          step="1"
+                          value={compressionAttack}
+                          onChange={(e) => setCompressionAttack(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>1ms</span>
+                          <span>10ms</span>
+                          <span>100ms</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700" title="How quickly compression releases when audio falls below the threshold">
+                          <RotateCcw size={16} />
+                          Release: {compressionRelease}ms
+                        </label>
+                        <input
+                          type="range"
+                          min="10"
+                          max="1000"
+                          step="10"
+                          value={compressionRelease}
+                          onChange={(e) => setCompressionRelease(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>10ms</span>
+                          <span>100ms</span>
+                          <span>1000ms</span>
                         </div>
                       </div>
                     </div>
@@ -933,47 +1327,36 @@ export const AudioPage: React.FC = () => {
               {activeTab === 'music' && (
                 <>
                   {musicUrl ? (
-                    <div className="space-y-2">
-                      <audio 
-                        src={musicUrl} 
-                        controls 
-                        className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-8 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full [&::-webkit-media-controls-timeline]:!bg-orange-200 [&::-webkit-media-controls-timeline]:!h-8 [&::-webkit-media-controls-timeline]:!border-2 [&::-webkit-media-controls-timeline]:!border-orange-500"
-                        style={{
-                          '--webkit-media-controls-panel-background-color': '#f3f4f6',
-                          '--webkit-media-controls-play-button-background-color': '#3b82f6',
-                          '--webkit-media-controls-timeline-background-color': '#fed7aa',
-                          '--webkit-media-controls-timeline-progress-color': '#ea580c',
-                          '--webkit-media-controls-timeline-border-radius': '9999px',
-                          '--webkit-media-controls-timeline-height': '32px',
-                          '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
-                          '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
-                          '--webkit-media-controls-volume-slider-border-radius': '9999px',
-                          '--webkit-media-controls-volume-slider-height': '8px'
-                        } as React.CSSProperties}
-                      />
-                      {/* Custom progress indicator */}
-                      <div className="absolute top-0 left-0 w-full h-8 pointer-events-none">
-                        <div className="relative w-full h-full">
-                          <div className="absolute top-1 left-0 w-full h-6 bg-transparent">
-                            <div 
-                              className="absolute top-0 left-0 h-full bg-red-500 rounded-l-full transition-all duration-300 ease-out"
-                              style={{ width: `${musicProgress}%` }}
-                            />
-                            <div 
-                              className="absolute top-0 h-full w-2 bg-red-600 border-2 border-white rounded-full shadow-lg transform -translate-y-1 transition-all duration-300 ease-out"
-                              style={{ left: `calc(${musicProgress}% - 4px)` }}
-                            >
-                              <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-red-600 absolute -top-2 left-1/2 transform -translate-x-1/2"></div>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">Generated Music</h3>
+                        <a href={musicUrl} download="music.wav" className="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm">
+                          <Download size={14} /> Download WAV
+                        </a>
                       </div>
-                      <a href={musicUrl} download="music.wav" className="text-indigo-600 hover:underline inline-flex items-center gap-1">
-                        <Download size={14} /> Download WAV
-                      </a>
+                      
+                      <div className="space-y-2 p-4 bg-gray-50 rounded-lg border">
+                        <audio 
+                          src={musicUrl} 
+                          controls 
+                          className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-8 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full [&::-webkit-media-controls-timeline]:!bg-orange-200 [&::-webkit-media-controls-timeline]:!h-8 [&::-webkit-media-controls-timeline]:!border-2 [&::-webkit-media-controls-timeline]:!border-orange-500"
+                          style={{
+                            '--webkit-media-controls-panel-background-color': '#f3f4f6',
+                            '--webkit-media-controls-play-button-background-color': '#3b82f6',
+                            '--webkit-media-controls-timeline-background-color': '#fed7aa',
+                            '--webkit-media-controls-timeline-progress-color': '#ea580c',
+                            '--webkit-media-controls-timeline-border-radius': '9999px',
+                            '--webkit-media-controls-timeline-height': '32px',
+                            '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
+                            '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
+                            '--webkit-media-controls-volume-slider-border-radius': '9999px',
+                            '--webkit-media-controls-volume-slider-height': '8px'
+                          } as React.CSSProperties}
+                        />
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-600">No audio yet. Enter a prompt and click Generate Music to hear the result.</div>
+                    <div className="text-sm text-gray-600">No audio yet. Enter a descriptive prompt and click Generate Music to create your composition.</div>
                   )}
                 </>
               )}
@@ -1126,6 +1509,48 @@ export const AudioPage: React.FC = () => {
                                 <span className="text-blue-600 font-medium">{fadeOut}s</span>
                               </div>
                             )}
+                            {eqLow !== 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">EQ Low</span>
+                                <span className="text-blue-600 font-medium">{eqLow}dB</span>
+                              </div>
+                            )}
+                            {eqMid !== 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">EQ Mid</span>
+                                <span className="text-blue-600 font-medium">{eqMid}dB</span>
+                              </div>
+                            )}
+                            {eqHigh !== 0 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">EQ High</span>
+                                <span className="text-blue-600 font-medium">{eqHigh}dB</span>
+                              </div>
+                            )}
+                            {compressionThreshold !== -20 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Compression Threshold</span>
+                                <span className="text-blue-600 font-medium">{compressionThreshold}dB</span>
+                              </div>
+                            )}
+                            {compressionRatio !== 4 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Compression Ratio</span>
+                                <span className="text-blue-600 font-medium">{compressionRatio}:1</span>
+                              </div>
+                            )}
+                            {compressionAttack !== 10 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Compression Attack</span>
+                                <span className="text-blue-600 font-medium">{compressionAttack}ms</span>
+                              </div>
+                            )}
+                            {compressionRelease !== 100 && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">Compression Release</span>
+                                <span className="text-blue-600 font-medium">{compressionRelease}ms</span>
+                              </div>
+                            )}
                             {outputFormat !== 'wav' && (
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-600">Output Format</span>
@@ -1138,7 +1563,7 @@ export const AudioPage: React.FC = () => {
                                 <span className="text-blue-600 font-medium">{sampleRate}Hz</span>
                               </div>
                             )}
-                            {!normalize && !reverse && speed === 1.0 && pitch === 1.0 && volume === 1.0 && reverb === 0 && echo === 0 && fadeIn === 0 && fadeOut === 0 && outputFormat === 'wav' && sampleRate === 44100 && (
+                            {!normalize && !reverse && speed === 1.0 && pitch === 1.0 && volume === 1.0 && reverb === 0 && echo === 0 && fadeIn === 0 && fadeOut === 0 && eqLow === 0 && eqMid === 0 && eqHigh === 0 && compressionThreshold === -20 && compressionRatio === 4 && compressionAttack === 10 && compressionRelease === 100 && outputFormat === 'wav' && sampleRate === 44100 && (
                               <div className="text-sm text-gray-500 italic">No effects applied</div>
                             )}
                           </div>
@@ -1152,24 +1577,6 @@ export const AudioPage: React.FC = () => {
                           <a href={processedUrl} download="processed.wav" className="text-indigo-600 hover:underline inline-flex items-center gap-1">
                             <Download size={14} /> Download Processed
                           </a>
-                          <button
-                            onClick={() => {
-                              console.log('Volume test: Set volume to 0.5 and apply effects to hear the difference');
-                              alert('Set volume to 0.5 and apply effects to test volume changes');
-                            }}
-                            className="text-green-600 hover:underline inline-flex items-center gap-1"
-                          >
-                            <Zap size={14} /> Test Volume
-                          </button>
-                          <button
-                            onClick={() => {
-                              console.log('Fade test: Set fade in to 1s and fade out to 1s to hear the difference');
-                              alert('Set fade in to 1s and fade out to 1s to test fade effects');
-                            }}
-                            className="text-green-600 hover:underline inline-flex items-center gap-1"
-                          >
-                            <Zap size={14} /> Test Fade
-                          </button>
                         </div>
                       </div>
                     </div>
