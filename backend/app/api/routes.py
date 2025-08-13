@@ -206,6 +206,11 @@ def _number_to_words(n: int) -> str:
 
 def process_ssml(text: str, style: str = "", emotion: str = "", speed: float = 1.0, pitch: float = 0, voice: str = "") -> str:
     """Process text with SSML markup for enhanced TTS."""
+    # Check if text already contains SSML markup
+    if text.strip().startswith('<speak'):
+        # If text already has SSML, return it as-is
+        return text
+    
     # Only generate SSML if we actually have speed/pitch modifications
     # Otherwise, return plain text to avoid SSML issues
     if speed == 1.0 and pitch == 0:
@@ -1992,10 +1997,14 @@ async def text_to_speech(
             text = normalize_text_for_tts(text)
             logger.info(f"Text normalized: {len(original_text)} -> {len(text)} chars")
         
-        # Apply SSML processing if enabled (but not for speaking styles - those are handled by voice selection)
+        # Apply SSML processing if enabled
         if use_ssml:
+            original_text = text
             text = process_ssml(text, "", "", speed, pitch, voice)
-            logger.info(f"SSML processing applied (use_ssml: {use_ssml})")
+            if text != original_text:
+                logger.info(f"SSML processing applied (use_ssml: {use_ssml})")
+            else:
+                logger.info(f"SSML already present in text, using as-is")
         
         # Note: Speaking styles and emotions are handled through voice selection, not SSML
         # This prevents SSML tags from being spoken literally
@@ -2066,8 +2075,8 @@ async def text_to_speech(
                 is_ssml = text.strip().startswith('<speak')
                 
                 if is_ssml:
-                    # For SSML, pass the text directly without voice parameter
-                    communicate = edge_tts.Communicate(text)
+                    # For SSML, pass the text with voice parameter but without rate/volume (SSML handles these)
+                    communicate = edge_tts.Communicate(text, voice)
                 else:
                     # For plain text, use voice parameter with rate and volume
                     rate_str = f"{int((speed-1.0)*100):+d}%" if speed != 1.0 else "+0%"
