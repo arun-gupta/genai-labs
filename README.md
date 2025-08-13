@@ -96,6 +96,7 @@ cd frontend && npm run dev     # Start frontend
 - **Anthropic**: Claude Sonnet 4, Claude Opus 4, Claude 3.5 Sonnet
 
 **Local Models (Free, Private)**
+- **Llama 3.2**: Meta's latest 3B model with improved performance and capabilities (default)
 - **GPT-OSS-20B**: OpenAI's open-weight model with advanced reasoning
 - **Mistral**: High-performance 7B model with excellent reasoning
 - **Llama 2**: Meta's foundational models (3B, 7B, 13B variants)
@@ -128,6 +129,12 @@ cd frontend && npm run dev     # Start frontend
 - **Smart Loading**: Progressive model loading for faster video generation
 - **⚠️ Note**: Currently optimizing memory usage for stable video generation
 
+### 🗣️ **Voice Features** (SSML Support: Work in Progress)
+- **Speech-to-Text**: Convert audio to text with multiple language support
+- **Text-to-Speech**: Generate natural-sounding speech from text
+- **SSML Support**: Advanced speech markup for enhanced voice control (currently WIP)
+- **Audio Processing**: Automatic format conversion and optimization
+
 ### 🎬 **Dynamic Storyboard Generation**
 - **Story Progression**: Each panel has unique prompts for natural story flow
 - **Smart Loading**: Images generate while models are still loading
@@ -142,15 +149,24 @@ cd frontend && npm run dev     # Start frontend
 - **14+ Artistic Styles**: Photorealistic, Oil Painting, Anime, Cyberpunk, and more
 
 ### 🤖 **Latest AI Models**
+- **Llama 3.2**: Meta's latest 3B model with improved performance (now default)
 - **GPT-5 Support**: Latest OpenAI model with advanced reasoning
 - **Claude Sonnet 4 & Opus 4**: Latest Anthropic models with 200K context
 - **GPT-OSS-20B**: OpenAI's open-weight model with agentic capabilities
+
+### 🔧 **Recent Improvements**
+- **Smart Model Detection**: Automatic detection and selection of available Ollama models
+- **Default Model Selection**: Llama 3.2 automatically selected when available
+- **Enhanced UI**: Reorganized voice features interface for better user experience
+- **Audio Processing**: Improved STT/TTS with automatic format conversion
+- **Documentation**: Comprehensive guides for all features and troubleshooting
 
 ### 📄 **Document Intelligence**
 - **Intelligent Question Suggestions**: AI-powered suggestions based on document content
 - **Document Tagging**: Organize documents with custom tags
 - **Multi-Collection Queries**: Target specific document collections
 - **Enhanced Analytics**: Comprehensive document analysis and insights
+- **Smart Model Detection**: Automatic detection and selection of available Ollama models
 
 ## 🛠️ Technical Details
 
@@ -178,6 +194,8 @@ All Python dependencies are automatically installed in virtual environments for 
 ## 🗺️ Roadmap
 
 🔄 **Video & Animation** - Local video generation and animated storyboards (Work in Progress - Memory optimization in progress)
+
+🗣️ **Voice Features** - Enhanced SSML support and voice processing improvements (Work in Progress)
 
 🤖 **AI Agents & Automation** - Multi-step reasoning agents and workflow automation
 
