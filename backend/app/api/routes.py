@@ -1481,7 +1481,10 @@ async def text_to_speech(
         if model == "edge":
             # Use Microsoft Edge TTS (high quality, free)
             try:
-                communicate = edge_tts.Communicate(text, voice, rate=f"{speed:+.1f}%", volume=f"{volume:+.1f}%")
+                # Format rate properly - Edge TTS expects percentage changes
+                rate_str = f"{int((speed-1.0)*100):+d}%" if speed != 1.0 else "+0%"
+                volume_str = f"{int(volume-100):+d}%" if volume != 100 else "+0%"
+                communicate = edge_tts.Communicate(text, voice, rate=rate_str, volume=volume_str)
                 
                 # Generate audio data
                 audio_data = b""
