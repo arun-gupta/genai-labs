@@ -30,11 +30,14 @@ cd genai-labs
 - **Multiple Variations**: Generate 1-5 different versions of your content
 - **Export Options**: Save as PDF, Word, Markdown, or other formats
 
-### 📄 **Document Intelligence**
+### 📄 **Document Intelligence (RAG)**
 - **Upload & Ask**: Drop PDFs, Word docs, or text files and ask questions
-- **Smart Search**: AI finds the most relevant information from your documents
+- **Smart Search**: AI finds the most relevant information from your documents using vector search
 - **Collection Management**: Organize documents with tags and collections
 - **Confidence Scores**: See how confident the AI is in its answers
+- **Document Analytics**: Get insights into your uploaded documents
+- **Question Suggestions**: AI-powered suggestions based on document content
+- **Multi-Collection Queries**: Target specific document collections
 
 ### 🗣️ **Audio & Voice**
 - **Speech-to-Text**: Convert audio files to text with multiple language support
@@ -168,7 +171,7 @@ cd frontend && npm run dev     # Start frontend
 - **Audio Processing**: Improved STT/TTS with automatic format conversion
 - **Documentation**: Comprehensive guides for all features and troubleshooting
 
-### 📄 **Document Intelligence**
+### 📄 **Document Intelligence (RAG)**
 - **Intelligent Question Suggestions**: AI-powered suggestions based on document content
 - **Document Tagging**: Organize documents with custom tags
 - **Multi-Collection Queries**: Target specific document collections
