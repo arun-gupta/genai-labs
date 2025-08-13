@@ -39,6 +39,13 @@ cd genai-labs
 - **Question Suggestions**: AI-powered suggestions based on document content
 - **Multi-Collection Queries**: Target specific document collections
 
+### 🎨 **Image Creation & Analysis**
+- **Generate Images**: Create stunning visuals from text descriptions
+- **Multiple Styles**: Choose from 14+ artistic styles (Photorealistic, Anime, Oil Painting, etc.)
+- **Storyboard Creation**: Build multi-panel visual stories with AI
+- **Image Analysis**: Upload images and get detailed descriptions and insights
+- **Local Generation**: Create images privately on your own machine
+
 ### 🗣️ **Audio & Voice**
 - **Speech-to-Text**: Convert audio files to text with multiple language support
 - **Text-to-Speech**: Generate natural-sounding speech from text with voice customization
@@ -46,13 +53,6 @@ cd genai-labs
 - **Voice Output**: Listen to AI responses being read aloud
 - **Audio Processing**: Automatic format conversion and optimization
 - **SSML Support**: Advanced speech markup for enhanced voice control (Work in Progress)
-
-### 🎨 **Image Creation & Analysis**
-- **Generate Images**: Create stunning visuals from text descriptions
-- **Multiple Styles**: Choose from 14+ artistic styles (Photorealistic, Anime, Oil Painting, etc.)
-- **Storyboard Creation**: Build multi-panel visual stories with AI
-- **Image Analysis**: Upload images and get detailed descriptions and insights
-- **Local Generation**: Create images privately on your own machine
 
 ### 🎬 **Video & Animation** (Work in Progress)
 - **Video Generation**: Create videos from text prompts using Stable Video Diffusion (Memory optimization in progress)
