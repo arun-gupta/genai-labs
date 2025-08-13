@@ -28,7 +28,6 @@ cd genai-labs
 - **Text Summarization**: Summarize text, URLs, and documents with 7+ summary types
 - **Real-time Streaming**: Watch your content being created live
 - **Multiple Variations**: Generate 1-5 different versions of your content
-- **Voice Features**: Speak your prompts and hear responses aloud (SSML support: WIP)
 - **Export Options**: Save as PDF, Word, Markdown, or other formats
 
 ### 📄 **Document Intelligence**
@@ -36,6 +35,14 @@ cd genai-labs
 - **Smart Search**: AI finds the most relevant information from your documents
 - **Collection Management**: Organize documents with tags and collections
 - **Confidence Scores**: See how confident the AI is in its answers
+
+### 🗣️ **Audio & Voice**
+- **Speech-to-Text**: Convert audio files to text with multiple language support
+- **Text-to-Speech**: Generate natural-sounding speech from text with voice customization
+- **Voice Input**: Speak your prompts directly into the application
+- **Voice Output**: Listen to AI responses being read aloud
+- **Audio Processing**: Automatic format conversion and optimization
+- **SSML Support**: Advanced speech markup for enhanced voice control (Work in Progress)
 
 ### 🎨 **Image Creation & Analysis**
 - **Generate Images**: Create stunning visuals from text descriptions
