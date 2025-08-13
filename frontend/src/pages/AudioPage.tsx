@@ -1435,14 +1435,18 @@ export const AudioPage: React.FC = () => {
             )}
           </div>
 
-          {/* Right Panel - Output */}
-          <div className={`space-y-6 ${
-            activeTab === 'music' || activeTab === 'effects' 
-              ? 'xl:col-span-2' 
-              : ''
-          }`}>
-            <div className="card space-y-2">
-              <h2 className="text-lg font-semibold">Output</h2>
+                      {/* Right Panel - Output */}
+            <div className={`space-y-6 ${
+              activeTab === 'music' || activeTab === 'effects' 
+                ? 'xl:col-span-2' 
+                : ''
+            }`}>
+              <div className={`card space-y-2 ${
+                activeTab === 'tts' || activeTab === 'stt' 
+                  ? 'hidden' 
+                  : ''
+              }`}>
+                <h2 className="text-lg font-semibold">Output</h2>
               {activeTab === 'music' && (
                 <>
                   {musicUrl ? (
@@ -1708,7 +1712,11 @@ export const AudioPage: React.FC = () => {
 
             </div>
 
-            <div className="card">
+            <div className={`card ${
+              activeTab === 'tts' || activeTab === 'stt' 
+                ? 'hidden' 
+                : ''
+            }`}>
               <h3 className="text-md font-semibold mb-2">Notes</h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Music generation is a lightweight demo (procedural synth). Swap with server models later.</li>
@@ -1886,6 +1894,18 @@ export const AudioPage: React.FC = () => {
                   <div className="text-sm text-gray-600">No speech generated yet. Enter text, choose settings, and click Generate Speech to create audio.</div>
                 )}
               </div>
+
+              {/* TTS Notes */}
+              <div className="card">
+                <h3 className="text-md font-semibold mb-2">Notes</h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Text-to-Speech uses Microsoft Edge TTS (high quality), Google TTS, and system voices.</li>
+                  <li>• Edge TTS provides the best quality with natural-sounding voices in multiple languages.</li>
+                  <li>• Google TTS offers good quality and supports many languages.</li>
+                  <li>• System TTS uses your device's built-in text-to-speech capabilities.</li>
+                  <li>• Adjust speed and volume to customize the generated speech output.</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
@@ -2009,6 +2029,18 @@ export const AudioPage: React.FC = () => {
                 ) : (
                   <div className="text-sm text-gray-600">No transcription yet. Upload an audio file to convert speech to text.</div>
                 )}
+              </div>
+
+              {/* STT Notes */}
+              <div className="card">
+                <h3 className="text-md font-semibold mb-2">Notes</h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Speech-to-Text supports Google Speech Recognition and OpenAI Whisper models.</li>
+                  <li>• Google Speech Recognition works best with clear audio and supports multiple languages.</li>
+                  <li>• OpenAI Whisper provides high accuracy and works well with various audio qualities.</li>
+                  <li>• Supported audio formats: WAV, MP3, M4A up to 10MB file size.</li>
+                  <li>• Choose the appropriate language for better transcription accuracy.</li>
+                </ul>
               </div>
             </div>
           </div>
