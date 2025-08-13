@@ -95,6 +95,17 @@ class ModelAvailabilityService:
                 "tags": ["general", "meta", "latest"]
             },
             {
+                "name": "llama3.2:3b",
+                "display_name": "Llama 3.2 (3B)",
+                "description": "Meta's latest 3B model with improved performance and capabilities",
+                "parameters": "3B",
+                "organization": "Meta",
+                "license": "Meta License",
+                "download_command": "ollama pull llama3.2:3b",
+                "category": "General Purpose",
+                "tags": ["general", "meta", "latest", "llama3.2"]
+            },
+            {
                 "name": "grok:3b",
                 "display_name": "Grok (3B)",
                 "description": "xAI's compact model with conversational abilities",

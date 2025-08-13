@@ -122,12 +122,12 @@ export const GeneratePage: React.FC = () => {
   useEffect(() => {
     if (availableModels?.providers) {
       const ollamaProvider = availableModels.providers.find((p: any) => p.id === 'ollama');
-      if (ollamaProvider && ollamaProvider.models.length > 0 && selectedProvider !== 'ollama') {
+      if (ollamaProvider && ollamaProvider.models.length > 0) {
         setSelectedProvider('ollama');
         setSelectedModel(ollamaProvider.models[0]);
       }
     }
-  }, [availableModels, selectedProvider]);
+  }, [availableModels]);
 
   // Get all available Ollama models for the "Compare All Local Models" preset
   const getAllLocalModels = useMemo(() => {
