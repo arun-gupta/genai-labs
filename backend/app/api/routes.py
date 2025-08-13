@@ -1844,12 +1844,43 @@ async def speech_to_text(
             # Use Google Speech Recognition
             recognizer = sr.Recognizer()
             
-            # Convert audio data to AudioData object
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+            # Determine file extension from uploaded file
+            file_extension = os.path.splitext(file.filename)[1].lower() if file.filename else '.wav'
+            
+            # Create temporary file with appropriate extension
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
                 temp_file.write(audio_data)
                 temp_file_path = temp_file.name
             
             try:
+                # Convert audio to WAV if it's not already WAV format
+                if file_extension not in ['.wav', '.wave']:
+                    try:
+                        from pydub import AudioSegment
+                        
+                        # Load the audio file
+                        if file_extension == '.mp3':
+                            audio_segment = AudioSegment.from_mp3(temp_file_path)
+                        elif file_extension == '.m4a':
+                            audio_segment = AudioSegment.from_file(temp_file_path, format='m4a')
+                        elif file_extension == '.ogg':
+                            audio_segment = AudioSegment.from_ogg(temp_file_path)
+                        else:
+                            # Try to load with pydub's automatic format detection
+                            audio_segment = AudioSegment.from_file(temp_file_path)
+                        
+                        # Export as WAV
+                        wav_path = temp_file_path + '.wav'
+                        audio_segment.export(wav_path, format='wav')
+                        
+                        # Use the converted WAV file
+                        temp_file_path = wav_path
+                        
+                    except ImportError:
+                        logger.warning("pydub not available, trying with original file format")
+                    except Exception as e:
+                        logger.warning(f"Audio conversion failed: {e}, trying with original file")
+                
                 with sr.AudioFile(temp_file_path) as source:
                     audio = recognizer.record(source)
                 
@@ -1865,8 +1896,14 @@ async def speech_to_text(
                 }
                 
             finally:
-                # Clean up temporary file
-                os.unlink(temp_file_path)
+                # Clean up temporary files
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+                # Also clean up converted WAV file if it was created
+                if temp_file_path.endswith('.wav') and temp_file_path != os.path.splitext(temp_file_path)[0]:
+                    converted_wav = temp_file_path
+                    if os.path.exists(converted_wav):
+                        os.unlink(converted_wav)
                 
         elif model == "whisper":
             # Use OpenAI Whisper (requires OpenAI API key)
@@ -1926,6 +1963,7 @@ async def text_to_speech(
     style: str = Form(""),  # formal, casual, cheerful, sad, angry, etc.
     use_ssml: bool = Form(False),  # Enable SSML processing
     normalize_text: bool = Form(True),  # Enable text normalization
+    output_format: str = Form("mp3"),  # mp3, wav, ogg, m4a
     language: str = Form(""),  # Target language for TTS
     translate_text: bool = Form(True)  # Enable text translation
 ):
@@ -2042,15 +2080,50 @@ async def text_to_speech(
                     if chunk["type"] == "audio":
                         audio_data += chunk["data"]
                 
+                # Convert audio format if needed
+                if output_format != "mp3":
+                    try:
+                        from pydub import AudioSegment
+                        import io
+                        
+                        # Load the audio data (Edge TTS returns MP3)
+                        audio_segment = AudioSegment.from_mp3(io.BytesIO(audio_data))
+                        
+                        # Export in the requested format
+                        output_buffer = io.BytesIO()
+                        if output_format == "wav":
+                            audio_segment.export(output_buffer, format="wav")
+                            mime_type = "audio/wav"
+                        elif output_format == "ogg":
+                            audio_segment.export(output_buffer, format="ogg")
+                            mime_type = "audio/ogg"
+                        elif output_format == "m4a":
+                            audio_segment.export(output_buffer, format="mp4")
+                            mime_type = "audio/mp4"
+                        else:
+                            # Fallback to MP3
+                            output_buffer = io.BytesIO(audio_data)
+                            mime_type = "audio/mp3"
+                            output_format = "mp3"
+                        
+                        audio_data = output_buffer.getvalue()
+                        
+                    except Exception as e:
+                        logger.warning(f"Format conversion failed: {e}, using MP3")
+                        mime_type = "audio/mp3"
+                        output_format = "mp3"
+                else:
+                    mime_type = "audio/mp3"
+                
                 # Convert to base64
                 b64 = base64.b64encode(audio_data).decode('utf-8')
-                data_url = f"data:audio/mp3;base64,{b64}"
+                data_url = f"data:{mime_type};base64,{b64}"
                 
-                logger.info(f"Edge TTS successful: {len(audio_data)} bytes")
+                logger.info(f"Edge TTS successful: {len(audio_data)} bytes, format: {output_format}")
                 
                 return {
                     "audio_base64": data_url,
-                    "format": "mp3",
+                    "format": output_format,
                     "voice": voice,
                     "model": model,
                     "text_length": len(text),
@@ -2064,7 +2137,8 @@ async def text_to_speech(
                         "language": language,
                         "translation_applied": translate_text and language and detected_lang != language,
                         "ssml_used": use_ssml,
-                        "text_normalized": normalize_text
+                        "text_normalized": normalize_text,
+                        "output_format": output_format
                     }
                 }
                 

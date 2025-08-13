@@ -37,6 +37,7 @@ SpeechRecognition>=3.10.0
 pyttsx3>=2.90
 gTTS>=2.3.2
 edge-tts>=6.1.9
+pydub>=0.25.1
 
 # RAG Dependencies
 chromadb>=0.4.0
