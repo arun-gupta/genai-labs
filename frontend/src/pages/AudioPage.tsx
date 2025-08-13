@@ -1722,84 +1722,92 @@ export const AudioPage: React.FC = () => {
 
         {/* Speech Content - Full Width */}
         {activeTab === 'tts' && (
-          <div className="space-y-6">
-            <div className="card">
-              <div className="flex items-center gap-2 mb-3">
-                <Volume1 className="text-indigo-600" size={18} />
-                <h2 className="text-lg font-semibold">Text-to-Speech</h2>
-              </div>
-
-              {/* TTS Text Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Text to Convert</label>
-                <textarea
-                  value={ttsText}
-                  onChange={(e) => setTtsText(e.target.value)}
-                  placeholder="Enter text to convert to speech..."
-                  className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              {/* TTS Controls */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Voice</label>
-                  <select
-                    value={ttsVoice}
-                    onChange={(e) => setTtsVoice(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {availableVoices
-                      .filter(voice => voice.model === ttsModel)
-                      .map(voice => (
-                        <option key={voice.name} value={voice.name}>
-                          {voice.name} ({voice.language})
-                        </option>
-                      ))}
-                  </select>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Left Panel - Inputs */}
+            <div className="xl:col-span-1 space-y-6">
+              <div className="card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Volume1 className="text-indigo-600" size={18} />
+                  <h2 className="text-lg font-semibold">Text-to-Speech</h2>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                  <select
-                    value={ttsModel}
-                    onChange={(e) => setTtsModel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="edge">Microsoft Edge TTS</option>
-                    <option value="gtts">Google TTS</option>
-                    <option value="pyttsx3">System TTS</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* TTS Settings */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="2.0"
-                    step="0.1"
-                    value={ttsSpeed}
-                    onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
-                    className="w-full"
+                {/* TTS Text Input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Text to Convert</label>
+                  <textarea
+                    value={ttsText}
+                    onChange={(e) => setTtsText(e.target.value)}
+                    placeholder="Enter text to convert to speech..."
+                    className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                   />
-                  <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={ttsVolume}
-                    onChange={(e) => setTtsVolume(parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
-                </div>
-                <div className="flex items-end">
+
+                {/* Quick Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700">Quick Settings</h3>
+                  
+                  {/* TTS Controls */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Voice</label>
+                      <select
+                        value={ttsVoice}
+                        onChange={(e) => setTtsVoice(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        {availableVoices
+                          .filter(voice => voice.model === ttsModel)
+                          .map(voice => (
+                            <option key={voice.name} value={voice.name}>
+                              {voice.name} ({voice.language})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                      <select
+                        value={ttsModel}
+                        onChange={(e) => setTtsModel(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="edge">Microsoft Edge TTS</option>
+                        <option value="gtts">Google TTS</option>
+                        <option value="pyttsx3">System TTS</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* TTS Settings */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="2.0"
+                        step="0.1"
+                        value={ttsSpeed}
+                        onChange={(e) => setTtsSpeed(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">{ttsSpeed}x</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Volume</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={ttsVolume}
+                        onChange={(e) => setTtsVolume(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">{ttsVolume}%</div>
+                    </div>
+                  </div>
+
+                  {/* Generate Button */}
                   <button
                     onClick={handleTextToSpeech}
                     disabled={isTtsGenerating || !ttsText.trim()}
@@ -1817,161 +1825,191 @@ export const AudioPage: React.FC = () => {
                       </>
                     )}
                   </button>
+
+                  {/* TTS Progress */}
+                  {isTtsGenerating && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Generating speech...</span>
+                        <span>{ttsProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${ttsProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {/* TTS Progress */}
-              {isTtsGenerating && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>Generating speech...</span>
-                    <span>{ttsProgress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${ttsProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* TTS Audio Output */}
-              {ttsAudioUrl && (
-                <div className="space-y-3">
-                  <h3 className="text-md font-semibold text-gray-900">Generated Speech</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg border">
-                    <audio
-                      src={ttsAudioUrl}
-                      controls
-                      className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-6 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full"
-                      style={{
-                        '--webkit-media-controls-panel-background-color': '#f3f4f6',
-                        '--webkit-media-controls-play-button-background-color': '#3b82f6',
-                        '--webkit-media-controls-timeline-background-color': '#e5e7eb',
-                        '--webkit-media-controls-timeline-progress-color': '#3b82f6',
-                        '--webkit-media-controls-timeline-border-radius': '9999px',
-                        '--webkit-media-controls-timeline-height': '24px',
-                        '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
-                        '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
-                        '--webkit-media-controls-volume-slider-border-radius': '9999px',
-                        '--webkit-media-controls-volume-slider-height': '8px'
-                      } as React.CSSProperties}
-                    />
-                    <div className="flex justify-between items-center mt-2">
+            {/* Right Panel - Output */}
+            <div className="xl:col-span-2 space-y-6">
+              <div className="card space-y-2">
+                <h2 className="text-lg font-semibold">Output</h2>
+                {ttsAudioUrl ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Generated Speech</h3>
                       <a href={ttsAudioUrl} download="speech.mp3" className="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm">
                         <Download size={14} /> Download MP3
                       </a>
-                      <span className="text-xs text-gray-500">
-                        {ttsText.length} characters
-                      </span>
+                    </div>
+                    
+                    <div className="space-y-2 p-4 bg-gray-50 rounded-lg border">
+                      <audio
+                        src={ttsAudioUrl}
+                        controls
+                        className="w-full [&::-webkit-media-controls-panel]:bg-gray-100 [&::-webkit-media-controls-play-button]:bg-blue-500 [&::-webkit-media-controls-play-button]:rounded-full [&::-webkit-media-controls-timeline]:bg-gray-300 [&::-webkit-media-controls-timeline]:rounded-full [&::-webkit-media-controls-timeline]:h-8 [&::-webkit-media-controls-current-time-display]:text-gray-700 [&::-webkit-media-controls-time-remaining-display]:text-gray-700 [&::-webkit-media-controls-volume-slider]:bg-gray-300 [&::-webkit-media-controls-volume-slider]:rounded-full [&::-webkit-media-controls-volume-slider]:h-2 [&::-webkit-media-controls-mute-button]:bg-gray-400 [&::-webkit-media-controls-mute-button]:rounded-full [&::-webkit-media-controls-timeline]:!bg-orange-200 [&::-webkit-media-controls-timeline]:!h-8 [&::-webkit-media-controls-timeline]:!border-2 [&::-webkit-media-controls-timeline]:!border-orange-500"
+                        style={{
+                          '--webkit-media-controls-panel-background-color': '#f3f4f6',
+                          '--webkit-media-controls-play-button-background-color': '#3b82f6',
+                          '--webkit-media-controls-timeline-background-color': '#fed7aa',
+                          '--webkit-media-controls-timeline-progress-color': '#ea580c',
+                          '--webkit-media-controls-timeline-border-radius': '9999px',
+                          '--webkit-media-controls-timeline-height': '32px',
+                          '--webkit-media-controls-volume-slider-background-color': '#d1d5db',
+                          '--webkit-media-controls-volume-slider-progress-color': '#3b82f6',
+                          '--webkit-media-controls-volume-slider-border-radius': '9999px',
+                          '--webkit-media-controls-volume-slider-height': '8px'
+                        } as React.CSSProperties}
+                      />
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Text Length:</span> {ttsText.length} characters
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-sm text-gray-600">No speech generated yet. Enter text, choose settings, and click Generate Speech to create audio.</div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'stt' && (
-          <div className="space-y-6">
-            <div className="card">
-              <div className="flex items-center gap-2 mb-3">
-                <Mic className="text-indigo-600" size={18} />
-                <h2 className="text-lg font-semibold">Speech-to-Text</h2>
-              </div>
-              
-              {/* STT Controls */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
-                  <select
-                    value={sttLanguage}
-                    onChange={(e) => setSttLanguage(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="en-US">English (US)</option>
-                    <option value="en-GB">English (UK)</option>
-                    <option value="es-ES">Spanish</option>
-                    <option value="fr-FR">French</option>
-                    <option value="de-DE">German</option>
-                    <option value="it-IT">Italian</option>
-                    <option value="pt-BR">Portuguese (Brazil)</option>
-                    <option value="ja-JP">Japanese</option>
-                    <option value="ko-KR">Korean</option>
-                    <option value="zh-CN">Chinese (Simplified)</option>
-                  </select>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Left Panel - Inputs */}
+            <div className="xl:col-span-1 space-y-6">
+              <div className="card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mic className="text-indigo-600" size={18} />
+                  <h2 className="text-lg font-semibold">Speech-to-Text</h2>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                  <select
-                    value={sttModel}
-                    onChange={(e) => setSttModel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="google">Google Speech Recognition</option>
-                    <option value="whisper">OpenAI Whisper</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* File Upload */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload Audio File</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleSpeechToText(file);
-                      }
-                    }}
-                    className="hidden"
-                    id="stt-file-input"
-                  />
-                  <label htmlFor="stt-file-input" className="cursor-pointer">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      WAV, MP3, M4A up to 10MB
-                    </p>
-                  </label>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              {isSttProcessing && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>Processing speech...</span>
-                    <span>{sttProgress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${sttProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* STT Results */}
-              {sttResult && (
-                <div className="space-y-3">
-                  <h3 className="text-md font-semibold text-gray-900">Transcription Result</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg border">
-                    <p className="text-gray-800 mb-2">{sttResult.text}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>Confidence: {Math.round(sttResult.confidence * 100)}%</span>
-                      <span>Model: {sttResult.model}</span>
+                
+                {/* Quick Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700">Quick Settings</h3>
+                  
+                  {/* STT Controls */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                      <select
+                        value={sttLanguage}
+                        onChange={(e) => setSttLanguage(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="es-ES">Spanish</option>
+                        <option value="fr-FR">French</option>
+                        <option value="de-DE">German</option>
+                        <option value="it-IT">Italian</option>
+                        <option value="pt-BR">Portuguese (Brazil)</option>
+                        <option value="ja-JP">Japanese</option>
+                        <option value="ko-KR">Korean</option>
+                        <option value="zh-CN">Chinese (Simplified)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                      <select
+                        value={sttModel}
+                        onChange={(e) => setSttModel(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="google">Google Speech Recognition</option>
+                        <option value="whisper">OpenAI Whisper</option>
+                      </select>
                     </div>
                   </div>
+
+                  {/* File Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload Audio File</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition-colors">
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleSpeechToText(file);
+                          }
+                        }}
+                        className="hidden"
+                        id="stt-file-input"
+                      />
+                      <label htmlFor="stt-file-input" className="cursor-pointer">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          WAV, MP3, M4A up to 10MB
+                        </p>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  {isSttProcessing && (
+                    <div>
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Processing speech...</span>
+                        <span>{sttProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${sttProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Right Panel - Output */}
+            <div className="xl:col-span-2 space-y-6">
+              <div className="card space-y-2">
+                <h2 className="text-lg font-semibold">Output</h2>
+                {sttResult ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Transcription Result</h3>
+                      <div className="text-sm text-gray-600">
+                        Confidence: {Math.round(sttResult.confidence * 100)}%
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 p-4 bg-gray-50 rounded-lg border">
+                      <p className="text-gray-800 text-lg leading-relaxed">{sttResult.text}</p>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Model:</span> {sttResult.model} | <span className="font-medium">Language:</span> {sttResult.language}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-600">No transcription yet. Upload an audio file to convert speech to text.</div>
+                )}
+              </div>
             </div>
           </div>
         )}
