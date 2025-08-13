@@ -29,9 +29,17 @@ export const HomePage: React.FC = () => {
       highlights: ['Image Analysis', 'Text-to-Image', 'Image Gallery']
     },
     {
+      title: 'Audio & Voice',
+      description: 'Convert speech to text and text to speech with voice customization and SSML support.',
+      icon: Mic,
+      path: '/audio',
+      color: 'bg-green-500',
+      highlights: ['Speech-to-Text', 'Text-to-Speech', 'Voice Customization']
+    },
+    {
       title: 'Video & Animation',
       description: 'Create videos and animations from text prompts using AI video generation models.',
-      icon: Zap,
+      icon: VideoIcon,
       path: '/video',
       color: 'bg-indigo-500',
       highlights: ['Video Generation', 'Animation Creation', 'WIP - Memory Optimization']
@@ -39,12 +47,6 @@ export const HomePage: React.FC = () => {
   ];
 
   const capabilities = [
-    {
-      title: 'Voice Features',
-      description: 'Speech-to-text and text-to-speech capabilities',
-      icon: Mic,
-      color: 'text-blue-600'
-    },
     {
       title: 'Model Comparison',
       description: 'Side-by-side performance analysis and metrics',
@@ -165,11 +167,11 @@ export const HomePage: React.FC = () => {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Core Features</h2>
           <p className="text-gray-600">
-            Four powerful AI capabilities to enhance your workflow
+            Five powerful AI capabilities to enhance your workflow
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
@@ -420,6 +422,13 @@ export const HomePage: React.FC = () => {
             >
               <Eye size={16} />
               <span>Vision AI</span>
+            </Link>
+            <Link
+              to="/audio"
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <Mic size={16} />
+              <span>Audio & Voice</span>
             </Link>
             <Link
               to="/video"
