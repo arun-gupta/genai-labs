@@ -95,7 +95,7 @@ export const HomePage: React.FC = () => {
       description: '20+ open-source models for privacy and speed',
       icon: Server,
       requiresKey: false,
-      models: ['GPT-OSS-20B', 'Mistral-7B', 'Qwen3-8B', 'Llama-3.1'],
+      models: ['GPT-OSS-20B', 'Mistral-7B', 'Meta Llama 3.2 3B', 'Llama-3.1'],
       features: ['Offline processing', 'Privacy-first', 'Latest OSS models']
     },
   ];
@@ -103,7 +103,7 @@ export const HomePage: React.FC = () => {
   const modelCategories = [
     {
       title: 'High Performance',
-      models: ['GPT-OSS-20B', 'Qwen3-8B', 'Mistral-7B', 'GPT-5'],
+      models: ['GPT-OSS-20B', 'Meta Llama 3.2 3B', 'Mistral-7B', 'GPT-5'],
       icon: Zap,
       color: 'text-blue-600'
     },
@@ -115,13 +115,13 @@ export const HomePage: React.FC = () => {
     },
     {
       title: 'Reasoning & Analysis',
-      models: ['Claude Opus 4', 'GPT-OSS-20B', 'Qwen3-8B', 'Claude Sonnet 4'],
+      models: ['Claude Opus 4', 'GPT-OSS-20B', 'Meta Llama 3.2 3B', 'Claude Sonnet 4'],
       icon: Brain,
       color: 'text-purple-600'
     },
     {
       title: 'Multilingual',
-      models: ['Qwen3-8B', 'BLOOM', 'Mistral-7B', 'GPT-5'],
+      models: ['Meta Llama 3.2 3B', 'BLOOM', 'Mistral-7B', 'GPT-5'],
       icon: Globe,
       color: 'text-orange-600'
     }
@@ -141,7 +141,7 @@ export const HomePage: React.FC = () => {
         </div>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Experiment with different GenAI use cases using large language models. 
-          Support for 20+ open-source models including GPT-OSS-20B, Mistral-7B, and Qwen3-8B, plus cloud models with real-time streaming responses.
+          Support for 20+ open-source models including GPT-OSS-20B, Mistral-7B, and Meta Llama 3.2 3B, plus cloud models with real-time streaming responses.
         </p>
         <div className="flex items-center justify-center space-x-4">
           <Link
@@ -250,7 +250,7 @@ export const HomePage: React.FC = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Supported Models</h2>
           <p className="text-gray-600">
-            Choose from 20+ open-source models including the latest GPT-OSS-20B, Mistral-7B, and Qwen3-8B, plus cloud models
+            Choose from 20+ open-source models including the latest GPT-OSS-20B, Mistral-7B, and Meta Llama 3.2 3B, plus cloud models
           </p>
         </div>
         
@@ -345,9 +345,9 @@ export const HomePage: React.FC = () => {
                   <Globe className="text-orange-600" size={24} />
                 </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Qwen3-8B</h4>
-              <p className="text-sm text-gray-600 mb-2">Alibaba's multilingual model</p>
-              <div className="text-xs text-orange-600 font-medium">8B Parameters • Multilingual</div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Meta Llama 3.2 3B</h4>
+              <p className="text-sm text-gray-600 mb-2">Meta's latest efficient language model</p>
+              <div className="text-xs text-orange-600 font-medium">3.2B Parameters • Multilingual</div>
             </div>
           </div>
         </div>
@@ -399,7 +399,7 @@ export const HomePage: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">Ready to Get Started?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Configure your API keys in the backend environment file to use cloud models, 
-            or set up Ollama locally for private, offline AI processing with 20+ open-source models including GPT-OSS-20B, Mistral, and Qwen3.
+            or set up Ollama locally for private, offline AI processing with 20+ open-source models including GPT-OSS-20B, Mistral, and Meta Llama 3.2 3B.
           </p>
           <div className="flex items-center justify-center space-x-4 flex-wrap">
             <Link
