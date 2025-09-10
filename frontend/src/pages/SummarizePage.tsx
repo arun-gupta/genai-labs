@@ -315,6 +315,16 @@ export const SummarizePage: React.FC = () => {
       setOriginalText(`URL: ${url}`);
     } else if (inputType === 'file' && selectedFile) {
       setOriginalText(`File: ${selectedFile.name}`);
+      
+      // Read file content for analytics
+      try {
+        const fileContent = await selectedFile.text();
+        setScrapedContent(fileContent);
+        console.log('File content read for analytics, length:', fileContent.length);
+      } catch (err) {
+        console.error('Error reading file content:', err);
+        setScrapedContent('');
+      }
     }
 
     try {
