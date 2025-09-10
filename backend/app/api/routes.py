@@ -753,6 +753,30 @@ async def summarize_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/extract-url-content")
+async def extract_url_content(request: dict):
+    """Extract text content from a URL without summarization."""
+    try:
+        url = request.get('url')
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        # Extract text from URL
+        try:
+            text_content, title = input_processor.extract_text_from_url(url)
+            return {
+                "content": text_content,
+                "title": title,
+                "url": url,
+                "timestamp": datetime.datetime.utcnow().isoformat()
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to extract content from URL: {str(e)}")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/analytics")
 async def analyze_summary(request: dict):
     """Analyze summary and provide comprehensive analytics."""

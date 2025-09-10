@@ -10,7 +10,10 @@ import {
   SupportedLanguages,
   PromptTemplatesResponse,
   TemplateFillRequest,
-  TemplateFillResponse
+  TemplateFillResponse,
+  AnalyticsRequest,
+  AnalyticsResponse,
+  PromptTemplate
 } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -90,6 +93,13 @@ class ApiService {
 
   async getImageGenerationProviders(): Promise<AvailableModels> {
     return this.request<AvailableModels>('/models/image-generation');
+  }
+
+  async extractUrlContent(url: string): Promise<{ content: string; title: string; url: string; timestamp: string }> {
+    return this.request<{ content: string; title: string; url: string; timestamp: string }>('/extract-url-content', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
   }
 
   async analyzeSummary(request: AnalyticsRequest): Promise<AnalyticsResponse> {

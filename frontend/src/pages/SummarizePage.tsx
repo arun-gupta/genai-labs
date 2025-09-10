@@ -34,6 +34,7 @@ export const SummarizePage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
   const [originalText, setOriginalText] = useState<string>('');
+  const [scrapedContent, setScrapedContent] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateOutput, setTranslateOutput] = useState(false);
   const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
@@ -375,6 +376,17 @@ export const SummarizePage: React.FC = () => {
     }
   };
 
+  const extractUrlContent = async (urlToExtract: string) => {
+    try {
+      const response = await apiService.extractUrlContent(urlToExtract);
+      setScrapedContent(response.content);
+      return response.content;
+    } catch (error) {
+      console.error('Error extracting URL content:', error);
+      return null;
+    }
+  };
+
   const generateAnalytics = async () => {
     if (!summary) return;
     
@@ -385,11 +397,16 @@ export const SummarizePage: React.FC = () => {
       if (inputType === 'text') {
         originalTextForAnalytics = text;
       } else if (inputType === 'url') {
-        // For URL, we'll use a placeholder since we don't have the scraped content
-        originalTextForAnalytics = `Content from URL: ${url}`;
+        // Extract URL content if not already available
+        if (!scrapedContent) {
+          const extractedContent = await extractUrlContent(url);
+          originalTextForAnalytics = extractedContent || `Content from URL: ${url}`;
+        } else {
+          originalTextForAnalytics = scrapedContent;
+        }
       } else if (inputType === 'file' && selectedFile) {
-        // For file, we'll use a placeholder since we don't have the extracted content
-        originalTextForAnalytics = `Content from file: ${selectedFile.name}`;
+        // Use scraped content if available, otherwise use placeholder
+        originalTextForAnalytics = scrapedContent || `Content from file: ${selectedFile.name}`;
       }
       
       if (originalTextForAnalytics && originalTextForAnalytics.length > 10) {
@@ -825,6 +842,7 @@ export const SummarizePage: React.FC = () => {
                 setLatencyMs(undefined);
                 setError(null);
                 setOriginalText('');
+                setScrapedContent('');
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'text'
@@ -847,6 +865,7 @@ export const SummarizePage: React.FC = () => {
                 setLatencyMs(undefined);
                 setError(null);
                 setOriginalText('');
+                setScrapedContent('');
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'url'
@@ -869,6 +888,7 @@ export const SummarizePage: React.FC = () => {
                 setLatencyMs(undefined);
                 setError(null);
                 setOriginalText('');
+                setScrapedContent('');
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'file'
