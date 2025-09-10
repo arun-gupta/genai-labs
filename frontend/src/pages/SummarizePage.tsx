@@ -849,9 +849,6 @@ export const SummarizePage: React.FC = () => {
             <button
               onClick={() => {
                 setInputType('text');
-                setText('');
-                setUrl('');
-                setSelectedFile(null);
                 setAnalytics(null);
                 setSummary('');
                 setTokenUsage(null);
@@ -872,9 +869,6 @@ export const SummarizePage: React.FC = () => {
             <button
               onClick={() => {
                 setInputType('url');
-                setText('');
-                setUrl('');
-                setSelectedFile(null);
                 setAnalytics(null);
                 setSummary('');
                 setTokenUsage(null);
@@ -895,9 +889,6 @@ export const SummarizePage: React.FC = () => {
             <button
               onClick={() => {
                 setInputType('file');
-                setText('');
-                setUrl('');
-                setSelectedFile(null);
                 setAnalytics(null);
                 setSummary('');
                 setTokenUsage(null);
