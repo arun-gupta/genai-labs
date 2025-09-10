@@ -35,6 +35,7 @@ export const SummarizePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'response' | 'analytics' | 'comparison'>('response');
   const [originalText, setOriginalText] = useState<string>('');
   const [scrapedContent, setScrapedContent] = useState<string>('');
+  const [shouldGenerateAnalytics, setShouldGenerateAnalytics] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateOutput, setTranslateOutput] = useState(false);
   const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
@@ -46,6 +47,15 @@ export const SummarizePage: React.FC = () => {
   const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
   const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Generate analytics when summary changes and we're not currently summarizing
+  useEffect(() => {
+    if (summary && !isSummarizing && shouldGenerateAnalytics) {
+      console.log('Summary changed, generating analytics...');
+      generateAnalytics();
+      setShouldGenerateAnalytics(false);
+    }
+  }, [summary, isSummarizing, shouldGenerateAnalytics]);
 
   // Type for model combinations
   interface ModelCombination {
@@ -294,6 +304,7 @@ export const SummarizePage: React.FC = () => {
     setTokenUsage(null);
     setLatencyMs(undefined);
     setAnalytics(null);
+    setShouldGenerateAnalytics(false);
     
     // Store original text for analytics
     if (inputType === 'text') {
@@ -338,6 +349,11 @@ export const SummarizePage: React.FC = () => {
         await apiService.summarizeTextStream(
           request,
           (chunk: StreamChunk) => {
+            console.log('Streaming chunk received:', { 
+              content: chunk.content.substring(0, 50) + '...', 
+              is_complete: chunk.is_complete,
+              content_length: chunk.content.length 
+            });
             setSummary(prev => prev + chunk.content);
             if (chunk.token_usage) {
               setTokenUsage(chunk.token_usage);
@@ -347,7 +363,8 @@ export const SummarizePage: React.FC = () => {
             }
             // Generate analytics when streaming is complete
             if (chunk.is_complete) {
-              setTimeout(() => generateAnalytics(), 100); // Small delay to ensure state is updated
+              console.log('Streaming complete, setting flag to generate analytics...');
+              setShouldGenerateAnalytics(true);
             }
           },
           (error: string) => {
@@ -868,6 +885,7 @@ export const SummarizePage: React.FC = () => {
                 setError(null);
                 setOriginalText('');
                 setScrapedContent('');
+                setShouldGenerateAnalytics(false);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'text'
@@ -888,6 +906,7 @@ export const SummarizePage: React.FC = () => {
                 setError(null);
                 setOriginalText('');
                 setScrapedContent('');
+                setShouldGenerateAnalytics(false);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'url'
@@ -908,6 +927,7 @@ export const SummarizePage: React.FC = () => {
                 setError(null);
                 setOriginalText('');
                 setScrapedContent('');
+                setShouldGenerateAnalytics(false);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'file'
