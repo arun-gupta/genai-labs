@@ -814,7 +814,18 @@ export const SummarizePage: React.FC = () => {
           {/* Input Type Selector */}
           <div className="flex space-x-2 mb-4">
             <button
-              onClick={() => setInputType('text')}
+              onClick={() => {
+                setInputType('text');
+                setText('');
+                setUrl('');
+                setSelectedFile(null);
+                setAnalytics(null);
+                setSummary('');
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
+                setOriginalText('');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'text'
                   ? 'bg-primary-100 text-primary-700'
@@ -825,7 +836,18 @@ export const SummarizePage: React.FC = () => {
               <span>Text</span>
             </button>
             <button
-              onClick={() => setInputType('url')}
+              onClick={() => {
+                setInputType('url');
+                setText('');
+                setUrl('');
+                setSelectedFile(null);
+                setAnalytics(null);
+                setSummary('');
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
+                setOriginalText('');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'url'
                   ? 'bg-primary-100 text-primary-700'
@@ -836,7 +858,18 @@ export const SummarizePage: React.FC = () => {
               <span>URL</span>
             </button>
             <button
-              onClick={() => setInputType('file')}
+              onClick={() => {
+                setInputType('file');
+                setText('');
+                setUrl('');
+                setSelectedFile(null);
+                setAnalytics(null);
+                setSummary('');
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
+                setOriginalText('');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'file'
                   ? 'bg-primary-100 text-primary-700'
