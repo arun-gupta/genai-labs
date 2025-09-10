@@ -378,7 +378,9 @@ export const SummarizePage: React.FC = () => {
 
   const extractUrlContent = async (urlToExtract: string) => {
     try {
+      console.log('Extracting content from URL:', urlToExtract);
       const response = await apiService.extractUrlContent(urlToExtract);
+      console.log('URL content extraction successful, content length:', response.content.length);
       setScrapedContent(response.content);
       return response.content;
     } catch (error) {
@@ -388,36 +390,50 @@ export const SummarizePage: React.FC = () => {
   };
 
   const generateAnalytics = async () => {
-    if (!summary) return;
+    if (!summary) {
+      console.log('No summary available for analytics');
+      return;
+    }
     
+    console.log('Starting analytics generation for input type:', inputType);
     setIsAnalyzing(true);
     try {
       // Get the actual original text for analytics
       let originalTextForAnalytics = '';
       if (inputType === 'text') {
         originalTextForAnalytics = text;
+        console.log('Using text content for analytics, length:', text.length);
       } else if (inputType === 'url') {
         // Extract URL content if not already available
         if (!scrapedContent) {
+          console.log('Extracting URL content for analytics...');
           const extractedContent = await extractUrlContent(url);
           originalTextForAnalytics = extractedContent || `Content from URL: ${url}`;
+          console.log('Extracted content length:', extractedContent?.length || 0);
         } else {
           originalTextForAnalytics = scrapedContent;
+          console.log('Using cached scraped content, length:', scrapedContent.length);
         }
       } else if (inputType === 'file' && selectedFile) {
         // Use scraped content if available, otherwise use placeholder
         originalTextForAnalytics = scrapedContent || `Content from file: ${selectedFile.name}`;
+        console.log('Using file content for analytics, length:', originalTextForAnalytics.length);
       }
       
+      console.log('Original text for analytics length:', originalTextForAnalytics.length);
+      console.log('Summary length:', summary.length);
+      
       if (originalTextForAnalytics && originalTextForAnalytics.length > 10) {
+        console.log('Calling analytics API...');
         const analyticsResponse = await apiService.analyzeSummary({
           original_text: originalTextForAnalytics,
           summary_text: summary
         });
+        console.log('Analytics response received:', analyticsResponse);
         setAnalytics(analyticsResponse.analytics);
       } else {
         // Show a message that analytics requires more content
-        console.log('Analytics requires more original content to be meaningful');
+        console.log('Analytics requires more original content to be meaningful. Original text length:', originalTextForAnalytics.length);
       }
     } catch (err) {
       console.error('Error generating analytics:', err);
