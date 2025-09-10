@@ -262,6 +262,24 @@ export const GeneratePage: React.FC = () => {
     }
   };
 
+  const loadSampleFile = async () => {
+    try {
+      const response = await fetch('/sample-document.txt');
+      if (!response.ok) {
+        throw new Error('Failed to load sample file');
+      }
+      
+      const text = await response.text();
+      const blob = new Blob([text], { type: 'text/plain' });
+      const file = new File([blob], 'sample-document.txt', { type: 'text/plain' });
+      setSelectedFile(file);
+      setUserPrompt(text);
+    } catch (error) {
+      console.error('Error loading sample file:', error);
+      alert('Failed to load sample file. Please try again.');
+    }
+  };
+
   const handleGenerate = async () => {
     if (!userPrompt.trim()) {
       setError('Please enter a user prompt');
@@ -970,9 +988,19 @@ export const GeneratePage: React.FC = () => {
                      {/* File Input */}
            {inputType === 'file' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                File to Generate
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  File to Generate
+                </label>
+                <button
+                  onClick={loadSampleFile}
+                  disabled={isGenerating}
+                  className="px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors text-xs font-medium disabled:opacity-50 border border-green-200 hover:border-green-300"
+                  title="Load sample document"
+                >
+                  Try Sample
+                </button>
+              </div>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <div className="space-y-2">
                   {selectedFile ? (
