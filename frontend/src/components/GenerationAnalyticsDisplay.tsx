@@ -95,28 +95,30 @@ export const GenerationAnalyticsDisplay: React.FC<GenerationAnalyticsDisplayProp
           <h2 className="text-xl font-semibold text-gray-900">Prompt Analysis</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">System Prompt</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Length:</span>
-                <span className="font-medium">{prompt_analysis.system_prompt.length} chars</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Words:</span>
-                <span className="font-medium">{prompt_analysis.system_prompt.word_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Complexity:</span>
-                <span className="font-medium">{prompt_analysis.system_prompt.complexity.toFixed(1)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Has Instructions:</span>
-                <span className="font-medium">{prompt_analysis.system_prompt.has_instructions ? 'Yes' : 'No'}</span>
+        <div className={`grid gap-6 ${prompt_analysis.system_prompt.length > 0 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+          {prompt_analysis.system_prompt.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-700">System Prompt</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Length:</span>
+                  <span className="font-medium">{prompt_analysis.system_prompt.length} chars</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Words:</span>
+                  <span className="font-medium">{prompt_analysis.system_prompt.word_count}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Complexity:</span>
+                  <span className="font-medium">{prompt_analysis.system_prompt.complexity.toFixed(1)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Has Instructions:</span>
+                  <span className="font-medium">{prompt_analysis.system_prompt.has_instructions ? 'Yes' : 'No'}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-4">
             <h3 className="font-medium text-gray-700">User Prompt</h3>

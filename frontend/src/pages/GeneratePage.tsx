@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Send, Settings, History, Languages, FileText, Zap, Mic, Volume2, Palette, ChevronDown, BarChart3, GitCompare, X, Globe, Upload } from 'lucide-react';
 import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
@@ -49,6 +49,8 @@ export const GeneratePage: React.FC = () => {
   const [selectedModels, setSelectedModels] = useState<Array<{ provider: string; model: string }>>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [availableModels, setAvailableModels] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Type for model combinations
   interface ModelCombination {
@@ -237,6 +239,28 @@ export const GeneratePage: React.FC = () => {
     const timeoutId = setTimeout(detectLanguage, 1000);
     return () => clearTimeout(timeoutId);
   }, [userPrompt]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Read file content and set it as userPrompt for text generation
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setUserPrompt(content);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setUserPrompt('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleGenerate = async () => {
     if (!userPrompt.trim()) {
@@ -816,36 +840,48 @@ export const GeneratePage: React.FC = () => {
           
           {/* Input Type Selector */}
           <div className="flex space-x-2 mb-4">
-                         <button
-               onClick={() => setInputType('text')}
-               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                 inputType === 'text'
-                   ? 'bg-primary-100 text-primary-700'
-                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-               }`}
-             >
+            <button
+              onClick={() => {
+                setInputType('text');
+                setUserPrompt('');
+                setSelectedFile(null);
+              }}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                inputType === 'text'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
               <FileText size={16} />
               <span>Text</span>
             </button>
-                         <button
-               onClick={() => setInputType('url')}
-               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                 inputType === 'url'
-                   ? 'bg-primary-100 text-primary-700'
-                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-               }`}
-             >
+            <button
+              onClick={() => {
+                setInputType('url');
+                setUserPrompt('');
+                setSelectedFile(null);
+              }}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                inputType === 'url'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
               <Globe size={16} />
               <span>URL</span>
             </button>
-                         <button
-               onClick={() => setInputType('file')}
-               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                 inputType === 'file'
-                   ? 'bg-primary-100 text-primary-700'
-                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-               }`}
-             >
+            <button
+              onClick={() => {
+                setInputType('file');
+                setUserPrompt('');
+                setSelectedFile(null);
+              }}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                inputType === 'file'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
               <Upload size={16} />
               <span>File</span>
             </button>
@@ -858,11 +894,21 @@ export const GeneratePage: React.FC = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Text to Generate
                 </label>
-                <VoiceInput
-                  onTranscript={handleVoiceInput}
-                  disabled={isGenerating}
-                  className="text-xs"
-                />
+                <div className="flex items-center space-x-2">
+                  <VoiceInput
+                    onTranscript={handleVoiceInput}
+                    disabled={isGenerating}
+                    className="text-xs"
+                  />
+                  <button
+                    onClick={() => setUserPrompt('Write a compelling blog post about the future of artificial intelligence and its impact on society.')}
+                    disabled={isGenerating}
+                    className="px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors text-xs font-medium disabled:opacity-50 border border-green-200 hover:border-green-300"
+                    title="Load sample prompt"
+                  >
+                    Try Sample
+                  </button>
+                </div>
               </div>
               <textarea
                 value={userPrompt}
@@ -872,18 +918,10 @@ export const GeneratePage: React.FC = () => {
                 placeholder="Enter your prompt here, or use voice input..."
                 onKeyDown={handleKeyPress}
               />
-              <div className="flex justify-between items-center mt-2">
+              <div className="flex justify-end items-center mt-2">
                 <div className="text-sm text-gray-500">
                   {userPrompt.trim() ? userPrompt.trim().split(/\s+/).length : 0} words
                 </div>
-                <button
-                  onClick={() => setUserPrompt('Write a compelling blog post about the future of artificial intelligence and its impact on society.')}
-                  disabled={isGenerating}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium disabled:opacity-50"
-                  title="Load sample prompt"
-                >
-                  Try Sample
-                </button>
               </div>
               
               {/* Language Detection Display */}
@@ -911,14 +949,14 @@ export const GeneratePage: React.FC = () => {
                   onChange={(e) => setUserPrompt(e.target.value)}
                   disabled={isGenerating}
                   className="input-field flex-1"
-                  placeholder="https://example.com/article"
+                  placeholder="https://opensource.org/ai/open-source-ai-definition"
                   onKeyDown={handleKeyPress}
                 />
                 <button
-                  onClick={() => setUserPrompt('https://example.com/ai-article')}
+                  onClick={() => setUserPrompt('https://opensource.org/ai/open-source-ai-definition')}
                   disabled={isGenerating}
                   className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium disabled:opacity-50"
-                  title="Try with sample URL"
+                  title="Try with Open Source AI Definition"
                 >
                   Try Sample
                 </button>
@@ -936,17 +974,11 @@ export const GeneratePage: React.FC = () => {
                 File to Generate
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                {/* This section is not directly related to the file input for text generation,
-                    but it's part of the original file input logic.
-                    For text generation, we'll use userPrompt.
-                    For file generation, we'd need a state for selectedFile and handleFileSelect.
-                    Since the original file input was removed, this block is now effectively dead code
-                    for text generation, but kept as per instruction to only apply specified changes. */}
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   {selectedFile ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-center space-x-2">
-                        <File className="text-green-500" size={20} />
+                        <FileText className="text-green-500" size={20} />
                         <span className="font-medium text-gray-900">{selectedFile.name}</span>
                         <button
                           onClick={removeFile}
@@ -983,7 +1015,7 @@ export const GeneratePage: React.FC = () => {
                     accept=".txt,.pdf,.docx,.xlsx,.md"
                     className="hidden"
                   />
-                </div> */}
+                </div>
               </div>
             </div>
           )}
