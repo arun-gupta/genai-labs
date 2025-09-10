@@ -345,6 +345,10 @@ export const SummarizePage: React.FC = () => {
             if (chunk.latency_ms) {
               setLatencyMs(chunk.latency_ms);
             }
+            // Generate analytics when streaming is complete
+            if (chunk.is_complete) {
+              setTimeout(() => generateAnalytics(), 100); // Small delay to ensure state is updated
+            }
           },
           (error: string) => {
             setError(error);
@@ -352,8 +356,10 @@ export const SummarizePage: React.FC = () => {
         );
       }
 
-      // Generate analytics
-      await generateAnalytics();
+      // Generate analytics for file uploads (streaming analytics are handled in the callback)
+      if (inputType === 'file' && selectedFile) {
+        await generateAnalytics();
+      }
 
       // Save to history
       const historyItem: PromptHistory = {
