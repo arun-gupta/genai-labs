@@ -270,9 +270,18 @@ export const GeneratePage: React.FC = () => {
       }
       
       const text = await response.text();
+      
+      // Create a file object using a different approach
       const blob = new Blob([text], { type: 'text/plain' });
-      const file = new File([blob], 'sample-document.txt', { type: 'text/plain' });
-      setSelectedFile(file);
+      
+      // Create a file-like object that works with the file input
+      const file = Object.assign(blob, {
+        name: 'sample-document.txt',
+        lastModified: Date.now(),
+        webkitRelativePath: ''
+      });
+      
+      setSelectedFile(file as File);
       setUserPrompt(text);
     } catch (error) {
       console.error('Error loading sample file:', error);
