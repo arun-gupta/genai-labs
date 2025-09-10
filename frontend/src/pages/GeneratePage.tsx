@@ -863,6 +863,7 @@ export const GeneratePage: React.FC = () => {
                 setInputType('text');
                 setUserPrompt('');
                 setSelectedFile(null);
+                setAnalytics(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'text'
@@ -878,6 +879,7 @@ export const GeneratePage: React.FC = () => {
                 setInputType('url');
                 setUserPrompt('');
                 setSelectedFile(null);
+                setAnalytics(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'url'
@@ -893,6 +895,7 @@ export const GeneratePage: React.FC = () => {
                 setInputType('file');
                 setUserPrompt('');
                 setSelectedFile(null);
+                setAnalytics(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'file'
