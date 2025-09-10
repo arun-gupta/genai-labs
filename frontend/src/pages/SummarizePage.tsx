@@ -216,28 +216,24 @@ export const SummarizePage: React.FC = () => {
     });
   }, [availableModels, getAllLocalModels]);
 
-  // Language detection effect
-  useEffect(() => {
-    if (inputType === 'text' && text.length > 10) {
-      const timeoutId = setTimeout(() => {
-        detectLanguage(text);
-      }, 1000); // Debounce for 1 second
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [text, inputType]);
 
-  const detectLanguage = async (text: string) => {
-    if (!text.trim() || text.length < 10) return;
-    
-    setIsDetectingLanguage(true);
+  const loadSampleFile = async () => {
     try {
-      const response = await apiService.detectLanguage(text);
-      setLanguageDetection(response.detection);
+      const response = await fetch('/sample-document.txt');
+      if (!response.ok) {
+        throw new Error('Failed to load sample file');
+      }
+      
+      const text = await response.text();
+      const blob = new Blob([text], { type: 'text/plain' });
+      const file = new File([blob], 'sample-document.txt', { type: 'text/plain' });
+      setSelectedFile(file);
+      
+      // Set the text content for preview
+      setText(text);
     } catch (err) {
-      console.error('Error detecting language:', err);
-    } finally {
-      setIsDetectingLanguage(false);
+      console.error('Error loading sample file:', err);
+      setError('Failed to load sample file. Please try again.');
     }
   };
 
@@ -1014,9 +1010,19 @@ An Open Source AI is an AI system made available under terms and in a way that g
           {/* File Input */}
           {inputType === 'file' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                File to Summarize
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">
+                  File to Summarize
+                </label>
+                <button
+                  onClick={loadSampleFile}
+                  disabled={isSummarizing}
+                  className="px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors text-xs font-medium disabled:opacity-50 border border-green-200 hover:border-green-300"
+                  title="Load sample document"
+                >
+                  Try Sample
+                </button>
+              </div>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 {selectedFile ? (
                   <div className="space-y-2">
