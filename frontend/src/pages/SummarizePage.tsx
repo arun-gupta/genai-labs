@@ -381,10 +381,12 @@ export const SummarizePage: React.FC = () => {
       console.log('Extracting content from URL:', urlToExtract);
       const response = await apiService.extractUrlContent(urlToExtract);
       console.log('URL content extraction successful, content length:', response.content.length);
+      console.log('URL content preview:', response.content.substring(0, 200) + '...');
       setScrapedContent(response.content);
       return response.content;
     } catch (error) {
       console.error('Error extracting URL content:', error);
+      console.error('Error details:', error);
       return null;
     }
   };
@@ -425,12 +427,16 @@ export const SummarizePage: React.FC = () => {
       
       if (originalTextForAnalytics && originalTextForAnalytics.length > 10) {
         console.log('Calling analytics API...');
+        console.log('Original text preview:', originalTextForAnalytics.substring(0, 200) + '...');
+        console.log('Summary preview:', summary.substring(0, 200) + '...');
         const analyticsResponse = await apiService.analyzeSummary({
           original_text: originalTextForAnalytics,
           summary_text: summary
         });
         console.log('Analytics response received:', analyticsResponse);
+        console.log('Analytics data:', analyticsResponse.analytics);
         setAnalytics(analyticsResponse.analytics);
+        console.log('Analytics state set successfully');
       } else {
         // Show a message that analytics requires more content
         console.log('Analytics requires more original content to be meaningful. Original text length:', originalTextForAnalytics.length);
