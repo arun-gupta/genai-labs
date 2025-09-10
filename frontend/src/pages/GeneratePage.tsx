@@ -864,6 +864,12 @@ export const GeneratePage: React.FC = () => {
                 setUserPrompt('');
                 setSelectedFile(null);
                 setAnalytics(null);
+                setResponse('');
+                setCandidates([]);
+                setSelectedCandidate(0);
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'text'
@@ -880,6 +886,12 @@ export const GeneratePage: React.FC = () => {
                 setUserPrompt('');
                 setSelectedFile(null);
                 setAnalytics(null);
+                setResponse('');
+                setCandidates([]);
+                setSelectedCandidate(0);
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'url'
@@ -896,6 +908,12 @@ export const GeneratePage: React.FC = () => {
                 setUserPrompt('');
                 setSelectedFile(null);
                 setAnalytics(null);
+                setResponse('');
+                setCandidates([]);
+                setSelectedCandidate(0);
+                setTokenUsage(null);
+                setLatencyMs(undefined);
+                setError(null);
               }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inputType === 'file'
