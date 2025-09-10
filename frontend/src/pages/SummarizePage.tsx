@@ -5,14 +5,13 @@ import { ModelSelector } from '../components/ModelSelector';
 import { ResponseDisplay } from '../components/ResponseDisplay';
 import { AnalyticsDisplay } from '../components/AnalyticsDisplay';
 import { LanguageSelector } from '../components/LanguageSelector';
-import { LanguageDetectionDisplay } from '../components/LanguageDetection';
 import { OutputFormatSelector } from '../components/OutputFormatSelector';
 import { PromptHistoryComponent } from '../components/PromptHistory';
 import { ExportOptions } from '../components/ExportOptions';
 import { ModelComparison } from '../components/ModelComparison';
 import { apiService } from '../services/api';
 import { storageUtils, PromptHistory } from '../utils/storage';
-import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse, LanguageDetection } from '../types/api';
+import { StreamChunk, SummaryType, SupportedFileType, AnalyticsResponse } from '../types/api';
 
 export const SummarizePage: React.FC = () => {
   const [inputType, setInputType] = useState<'text' | 'url' | 'file'>('text');
@@ -39,8 +38,6 @@ export const SummarizePage: React.FC = () => {
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [translateOutput, setTranslateOutput] = useState(false);
   const [outputFormat, setOutputFormat] = useState<'text' | 'json' | 'xml' | 'markdown' | 'csv' | 'yaml' | 'html' | 'bullet_points' | 'numbered_list' | 'table'>('text');
-  const [languageDetection, setLanguageDetection] = useState<LanguageDetection | null>(null);
-  const [isDetectingLanguage, setIsDetectingLanguage] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isComparing, setIsComparing] = useState(false);
   const [comparisonResults, setComparisonResults] = useState<any>(null);
@@ -979,16 +976,6 @@ An Open Source AI is an AI system made available under terms and in a way that g
                 >
                   Try Sample
                 </button>
-              </div>
-              
-              {/* Language Detection Display */}
-              <div className={`mt-3 transition-all duration-300 ease-in-out ${
-                (languageDetection || isDetectingLanguage) ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'
-              }`}>
-                <LanguageDetectionDisplay
-                  detection={languageDetection}
-                  isLoading={isDetectingLanguage}
-                />
               </div>
             </div>
           )}
